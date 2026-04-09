@@ -38,6 +38,34 @@ model BusinessProfile {
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  scheduleConfig    ScheduleConfig?
 
   @@map("business_profiles")
+}
+
+model ScheduleConfig {
+  id                String          @id @default(cuid())
+  startTime         String
+  endTime           String
+  intervalMinutes   Int
+  price             Decimal
+  businessProfileId String          @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id])
+  appointments      Appointment[]
+
+  @@map("schedule_configs")
+}
+
+model Appointment {
+  id               String         @id @default(cuid())
+  time             String
+  isActive         Boolean        @default(true)
+  scheduleConfigId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  scheduleConfig   ScheduleConfig @relation(fields: [scheduleConfigId], references: [id])
+
+  @@map("appointments")
 }
