@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,9 +26,18 @@ export function LoginForm() {
   const values = watch();
   const allFilled = !!(values.email && values.password);
 
-  async function handleFormSubmit(_data: LoginFormValues) {
+  async function handleFormSubmit(data: LoginFormValues) {
     setInvalidCredentials(false);
-    // Se conectará al backend en porcion-006
+    const result = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    });
+    if (result?.error) {
+      setInvalidCredentials(true);
+    } else {
+      window.location.href = "/dashboard";
+    }
   }
 
   return (

@@ -1,6 +1,6 @@
 # porcion-003 — API de creación de perfil y upload de logo [BACK]
 
-**Estado:** 🔄 En progreso
+**Estado:** completada
 
 **Historia de usuario:** HU-2: Gestión de perfil del negocio
 **Par:** porcion-002

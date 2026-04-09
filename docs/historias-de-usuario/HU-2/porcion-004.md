@@ -1,5 +1,7 @@
 # porcion-004 — Guard de redirección al primer acceso [FRONT]
 
+**Estado:** completada
+
 **Historia de usuario:** HU-2: Gestión de perfil del negocio
 **Par:** porcion-005
 **Tipo:** FRONT

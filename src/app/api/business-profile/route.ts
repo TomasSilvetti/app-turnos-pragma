@@ -6,6 +6,114 @@ import { auth } from "@/../auth";
 
 const prisma = new PrismaClient();
 
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const profile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: session.user.id },
+    select: {
+      name: true,
+      logoUrl: true,
+      address: true,
+      phone: true,
+      cbu: true,
+      alias: true,
+      slug: true,
+    },
+  });
+
+  if (!profile) {
+    return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+  }
+
+  return NextResponse.json(profile);
+}
+
+export async function PATCH(request: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const serviceProviderId = session.user.id;
+
+  const existingProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId },
+  });
+  if (!existingProfile) {
+    return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+  }
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json(
+      { error: "Cuerpo de la petición inválido" },
+      { status: 400 }
+    );
+  }
+
+  const name = formData.get("name");
+  const address = formData.get("address");
+  const phone = formData.get("phone");
+  const cbu = formData.get("cbu");
+  const alias = formData.get("alias");
+  const logo = formData.get("logo");
+
+  const missingFields: string[] = [];
+  if (!name || typeof name !== "string" || name.trim() === "") missingFields.push("name");
+  if (!address || typeof address !== "string" || address.trim() === "") missingFields.push("address");
+  if (!phone || typeof phone !== "string" || phone.trim() === "") missingFields.push("phone");
+  if (!cbu || typeof cbu !== "string" || cbu.trim() === "") missingFields.push("cbu");
+  if (!alias || typeof alias !== "string" || alias.trim() === "") missingFields.push("alias");
+
+  if (missingFields.length > 0) {
+    return NextResponse.json(
+      { error: "Campos obligatorios faltantes", fields: missingFields },
+      { status: 400 }
+    );
+  }
+
+  let logoUrl = existingProfile.logoUrl;
+
+  if (logo instanceof File) {
+    const ext = path.extname(logo.name) || ".png";
+    const filename = `${serviceProviderId}-${Date.now()}${ext}`;
+    const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
+    const filePath = path.join(uploadDir, filename);
+    const buffer = Buffer.from(await logo.arrayBuffer());
+    await writeFile(filePath, buffer);
+    logoUrl = `/uploads/logos/${filename}`;
+  }
+
+  const updated = await prisma.businessProfile.update({
+    where: { serviceProviderId },
+    data: {
+      name: (name as string).trim(),
+      address: (address as string).trim(),
+      phone: (phone as string).trim(),
+      cbu: (cbu as string).trim(),
+      alias: (alias as string).trim(),
+      logoUrl,
+    },
+    select: {
+      name: true,
+      logoUrl: true,
+      address: true,
+      phone: true,
+      cbu: true,
+      alias: true,
+      slug: true,
+    },
+  });
+
+  return NextResponse.json(updated);
+}
+
 function generateSlug(name: string): string {
   return name
     .normalize("NFD")

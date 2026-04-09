@@ -20,8 +20,20 @@ export default function RegisterPage() {
           </div>
 
           <RegisterForm
-            onSubmit={async (_data) => {
-              // Se conectará al backend en porcion-004
+            onSubmit={async (data) => {
+              const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              if (res.status === 201) {
+                window.location.href = "/login";
+                return {};
+              }
+              const json = await res.json();
+              if (res.status === 400 && json.error?.includes("Ya existe")) {
+                return { emailDuplicated: true };
+              }
               return {};
             }}
           />

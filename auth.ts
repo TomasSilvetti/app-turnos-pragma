@@ -2,11 +2,12 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcrypt";
 import { PrismaClient } from "@prisma/client";
-// import Google from "next-auth/providers/google";
+import { authConfig } from "./auth.config";
 
 const prisma = new PrismaClient();
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -21,6 +22,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const provider = await prisma.serviceProvider.findUnique({
           where: { email },
+          include: { businessProfile: true },
         });
 
         if (!provider) return null;
@@ -32,18 +34,30 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: provider.id,
           name: provider.name,
           email: provider.email,
+          hasProfile: !!provider.businessProfile,
         };
       },
     }),
-    // Google({
-    //   clientId: process.env.AUTH_GOOGLE_ID,
-    //   clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    // }),
   ],
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/login",
+  callbacks: {
+    async jwt({ token, user, trigger }) {
+      if (user) {
+        token.id = user.id;
+        token.hasProfile = (user as { hasProfile?: boolean }).hasProfile ?? false;
+      }
+      if (trigger === "update" && token.id) {
+        const profile = await prisma.businessProfile.findUnique({
+          where: { serviceProviderId: token.id as string },
+          select: { id: true },
+        });
+        token.hasProfile = !!profile;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      session.user.id = token.id as string;
+      (session.user as { hasProfile?: boolean }).hasProfile = token.hasProfile as boolean;
+      return session;
+    },
   },
 });

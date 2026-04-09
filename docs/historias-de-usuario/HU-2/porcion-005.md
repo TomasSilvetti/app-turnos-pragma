@@ -1,5 +1,7 @@
 # porcion-005 — Endpoint de verificación de perfil completo [BACK]
 
+**Estado:** completado
+
 **Historia de usuario:** HU-2: Gestión de perfil del negocio
 **Par:** porcion-004
 **Tipo:** BACK
