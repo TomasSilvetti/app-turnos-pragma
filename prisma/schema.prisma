@@ -14,12 +14,30 @@ datasource db {
 }
 
 model ServiceProvider {
-  id             String   @id @default(cuid())
-  name           String
-  email          String   @unique
-  hashedPassword String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              String           @id @default(cuid())
+  name            String
+  email           String           @unique
+  hashedPassword  String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  businessProfile BusinessProfile?
 
   @@map("service_providers")
+}
+
+model BusinessProfile {
+  id                String          @id @default(cuid())
+  name              String
+  logoUrl           String?
+  address           String?
+  phone             String?
+  cbu               String?
+  alias             String?
+  slug              String          @unique
+  serviceProviderId String          @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+
+  @@map("business_profiles")
 }
