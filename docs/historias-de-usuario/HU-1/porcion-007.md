@@ -1,5 +1,7 @@
 # porcion-007 — Middleware de protección de rutas /panel [BACK]
 
+**Estado:** 🔄 En progreso
+
 **Historia de usuario:** HU-1: Autenticación de prestadores de servicio
 **Par:** —
 **Tipo:** BACK
