@@ -5,7 +5,7 @@
 **Par:** porcion-003
 **Tipo:** FRONT
 **Prerequisitos:** Ninguno
-**Estado:** 🔄 En progreso
+**Estado:** completada
 
 ## Descripción
 
