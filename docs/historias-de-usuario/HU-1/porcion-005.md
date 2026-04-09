@@ -1,5 +1,6 @@
 # porcion-005 — Formulario de login — vista [FRONT]
 
+**Estado:** completada
 **Historia de usuario:** HU-1: Autenticación de prestadores de servicio
 **Par:** porcion-006
 **Tipo:** FRONT

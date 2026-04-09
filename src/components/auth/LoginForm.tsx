@@ -1,0 +1,108 @@
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+type LoginFormValues = {
+  email: string;
+  password: string;
+};
+
+export function LoginForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [invalidCredentials, setInvalidCredentials] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { isSubmitting },
+  } = useForm<LoginFormValues>({ mode: "onBlur" });
+
+  const values = watch();
+  const allFilled = !!(values.email && values.password);
+
+  async function handleFormSubmit(_data: LoginFormValues) {
+    setInvalidCredentials(false);
+    // Se conectará al backend en porcion-006
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit(handleFormSubmit)}
+      noValidate
+      className="flex flex-col gap-5"
+    >
+      {/* Email */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="email" className="text-sm font-medium text-slate-700">
+          Email
+        </label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="tu@email.com"
+          className={cn(
+            "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
+            "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20",
+            invalidCredentials ? "border-red-400" : "border-slate-200"
+          )}
+          {...register("email", {
+            onChange: () => setInvalidCredentials(false),
+          })}
+        />
+      </div>
+
+      {/* Contraseña */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="password" className="text-sm font-medium text-slate-700">
+          Contraseña
+        </label>
+        <div className="relative">
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            placeholder="Tu contraseña"
+            className={cn(
+              "h-10 w-full rounded-lg border bg-white px-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
+              "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20",
+              invalidCredentials ? "border-red-400" : "border-slate-200"
+            )}
+            {...register("password", {
+              onChange: () => setInvalidCredentials(false),
+            })}
+          />
+          <button
+            type="button"
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
+      </div>
+
+      {/* Error de credenciales */}
+      {invalidCredentials && (
+        <p role="alert" className="text-sm text-red-500 text-center -mt-1">
+          Email o contraseña incorrectos
+        </p>
+      )}
+
+      <Button
+        type="submit"
+        size="lg"
+        disabled={!allFilled || isSubmitting}
+        className="mt-1 w-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40"
+      >
+        {isSubmitting ? "Ingresando..." : "Ingresar"}
+      </Button>
+    </form>
+  );
+}
