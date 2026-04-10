@@ -5,6 +5,9 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
 
+**Estado:** ✅ Completada
+**Completada el:** 2026-04-10
+
 ## Descripción
 
 Implementar el endpoint que persiste la configuración de horarios del proveedor. Si es la primera vez, guarda sin generar turnos. Si ya existe una configuración, borra los turnos ya generados (sin reserva activa), regenera los del mismo mes con la nueva config, y marca como `requires_reschedule` las reservas cuyos turnos desaparecen con la nueva configuración.
