@@ -15,15 +15,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] flex">
+    <div className="min-h-screen bg-[#F4F5F7]">
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-20 bg-black/30"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Side panel */}
       <aside
         className={cn(
-          "shrink-0 border-r border-[#E0E0DB] bg-white flex flex-col transition-all duration-300 overflow-hidden",
-          sidebarOpen ? "w-56" : "w-0 border-r-0"
+          "fixed top-0 left-0 h-full z-30 border-r border-[#E0E0DB] bg-white flex flex-col transition-transform duration-300",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{ width: "14rem" }}
       >
-        <div className="px-5 py-6 border-b border-[#E0E0DB] flex items-center gap-3 min-w-[14rem]">
+        <div className="px-5 py-6 border-b border-[#E0E0DB] flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(false)}
             className="text-[#253551] hover:text-[#1a2740] transition-colors"
@@ -37,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
           <span className="font-heading text-lg text-[#253551]">Panel</span>
         </div>
-        <nav className="flex flex-col gap-1 p-3 min-w-[14rem]" aria-label="Navegación principal">
+        <nav className="flex flex-col gap-1 p-3" aria-label="Navegación principal">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -56,7 +66,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 px-6 py-8 overflow-y-auto">
+      <main className="px-6 py-8 min-h-screen overflow-y-auto">
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}

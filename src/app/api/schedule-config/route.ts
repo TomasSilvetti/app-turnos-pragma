@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
 
@@ -19,7 +19,46 @@ function generateSlots(startTime: string, endTime: string, intervalMinutes: numb
   return slots;
 }
 
-export async function POST(request: NextRequest) {
+export async function GET() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: session.user.id },
+    select: { id: true },
+  });
+
+  if (!businessProfile) {
+    return NextResponse.json({ config: null, appointments: [] }, { status: 200 });
+  }
+
+  const config = await prisma.scheduleConfig.findUnique({
+    where: { businessProfileId: businessProfile.id },
+    include: { appointments: { orderBy: { time: "asc" } } },
+  });
+
+  if (!config) {
+    return NextResponse.json({ config: null, appointments: [] }, { status: 200 });
+  }
+
+  return NextResponse.json(
+    {
+      config: {
+        id: config.id,
+        startTime: config.startTime,
+        endTime: config.endTime,
+        intervalMinutes: config.intervalMinutes,
+        price: config.price,
+      },
+      appointments: config.appointments,
+    },
+    { status: 200 }
+  );
+}
+
+export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -27,14 +66,13 @@ export async function POST(request: NextRequest) {
 
   let body: unknown;
   try {
-    body = await request.json();
+    body = await req.json();
   } catch {
     return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
   const { startTime, endTime, intervalMinutes, price } = body as Record<string, unknown>;
 
-  // Validación de campos obligatorios
   if (!startTime || typeof startTime !== "string") {
     return NextResponse.json({ error: "El campo 'startTime' es obligatorio", field: "startTime" }, { status: 400 });
   }
@@ -58,7 +96,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "'price' debe ser un número mayor a 0", field: "price" }, { status: 400 });
   }
 
-  // Validar que endTime > startTime
   const [startH, startM] = startTime.split(":").map(Number);
   const [endH, endM] = endTime.split(":").map(Number);
   if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
@@ -104,7 +141,7 @@ export async function POST(request: NextRequest) {
           create: slots.map((time) => ({ time })),
         },
       },
-      include: { appointments: true },
+      include: { appointments: { orderBy: { time: "asc" } } },
     });
   } else {
     config = await prisma.scheduleConfig.create({
@@ -118,7 +155,7 @@ export async function POST(request: NextRequest) {
           create: slots.map((time) => ({ time })),
         },
       },
-      include: { appointments: true },
+      include: { appointments: { orderBy: { time: "asc" } } },
     });
   }
 

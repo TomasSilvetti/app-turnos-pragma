@@ -21,6 +21,7 @@ model ServiceProvider {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   businessProfile BusinessProfile?
+  appointments    Appointment[]
 
   @@map("service_providers")
 }
@@ -59,13 +60,36 @@ model ScheduleConfig {
 }
 
 model Appointment {
-  id               String         @id @default(cuid())
-  time             String
-  isActive         Boolean        @default(true)
-  scheduleConfigId String
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  scheduleConfig   ScheduleConfig @relation(fields: [scheduleConfigId], references: [id])
+  id                String         @id @default(cuid())
+  time              String
+  date              String
+  isActive          Boolean        @default(true)
+  scheduleConfigId  String
+  serviceProviderId String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  scheduleConfig    ScheduleConfig @relation(fields: [scheduleConfigId], references: [id])
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  booking           Booking?
 
   @@map("appointments")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  appointmentId String        @unique
+  clientName    String
+  clientPhone   String
+  status        BookingStatus @default(pending)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
 }
