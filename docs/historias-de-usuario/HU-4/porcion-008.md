@@ -5,6 +5,9 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
 
+**Estado:** ✅ Completada
+**Completada el:** 2026-04-10
+
 ## Descripción
 
 Crear el endpoint público que recibe los datos del cliente y el turno a reservar, verifica que el turno sigue disponible, y crea la `Booking` de forma atómica para evitar reservas dobles por concurrencia.

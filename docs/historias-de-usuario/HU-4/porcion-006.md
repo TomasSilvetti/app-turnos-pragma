@@ -5,6 +5,9 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
 
+**Estado:** ✅ Completada
+**Completada el:** 2026-04-10
+
 ## Descripción
 
 Crear el endpoint público que, dado un slug de negocio y una fecha, devuelve los turnos activos y sin reserva confirmada para ese día. Las cards del frontend (porcion-005) consumen este endpoint.

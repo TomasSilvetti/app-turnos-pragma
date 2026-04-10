@@ -5,6 +5,9 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
 
+**Estado:** ✅ Completada
+**Completada el:** 2026-04-10
+
 ## Descripción
 
 Crear el endpoint público que, dado un slug de negocio y un mes/año, devuelve la lista de fechas que tienen al menos un turno activo y sin reserva confirmada. El calendario del frontend (porcion-003) consume este endpoint para saber qué días resaltar.
