@@ -109,7 +109,7 @@ export async function POST(req: Request) {
   if (!businessProfile)
     return NextResponse.json({ error: "El prestador no tiene perfil de negocio" }, { status: 404 });
 
-  const existingConfig = await prisma.scheduleConfig.findUnique({
+  const existingConfig = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },
     select: { id: true },
   });
@@ -185,7 +185,7 @@ export async function PUT(req: Request) {
   if (!businessProfile)
     return NextResponse.json({ error: "El prestador no tiene perfil de negocio" }, { status: 404 });
 
-  const existingConfig = await prisma.scheduleConfig.findUnique({
+  const existingConfig = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },
     select: { id: true },
   });
