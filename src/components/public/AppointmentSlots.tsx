@@ -7,7 +7,7 @@ export type Appointment = {
   time: string;
   price: number;
   booked?: boolean;
-  serviceTypes?: string[];
+  serviceTypes?: { id: string; title: string; price: number }[];
 };
 
 type Props = {

@@ -33,9 +33,9 @@ export async function GET() {
     bookingId: b.id,
     clientName: b.clientName,
     clientPhone: b.clientPhone,
-    serviceType: b.appointment.serviceType?.title ?? null,
-    originalDate: b.appointment.date,
-    originalTime: b.appointment.time,
+    appointmentType: b.appointment.serviceType?.title ?? "",
+    appointmentDate: b.appointment.date,
+    appointmentTime: b.appointment.time,
   }));
 
   return NextResponse.json(result, { status: 200 });

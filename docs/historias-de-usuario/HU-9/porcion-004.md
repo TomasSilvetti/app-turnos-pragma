@@ -4,7 +4,7 @@
 **Par:** —
 **Tipo:** BACK
 **Prerequisitos:** Ninguno (puede desarrollarse en paralelo con 001-003)
-**Estado:** pendiente
+**Estado:** completada
 
 ## Descripción
 

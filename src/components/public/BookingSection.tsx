@@ -13,7 +13,7 @@ type Slot = {
   time: string;
   price: number;
   booked?: boolean;
-  serviceTypes?: string[];
+  serviceTypes?: { id: string; title: string; price: number }[];
 };
 
 type BookingResult = {
@@ -99,6 +99,7 @@ export default function BookingSection({ slug, businessName }: Props) {
     clientSurname: string;
     clientPhone: string;
     appointmentId: string;
+    serviceTypeId: string | null;
   }) {
     setIsBooking(true);
     setBookingError(null);
@@ -107,7 +108,13 @@ export default function BookingSection({ slug, businessName }: Props) {
       const res = await fetch("/api/public/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          clientName: data.clientName,
+          clientSurname: data.clientSurname,
+          clientPhone: data.clientPhone,
+          appointmentId: data.appointmentId,
+          ...(data.serviceTypeId && { serviceTypeId: data.serviceTypeId }),
+        }),
       });
 
       if (!res.ok) {
@@ -175,6 +182,7 @@ export default function BookingSection({ slug, businessName }: Props) {
       {selectedAppointment && (
         <BookingModal
           appointment={selectedAppointment}
+          serviceTypes={selectedAppointment.serviceTypes ?? []}
           isLoading={isBooking}
           error={bookingError}
           onConfirm={handleConfirm}

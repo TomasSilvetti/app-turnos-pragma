@@ -1,24 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TiposDeTurnoList } from "@/components/tipos-de-turno/TiposDeTurnoList";
 import { TipoDeTurnoForm, type TipoDeTurno, type TipoDeTurnoFormValues } from "@/components/tipos-de-turno/TipoDeTurnoForm";
 import { DeleteTipoDeTurnoDialog } from "@/components/tipos-de-turno/DeleteTipoDeTurnoDialog";
 
-const mockTipos: TipoDeTurno[] = [
-  { id: "1", titulo: "Consulta general", descripcion: "Atención médica de primer nivel", precio: 5000 },
-  { id: "2", titulo: "Control de seguimiento", descripcion: "Seguimiento de tratamiento en curso", precio: 3500 },
-];
+function apiToTipo(item: { id: string; title: string; description: string; price: number }): TipoDeTurno {
+  return { id: item.id, titulo: item.title, descripcion: item.description, precio: item.price };
+}
 
 export default function TiposDeTurnoPage() {
-  const [tipos, setTipos] = useState<TipoDeTurno[]>(mockTipos);
+  const [tipos, setTipos] = useState<TipoDeTurno[]>([]);
+  const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
   const [editingTipo, setEditingTipo] = useState<TipoDeTurno | undefined>(undefined);
   const [deletingTipo, setDeletingTipo] = useState<TipoDeTurno | undefined>(undefined);
   const [deleteError, setDeleteError] = useState<string | undefined>(undefined);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/service-types")
+      .then((r) => r.json())
+      .then((data) => setTipos(data.map(apiToTipo)))
+      .finally(() => setLoading(false));
+  }, []);
 
   function handleAdd() {
     setEditingTipo(undefined);
@@ -30,18 +37,31 @@ export default function TiposDeTurnoPage() {
     setFormOpen(true);
   }
 
-  function handleSave(data: TipoDeTurnoFormValues) {
+  async function handleSave(data: TipoDeTurnoFormValues) {
+    const body = { title: data.titulo, description: data.descripcion, price: data.precio };
+
     if (editingTipo) {
-      setTipos((prev) =>
-        prev.map((t) => (t.id === editingTipo.id ? { ...editingTipo, ...data } : t))
-      );
+      const res = await fetch(`/api/service-types/${editingTipo.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTipos((prev) => prev.map((t) => (t.id === editingTipo.id ? apiToTipo(updated) : t)));
+      }
     } else {
-      const newTipo: TipoDeTurno = {
-        id: Date.now().toString(),
-        ...data,
-      };
-      setTipos((prev) => [...prev, newTipo]);
+      const res = await fetch("/api/service-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        const created = await res.json();
+        setTipos((prev) => [...prev, apiToTipo(created)]);
+      }
     }
+
     setFormOpen(false);
     setEditingTipo(undefined);
   }
@@ -61,12 +81,11 @@ export default function TiposDeTurnoPage() {
     setIsDeleting(true);
     setDeleteError(undefined);
 
-    // Simulación: si el id es "1" simular error de reservas activas
-    await new Promise((r) => setTimeout(r, 600));
-    if (deletingTipo.id === "RESERVAS_ACTIVAS") {
-      setDeleteError(
-        "No podés eliminar este tipo de turno porque tiene reservas futuras. Cancelalas primero."
-      );
+    const res = await fetch(`/api/service-types/${deletingTipo.id}`, { method: "DELETE" });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setDeleteError(data.error ?? "No se pudo eliminar el tipo de turno.");
       setIsDeleting(false);
       return;
     }
@@ -79,6 +98,20 @@ export default function TiposDeTurnoPage() {
   function handleDeleteCancel() {
     setDeletingTipo(undefined);
     setDeleteError(undefined);
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-6">
+          <h1 className="font-heading text-2xl text-[#253551]">Tipos de turno</h1>
+          <p className="mt-0.5 text-sm text-[#2A2829]/60">
+            Administrá los tipos de turno que ofrecés a tus clientes.
+          </p>
+        </div>
+        <p className="text-sm text-[#2A2829]/60">Cargando...</p>
+      </div>
+    );
   }
 
   return (

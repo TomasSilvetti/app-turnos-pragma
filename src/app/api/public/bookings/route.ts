@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Cuerpo de la solicitud inválido" }, { status: 400 });
   }
 
-  const { clientName, clientSurname, clientPhone, appointmentId } = body;
+  const { clientName, clientSurname, clientPhone, appointmentId, serviceTypeId } = body;
 
   if (!clientName || !clientSurname || !clientPhone || !appointmentId) {
     return NextResponse.json(
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     select: {
       id: true,
       isActive: true,
+      serviceProviderId: true,
       booking: { select: { status: true } },
     },
   });
@@ -38,6 +39,17 @@ export async function POST(request: NextRequest) {
 
   if (appointment.booking?.status === "confirmed") {
     return NextResponse.json({ error: "El turno ya fue reservado" }, { status: 409 });
+  }
+
+  if (serviceTypeId != null) {
+    const serviceType = await prisma.serviceType.findUnique({
+      where: { id: serviceTypeId },
+      select: { serviceProviderId: true },
+    });
+
+    if (!serviceType || serviceType.serviceProviderId !== appointment.serviceProviderId) {
+      return NextResponse.json({ error: "serviceTypeId inválido o no pertenece al proveedor" }, { status: 400 });
+    }
   }
 
   const fullName = `${clientName.trim()} ${clientSurname.trim()}`;
@@ -62,6 +74,13 @@ export async function POST(request: NextRequest) {
       status: true,
     },
   });
+
+  if (serviceTypeId != null) {
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { serviceTypeId },
+    });
+  }
 
   return NextResponse.json(booking, { status: 201 });
 }

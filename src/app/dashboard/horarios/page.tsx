@@ -1,44 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-config/ScheduleConfigList";
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
 import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfigSlots";
 
-// --- Mock data ---
-const mockServiceTypes: ServiceType[] = [
-  { id: "1", titulo: "Consulta general" },
-  { id: "2", titulo: "Control de seguimiento" },
-  { id: "3", titulo: "Primera vez" },
-];
+type ConfigWithServiceTypes = ScheduleConfig & { serviceTypeIds: string[] };
 
-const mockConfigs: ScheduleConfig[] = [
-  {
-    id: "1",
-    nombre: "Lunes a viernes mañana",
-    startTime: "09:00",
-    endTime: "13:00",
-    intervalMinutes: 30,
-    daysOfWeek: ["L", "M", "X", "J", "V"],
-    isActive: true,
-  },
-  {
-    id: "2",
-    nombre: "Sábados",
-    startTime: "10:00",
-    endTime: "14:00",
-    intervalMinutes: 45,
-    daysOfWeek: ["S"],
-    isActive: false,
-  },
-];
+function mapApiConfig(c: {
+  id: string;
+  name: string;
+  isActive: boolean;
+  startTime: string;
+  endTime: string;
+  intervalMinutes: number;
+  daysOfWeek: string[];
+  serviceTypes: { id: string; title: string }[];
+}): ConfigWithServiceTypes {
+  return {
+    id: c.id,
+    nombre: c.name,
+    isActive: c.isActive,
+    startTime: c.startTime,
+    endTime: c.endTime,
+    intervalMinutes: c.intervalMinutes,
+    daysOfWeek: c.daysOfWeek,
+    serviceTypeIds: c.serviceTypes.map((t) => t.id),
+  };
+}
 
 export default function HorariosPage() {
-  const [configs, setConfigs] = useState<ScheduleConfig[]>(mockConfigs);
+  const [configs, setConfigs] = useState<ConfigWithServiceTypes[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<(ScheduleConfig & { serviceTypeIds?: string[] }) | undefined>();
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const [configsRes, serviceTypesRes] = await Promise.all([
+        fetch("/api/schedule-configs"),
+        fetch("/api/service-types"),
+      ]);
+
+      if (configsRes.ok) {
+        const data = await configsRes.json();
+        setConfigs(data.map(mapApiConfig));
+      }
+
+      if (serviceTypesRes.ok) {
+        const data: { id: string; title: string }[] = await serviceTypesRes.json();
+        setServiceTypes(data.map((t) => ({ id: t.id, titulo: t.title })));
+      }
+
+      setLoading(false);
+    }
+    load();
+  }, []);
 
   function handleAdd() {
     setEditingConfig(undefined);
@@ -46,7 +66,8 @@ export default function HorariosPage() {
   }
 
   function handleEdit(config: ScheduleConfig) {
-    setEditingConfig({ ...config, serviceTypeIds: [] });
+    const full = configs.find((c) => c.id === config.id);
+    setEditingConfig({ ...config, serviceTypeIds: full?.serviceTypeIds ?? [] });
     setModalOpen(true);
   }
 
@@ -68,13 +89,29 @@ export default function HorariosPage() {
         )
       );
     } else {
-      const newConfig: ScheduleConfig = {
+      const newConfig: ConfigWithServiceTypes = {
         id: Date.now().toString(),
         isActive: true,
         ...data,
       };
       setConfigs((prev) => [...prev, newConfig]);
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-6">
+          <h1 className="font-heading text-2xl text-[#253551]">Configuración de horarios</h1>
+          <p className="mt-0.5 text-sm text-[#2A2829]/60">
+            Definí tus bloques de disponibilidad semanal para la generación de turnos.
+          </p>
+        </div>
+        <div className="flex items-center justify-center py-16 text-sm text-[#2A2829]/40">
+          Cargando...
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -88,23 +125,23 @@ export default function HorariosPage() {
       </div>
 
       <div className="flex flex-col gap-6">
-      <ScheduleConfigList
-        configs={configs}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggle={handleToggle}
-        onAdd={handleAdd}
-      />
+        <ScheduleConfigList
+          configs={configs}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggle={handleToggle}
+          onAdd={handleAdd}
+        />
 
-      <ScheduleConfigCalendar
-        configs={configs}
-        onDaySelect={(date) => setSelectedDay(date)}
-      />
+        <ScheduleConfigCalendar
+          configs={configs}
+          onDaySelect={(date) => setSelectedDay(date)}
+        />
 
-      <ScheduleConfigSlots
-        configs={configs}
-        selectedDay={selectedDay}
-      />
+        <ScheduleConfigSlots
+          configs={configs}
+          selectedDay={selectedDay}
+        />
       </div>
 
       <ScheduleConfigModal
@@ -112,7 +149,7 @@ export default function HorariosPage() {
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}
         initialData={editingConfig}
-        serviceTypes={mockServiceTypes}
+        serviceTypes={serviceTypes}
       />
     </div>
   );

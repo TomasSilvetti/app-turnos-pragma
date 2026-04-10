@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { Appointment } from "./AppointmentSlots";
 
+type ServiceType = { id: string; title: string; price: number };
+
 type Props = {
   appointment: Appointment;
+  serviceTypes: ServiceType[];
   isLoading: boolean;
   error: string | null;
   onConfirm: (data: {
@@ -13,12 +16,14 @@ type Props = {
     clientSurname: string;
     clientPhone: string;
     appointmentId: string;
+    serviceTypeId: string | null;
   }) => void;
   onClose: () => void;
 };
 
 export default function BookingModal({
   appointment,
+  serviceTypes,
   isLoading,
   error,
   onConfirm,
@@ -27,6 +32,7 @@ export default function BookingModal({
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [phone, setPhone] = useState("");
+  const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -45,7 +51,16 @@ export default function BookingModal({
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  const isValid = name.trim() !== "" && surname.trim() !== "" && phone.trim() !== "";
+  const hasServiceTypes = serviceTypes.length > 0;
+  const displayPrice = hasServiceTypes && selectedServiceTypeId
+    ? (serviceTypes.find((t) => t.id === selectedServiceTypeId)?.price ?? appointment.price)
+    : appointment.price;
+
+  const isValid =
+    name.trim() !== "" &&
+    surname.trim() !== "" &&
+    phone.trim() !== "" &&
+    (!hasServiceTypes || selectedServiceTypeId !== null);
 
   function handleOverlayClick(e: React.MouseEvent) {
     if (e.target === overlayRef.current) onClose();
@@ -59,6 +74,7 @@ export default function BookingModal({
       clientSurname: surname.trim(),
       clientPhone: phone.trim(),
       appointmentId: appointment.id,
+      serviceTypeId: selectedServiceTypeId,
     });
   }
 
@@ -82,7 +98,7 @@ export default function BookingModal({
               Confirmar reserva
             </h2>
             <p className="font-body text-sm text-[#253551] font-medium mt-0.5">
-              {appointment.time} — ${appointment.price.toLocaleString("es-AR")}
+              {appointment.time} — ${displayPrice.toLocaleString("es-AR")}
             </p>
           </div>
           <button
@@ -93,6 +109,40 @@ export default function BookingModal({
             <X size={18} className="text-[#2A2829]" />
           </button>
         </div>
+
+        {/* Selector de tipo de turno */}
+        {hasServiceTypes && (
+          <div className="flex flex-col gap-2">
+            <p className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide">
+              Tipo de turno <span aria-hidden="true" className="text-[#ef4444]">*</span>
+            </p>
+            <div className="flex flex-col gap-2">
+              {serviceTypes.map((type) => {
+                const isSelected = selectedServiceTypeId === type.id;
+                return (
+                  <button
+                    key={type.id}
+                    type="button"
+                    onClick={() => setSelectedServiceTypeId(type.id)}
+                    aria-pressed={isSelected}
+                    className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-left transition-colors ${
+                      isSelected
+                        ? "border-[#253551] bg-[#253551]/5"
+                        : "border-[#E0E0DB] bg-white hover:bg-[#F4F5F7]"
+                    }`}
+                  >
+                    <span className={`font-body text-sm ${isSelected ? "text-[#253551] font-medium" : "text-[#2A2829]"}`}>
+                      {type.title}
+                    </span>
+                    <span className={`font-body text-sm font-medium ${isSelected ? "text-[#253551]" : "text-[#2A2829]"}`}>
+                      ${type.price.toLocaleString("es-AR")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>

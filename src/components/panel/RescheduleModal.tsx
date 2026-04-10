@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { X, AlertCircle } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
 import AppointmentSlots, {
@@ -38,6 +38,7 @@ type Props = {
 
 export default function RescheduleModal({ item, onClose, onRescheduled }: Props) {
   const [selectedDate, setSelectedDate] = useState<string>(MOCK_AVAILABLE_DATES[0]);
+  const [viewMonth, setViewMonth] = useState<Date>(() => parseISO(MOCK_AVAILABLE_DATES[0]));
   const [selectedSlot, setSelectedSlot] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,6 +164,8 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
         <MiniCalendar
           availableDates={MOCK_AVAILABLE_DATES}
           selectedDate={selectedDate}
+          viewMonth={viewMonth}
+          onMonthChange={setViewMonth}
           onDaySelect={handleDaySelect}
         />
 
