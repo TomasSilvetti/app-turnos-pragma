@@ -1,4 +1,4 @@
-# porcion-006 — Cards de turnos del día seleccionado [FRONT]
+22# porcion-006 — Cards de turnos del día seleccionado [FRONT]
 
 **Historia de usuario:** HU-8: Configuración de horarios con vista previa de turnos
 **Par:** porcion-007

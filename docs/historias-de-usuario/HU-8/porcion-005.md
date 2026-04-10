@@ -4,6 +4,7 @@
 **Par:** —
 **Tipo:** FRONT
 **Prerequisitos:** porcion-002, porcion-004
+**Estado:** completado
 
 ## Descripción
 

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-config/ScheduleConfigList";
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
+import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
 
 // --- Mock data ---
 const mockServiceTypes: ServiceType[] = [
@@ -84,6 +85,7 @@ export default function HorariosPage() {
         </p>
       </div>
 
+      <div className="flex flex-col gap-6">
       <ScheduleConfigList
         configs={configs}
         onEdit={handleEdit}
@@ -91,6 +93,12 @@ export default function HorariosPage() {
         onToggle={handleToggle}
         onAdd={handleAdd}
       />
+
+      <ScheduleConfigCalendar
+        configs={configs}
+        onDaySelect={(date) => console.log("Día seleccionado:", date)}
+      />
+      </div>
 
       <ScheduleConfigModal
         open={modalOpen}
