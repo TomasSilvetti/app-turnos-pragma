@@ -101,7 +101,7 @@ export async function GET(
         date: { startsWith: month },
         OR: [
           { booking: { is: null } },
-          { booking: { status: { not: "confirmed" } } },
+          { booking: { status: { notIn: ["confirmed", "pending"] } } },
         ],
       },
     });
@@ -153,7 +153,7 @@ export async function GET(
       date: a.date,
       time: a.time,
       price: a.scheduleConfig.price,
-      booked: a.booking?.status === "confirmed",
+      booked: a.booking?.status === "confirmed" || a.booking?.status === "pending",
       serviceTypes: a.scheduleConfig.serviceTypes,
     })),
   });

@@ -21,14 +21,18 @@ type BookingResult = {
   date: string;
   time: string;
   price: number;
+  cbu: string | null;
+  alias: string | null;
 };
 
 type Props = {
   slug: string;
   businessName: string;
+  cbu: string | null;
+  alias: string | null;
 };
 
-export default function BookingSection({ slug, businessName }: Props) {
+export default function BookingSection({ slug, businessName, cbu, alias }: Props) {
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -125,13 +129,19 @@ export default function BookingSection({ slug, businessName }: Props) {
       const appointment = appointmentsForDate.find((a) => a.id === data.appointmentId);
       if (!appointment) throw new Error("Turno no encontrado");
 
+      const finalPrice = data.serviceTypeId
+        ? (appointment.serviceTypes?.find((t) => t.id === data.serviceTypeId)?.price ?? appointment.price)
+        : appointment.price;
+
       setBookedIds((prev) => new Set([...prev, data.appointmentId]));
       setSelectedAppointment(null);
       setBookingResult({
         businessName,
         date: selectedDate!,
         time: appointment.time,
-        price: appointment.price,
+        price: finalPrice,
+        cbu,
+        alias,
       });
     } catch (err) {
       setBookingError(
@@ -153,6 +163,8 @@ export default function BookingSection({ slug, businessName }: Props) {
         date={bookingResult.date}
         time={bookingResult.time}
         price={bookingResult.price}
+        cbu={bookingResult.cbu}
+        alias={bookingResult.alias}
         onBack={handleBack}
       />
     );

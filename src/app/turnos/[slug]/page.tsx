@@ -8,6 +8,8 @@ type BusinessPublicData = {
   logoUrl: string | null;
   address: string | null;
   phone: string | null;
+  cbu: string | null;
+  alias: string | null;
 };
 
 async function getBusinessBySlug(
@@ -93,7 +95,12 @@ export default async function PublicBusinessPage({
         </div>
 
         {/* Calendario y turnos */}
-        <BookingSection slug={slug} businessName={business.name} />
+        <BookingSection
+          slug={slug}
+          businessName={business.name}
+          cbu={business.cbu}
+          alias={business.alias}
+        />
       </div>
     </main>
   );

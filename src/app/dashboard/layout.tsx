@@ -10,6 +10,7 @@ const navItems = [
   { label: "Perfil", href: "/dashboard/perfil", icon: "person" },
   { label: "Tipos de turno", href: "/dashboard/tipos-de-turno", icon: "label" },
   { label: "Configuración de turnos", href: "/dashboard/configuracion-turnos", icon: "calendar_month" },
+  { label: "Turnos reservados", href: "/dashboard/turnos-reservados", icon: "bookmark" },
   { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat" },
 ];
 

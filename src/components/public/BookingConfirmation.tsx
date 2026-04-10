@@ -1,14 +1,17 @@
 "use client";
 
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Copy, Check } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { useState } from "react";
 
 type Props = {
   businessName: string;
   date: string; // YYYY-MM-DD
   time: string;
   price: number;
+  cbu: string | null;
+  alias: string | null;
   onBack: () => void;
 };
 
@@ -17,8 +20,26 @@ export default function BookingConfirmation({
   date,
   time,
   price,
+  cbu,
+  alias,
   onBack,
 }: Props) {
+  const [copiedCbu, setCopiedCbu] = useState(false);
+  const [copiedAlias, setCopiedAlias] = useState(false);
+
+  function copyToClipboard(value: string, type: "cbu" | "alias") {
+    navigator.clipboard.writeText(value).then(() => {
+      if (type === "cbu") {
+        setCopiedCbu(true);
+        setTimeout(() => setCopiedCbu(false), 2000);
+      } else {
+        setCopiedAlias(true);
+        setTimeout(() => setCopiedAlias(false), 2000);
+      }
+    });
+  }
+
+  const hasPaymentInfo = !!(cbu || alias);
   const formattedDate = format(parseISO(date), "EEEE d 'de' MMMM", {
     locale: es,
   });
@@ -80,6 +101,63 @@ export default function BookingConfirmation({
           </div>
         </div>
       </div>
+
+      {/* Datos de transferencia */}
+      {hasPaymentInfo && (
+        <div className="w-full flex flex-col gap-3">
+          <p className="font-body text-xs text-[#2A2829] opacity-50 uppercase tracking-wide text-center">
+            Datos para transferencia
+          </p>
+          <div className="w-full rounded-lg bg-[#F4F5F7] border border-[#E0E0DB] p-4 flex flex-col gap-3">
+            {alias && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="font-small text-[10px] text-[#2A2829] opacity-50 uppercase tracking-wide">
+                    Alias
+                  </span>
+                  <span className="font-body text-sm text-[#2A2829] font-medium truncate">
+                    {alias}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(alias, "alias")}
+                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] transition-colors"
+                  aria-label="Copiar alias"
+                >
+                  {copiedAlias ? (
+                    <Check size={15} className="text-[#22c55e]" />
+                  ) : (
+                    <Copy size={15} className="text-[#253551]" />
+                  )}
+                </button>
+              </div>
+            )}
+            {cbu && (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="font-small text-[10px] text-[#2A2829] opacity-50 uppercase tracking-wide">
+                    CBU
+                  </span>
+                  <span className="font-body text-sm text-[#2A2829] font-medium truncate">
+                    {cbu}
+                  </span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(cbu, "cbu")}
+                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] transition-colors"
+                  aria-label="Copiar CBU"
+                >
+                  {copiedCbu ? (
+                    <Check size={15} className="text-[#22c55e]" />
+                  ) : (
+                    <Copy size={15} className="text-[#253551]" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Volver */}
       <button

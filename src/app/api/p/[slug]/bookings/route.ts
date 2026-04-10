@@ -52,7 +52,7 @@ export async function POST(
         throw { code: 404, message: "Turno no encontrado para este negocio" };
       }
 
-      if (appointment.booking?.status === "confirmed") {
+      if (appointment.booking?.status === "confirmed" || appointment.booking?.status === "pending") {
         throw { code: 409, message: "Este turno ya fue reservado" };
       }
 
@@ -61,7 +61,7 @@ export async function POST(
           appointmentId,
           clientName,
           clientPhone,
-          status: "confirmed",
+          status: "pending",
         },
       });
 

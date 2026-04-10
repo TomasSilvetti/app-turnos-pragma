@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "El turno no está disponible" }, { status: 409 });
   }
 
-  if (appointment.booking?.status === "confirmed") {
+  if (appointment.booking?.status === "confirmed" || appointment.booking?.status === "pending") {
     return NextResponse.json({ error: "El turno ya fue reservado" }, { status: 409 });
   }
 
@@ -59,13 +59,13 @@ export async function POST(request: NextRequest) {
     update: {
       clientName: fullName,
       clientPhone: clientPhone.trim(),
-      status: "confirmed",
+      status: "pending",
     },
     create: {
       appointmentId,
       clientName: fullName,
       clientPhone: clientPhone.trim(),
-      status: "confirmed",
+      status: "pending",
     },
     select: {
       id: true,

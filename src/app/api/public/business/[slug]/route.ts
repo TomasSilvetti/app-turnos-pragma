@@ -16,6 +16,8 @@ export async function GET(
       logoUrl: true,
       address: true,
       phone: true,
+      cbu: true,
+      alias: true,
     },
   });
 
