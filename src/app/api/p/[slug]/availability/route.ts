@@ -152,9 +152,9 @@ export async function GET(
       id: a.id,
       date: a.date,
       time: a.time,
-      price: a.scheduleConfig.price,
+      price: a.scheduleConfig?.price ?? null,
       booked: a.booking?.status === "confirmed" || a.booking?.status === "pending",
-      serviceTypes: a.scheduleConfig.serviceTypes,
+      serviceTypes: a.scheduleConfig?.serviceTypes ?? [],
     })),
   });
 }
