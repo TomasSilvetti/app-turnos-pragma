@@ -36,6 +36,10 @@ export const PATCH = auth(async (
     return NextResponse.json({ error: "Turno no encontrado" }, { status: 404 });
   }
 
+  if (!appointment.scheduleConfig) {
+    return NextResponse.json({ error: "Turno sin configuración de agenda" }, { status: 500 });
+  }
+
   if (appointment.scheduleConfig.businessProfile.serviceProviderId !== req.auth.user.id) {
     return NextResponse.json({ error: "No tenés permiso para modificar este turno" }, { status: 403 });
   }
@@ -62,6 +66,10 @@ export const DELETE = auth(async (
 
   if (!appointment) {
     return NextResponse.json({ error: "Turno no encontrado" }, { status: 404 });
+  }
+
+  if (!appointment.scheduleConfig) {
+    return NextResponse.json({ error: "Turno sin configuración de agenda" }, { status: 500 });
   }
 
   if (appointment.scheduleConfig.businessProfile.serviceProviderId !== req.auth.user.id) {
