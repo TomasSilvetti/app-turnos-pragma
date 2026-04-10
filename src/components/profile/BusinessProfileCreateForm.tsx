@@ -17,7 +17,7 @@ export type BusinessProfileCreateFormValues = {
 
 type FieldErrors = Partial<Record<keyof BusinessProfileCreateFormValues, string>>;
 
-export function BusinessProfileCreateForm() {
+export function BusinessProfileCreateForm({ onCreated }: { onCreated?: () => void } = {}) {
   const { update } = useSession();
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -94,7 +94,11 @@ export function BusinessProfileCreateForm() {
 
     if (res.status === 201) {
       await update();
-      window.location.href = "/dashboard";
+      if (onCreated) {
+        onCreated();
+      } else {
+        window.location.href = "/dashboard";
+      }
       return;
     }
 

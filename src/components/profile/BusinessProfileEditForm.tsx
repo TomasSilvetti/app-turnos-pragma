@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BusinessProfileCreateForm } from "@/components/profile/BusinessProfileCreateForm";
 
 type ProfileData = {
   name: string;
@@ -29,6 +30,7 @@ type FieldErrors = Partial<Record<keyof BusinessProfileEditFormValues, string>>;
 export function BusinessProfileEditForm() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileNotFound, setProfileNotFound] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
@@ -47,29 +49,34 @@ export function BusinessProfileEditForm() {
     formState: { errors, isSubmitting },
   } = useForm<BusinessProfileEditFormValues>({ mode: "onBlur" });
 
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await fetch("/api/business-profile");
-        if (!res.ok) throw new Error("No se pudo cargar el perfil");
-        const data: ProfileData = await res.json();
-        setProfileData(data);
-        reset({
-          nombre: data.name,
-          direccion: data.address ?? "",
-          telefono: data.phone ?? "",
-          cbu: data.cbu ?? "",
-          alias: data.alias ?? "",
-        });
-        if (data.logoUrl) setLogoPreview(data.logoUrl);
-      } catch {
-        setFetchError("No se pudo cargar el perfil. Intentá de nuevo.");
-      } finally {
-        setLoading(false);
+  async function loadProfile() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/business-profile");
+      if (res.status === 404) {
+        setProfileNotFound(true);
+        return;
       }
+      if (!res.ok) throw new Error("No se pudo cargar el perfil");
+      const data: ProfileData = await res.json();
+      setProfileData(data);
+      reset({
+        nombre: data.name,
+        direccion: data.address ?? "",
+        telefono: data.phone ?? "",
+        cbu: data.cbu ?? "",
+        alias: data.alias ?? "",
+      });
+      if (data.logoUrl) setLogoPreview(data.logoUrl);
+    } catch {
+      setFetchError("No se pudo cargar el perfil. Intentá de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    loadProfile();
-  }, [reset]);
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadProfile(); }, []);
 
   function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
@@ -170,6 +177,18 @@ export function BusinessProfileEditForm() {
           <div key={i} className="h-10 rounded-lg bg-[#E0E0DB]" />
         ))}
       </div>
+    );
+  }
+
+  if (profileNotFound) {
+    return (
+      <BusinessProfileCreateForm
+        onCreated={() => {
+          setProfileNotFound(false);
+          setLoading(true);
+          loadProfile();
+        }}
+      />
     );
   }
 
