@@ -5,6 +5,8 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001, porcion-003
 
+**Estado:** 🔄 En progreso
+
 ## Descripción
 
 Modificar los handlers de disponibilidad pública del proveedor para que generen los turnos del mes solicitado en el momento en que un cliente los consulta, si aún no existen en base de datos.

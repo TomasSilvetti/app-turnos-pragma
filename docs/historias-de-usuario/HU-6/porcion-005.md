@@ -5,6 +5,8 @@
 **Tipo:** FRONT
 **Prerequisitos:** porcion-003
 
+**Estado:** 🔄 En progreso
+
 ## Descripción
 
 Mostrar un banner de aviso en el panel del proveedor cuando tiene reservas con estado `requires_reschedule`, indicando cuántos clientes necesitan ser reprogramados y con un enlace a la sección de reprogramaciones.
