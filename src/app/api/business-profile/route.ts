@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import path from "path";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
 
@@ -47,29 +45,21 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
   }
 
-  let formData: FormData;
+  let body: Record<string, unknown>;
   try {
-    formData = await request.formData();
+    body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Cuerpo de la petición inválido" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  const name = formData.get("name");
-  const address = formData.get("address");
-  const phone = formData.get("phone");
-  const cbu = formData.get("cbu");
-  const alias = formData.get("alias");
-  const logo = formData.get("logo");
+  const { name, address, phone, cbu, alias, logo } = body as Record<string, string | undefined>;
 
   const missingFields: string[] = [];
-  if (!name || typeof name !== "string" || name.trim() === "") missingFields.push("name");
-  if (!address || typeof address !== "string" || address.trim() === "") missingFields.push("address");
-  if (!phone || typeof phone !== "string" || phone.trim() === "") missingFields.push("phone");
-  if (!cbu || typeof cbu !== "string" || cbu.trim() === "") missingFields.push("cbu");
-  if (!alias || typeof alias !== "string" || alias.trim() === "") missingFields.push("alias");
+  if (!name?.trim()) missingFields.push("name");
+  if (!address?.trim()) missingFields.push("address");
+  if (!phone?.trim()) missingFields.push("phone");
+  if (!cbu?.trim()) missingFields.push("cbu");
+  if (!alias?.trim()) missingFields.push("alias");
 
   if (missingFields.length > 0) {
     return NextResponse.json(
@@ -78,26 +68,16 @@ export async function PATCH(request: NextRequest) {
     );
   }
 
-  let logoUrl = existingProfile.logoUrl;
-
-  if (logo instanceof File) {
-    const ext = path.extname(logo.name) || ".png";
-    const filename = `${serviceProviderId}-${Date.now()}${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
-    const filePath = path.join(uploadDir, filename);
-    const buffer = Buffer.from(await logo.arrayBuffer());
-    await writeFile(filePath, buffer);
-    logoUrl = `/uploads/logos/${filename}`;
-  }
+  const logoUrl = logo ?? existingProfile.logoUrl;
 
   const updated = await prisma.businessProfile.update({
     where: { serviceProviderId },
     data: {
-      name: (name as string).trim(),
-      address: (address as string).trim(),
-      phone: (phone as string).trim(),
-      cbu: (cbu as string).trim(),
-      alias: (alias as string).trim(),
+      name: name!.trim(),
+      address: address!.trim(),
+      phone: phone!.trim(),
+      cbu: cbu!.trim(),
+      alias: alias!.trim(),
       logoUrl,
     },
     select: {
@@ -160,30 +140,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let formData: FormData;
+  let body: Record<string, unknown>;
   try {
-    formData = await request.formData();
+    body = await request.json();
   } catch {
-    return NextResponse.json(
-      { error: "Cuerpo de la petición inválido" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  const name = formData.get("name");
-  const address = formData.get("address");
-  const phone = formData.get("phone");
-  const cbu = formData.get("cbu");
-  const alias = formData.get("alias");
-  const logo = formData.get("logo");
+  const { name, address, phone, cbu, alias, logo } = body as Record<string, string | undefined>;
 
   const missingFields: string[] = [];
-  if (!name || typeof name !== "string" || name.trim() === "") missingFields.push("name");
-  if (!address || typeof address !== "string" || address.trim() === "") missingFields.push("address");
-  if (!phone || typeof phone !== "string" || phone.trim() === "") missingFields.push("phone");
-  if (!cbu || typeof cbu !== "string" || cbu.trim() === "") missingFields.push("cbu");
-  if (!alias || typeof alias !== "string" || alias.trim() === "") missingFields.push("alias");
-  if (!logo || !(logo instanceof File)) missingFields.push("logo");
+  if (!name?.trim()) missingFields.push("name");
+  if (!address?.trim()) missingFields.push("address");
+  if (!phone?.trim()) missingFields.push("phone");
+  if (!cbu?.trim()) missingFields.push("cbu");
+  if (!alias?.trim()) missingFields.push("alias");
+  if (!logo) missingFields.push("logo");
 
   if (missingFields.length > 0) {
     return NextResponse.json(
@@ -192,27 +164,16 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const logoFile = logo as File;
-  const ext = path.extname(logoFile.name) || ".png";
-  const filename = `${serviceProviderId}-${Date.now()}${ext}`;
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "logos");
-  const filePath = path.join(uploadDir, filename);
-
-  const buffer = Buffer.from(await logoFile.arrayBuffer());
-  await writeFile(filePath, buffer);
-
-  const logoUrl = `/uploads/logos/${filename}`;
-
-  const slug = await uniqueSlug(generateSlug((name as string).trim()));
+  const slug = await uniqueSlug(generateSlug(name!.trim()));
 
   const profile = await prisma.businessProfile.create({
     data: {
-      name: (name as string).trim(),
-      address: (address as string).trim(),
-      phone: (phone as string).trim(),
-      cbu: (cbu as string).trim(),
-      alias: (alias as string).trim(),
-      logoUrl,
+      name: name!.trim(),
+      address: address!.trim(),
+      phone: phone!.trim(),
+      cbu: cbu!.trim(),
+      alias: alias!.trim(),
+      logoUrl: logo!,
       slug,
       serviceProviderId,
     },

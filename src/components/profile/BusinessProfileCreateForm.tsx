@@ -33,6 +33,26 @@ export function BusinessProfileCreateForm({ onCreated }: { onCreated?: () => voi
     formState: { errors, isSubmitting },
   } = useForm<BusinessProfileCreateFormValues>({ mode: "onBlur" });
 
+  function compressImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 256;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+
   function handleFile(file: File) {
     if (!file.type.startsWith("image/")) {
       setLogoError("Formato no válido. Solo se aceptan imágenes.");
@@ -79,17 +99,25 @@ export function BusinessProfileCreateForm({ onCreated }: { onCreated?: () => voi
       return;
     }
 
-    const formData = new FormData();
-    formData.append("name", data.nombre);
-    formData.append("address", data.direccion);
-    formData.append("phone", data.telefono);
-    formData.append("cbu", data.cbu);
-    formData.append("alias", data.alias);
-    formData.append("logo", logo);
+    let logoBase64: string;
+    try {
+      logoBase64 = await compressImage(logo);
+    } catch {
+      setSaveError("Error al procesar la imagen. Intentá con otra.");
+      return;
+    }
 
     const res = await fetch("/api/business-profile", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.nombre,
+        address: data.direccion,
+        phone: data.telefono,
+        cbu: data.cbu,
+        alias: data.alias,
+        logo: logoBase64,
+      }),
     });
 
     if (res.status === 201) {
