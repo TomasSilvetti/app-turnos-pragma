@@ -1,5 +1,7 @@
 # porcion-001 — Endpoint: lista de bookings pendientes de reprogramación [BACK]
 
+**Estado:** 🔄 En progreso
+
 **Historia de usuario:** HU-7: Reprogramación de clientes con reservas en conflicto
 **Par:** porcion-002
 **Tipo:** BACK
