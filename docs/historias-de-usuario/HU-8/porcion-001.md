@@ -1,6 +1,6 @@
 # porcion-001 — Migración ScheduleConfig para múltiples configuraciones [BACK]
 
-**Estado:** 🔄 En progreso
+**Estado:** completada
 
 **Historia de usuario:** HU-8: Configuración de horarios con vista previa de turnos
 **Par:** —

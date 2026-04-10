@@ -5,6 +5,8 @@
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
 
+**Estado:** 🔄 En progreso
+
 ## Descripción
 
 Implementar los endpoints para crear, leer, editar, eliminar y cambiar el estado activo/inactivo de las configuraciones de horario. Incluye la validación de conflictos: cuando se intenta activar una configuración, el servidor verifica que ninguno de sus días habilitados esté ya cubierto por otra configuración activa del mismo proveedor; si hay conflicto, devuelve un error con los días en conflicto.
