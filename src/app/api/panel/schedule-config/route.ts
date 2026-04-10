@@ -81,7 +81,8 @@ export async function POST(req: Request) {
   const validationError = validateBody(body);
   if (validationError) return NextResponse.json(validationError, { status: 422 });
 
-  const { startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds } = body as {
+  const { name, startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds } = body as {
+    name: string;
     startTime: string;
     endTime: string;
     intervalMinutes: number;
@@ -118,6 +119,7 @@ export async function POST(req: Request) {
 
   const config = await prisma.scheduleConfig.create({
     data: {
+      name: name ?? `${startTime} - ${endTime}`,
       startTime,
       endTime,
       intervalMinutes: Number(intervalMinutes),
@@ -126,6 +128,10 @@ export async function POST(req: Request) {
       businessProfileId: businessProfile.id,
       serviceTypes: { connect: serviceTypeIds.map((id) => ({ id })) },
     },
+  });
+
+  const configWithTypes = await prisma.scheduleConfig.findUnique({
+    where: { id: config.id },
     include: { serviceTypes: { select: { id: true, title: true } } },
   });
 
@@ -136,7 +142,7 @@ export async function POST(req: Request) {
       endTime: config.endTime,
       intervalMinutes: config.intervalMinutes,
       daysOfWeek: config.daysOfWeek,
-      serviceTypes: config.serviceTypes,
+      serviceTypes: configWithTypes?.serviceTypes ?? [],
       affectedBookings: 0,
     },
     { status: 201 }

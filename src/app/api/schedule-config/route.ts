@@ -34,7 +34,7 @@ export async function GET() {
     return NextResponse.json({ config: null, appointments: [] }, { status: 200 });
   }
 
-  const config = await prisma.scheduleConfig.findUnique({
+  const config = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },
     include: { appointments: { orderBy: { time: "asc" } } },
   });
@@ -120,7 +120,7 @@ export async function POST(req: Request) {
 
   const slots = generateSlots(startTime, endTime, intervalNum);
 
-  const existingConfig = await prisma.scheduleConfig.findUnique({
+  const existingConfig = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },
     select: { id: true },
   });
@@ -128,8 +128,6 @@ export async function POST(req: Request) {
   let config;
 
   if (existingConfig) {
-    await prisma.appointment.deleteMany({ where: { scheduleConfigId: existingConfig.id } });
-
     config = await prisma.scheduleConfig.update({
       where: { id: existingConfig.id },
       data: {
@@ -137,23 +135,18 @@ export async function POST(req: Request) {
         endTime,
         intervalMinutes: intervalNum,
         price: priceNum,
-        appointments: {
-          create: slots.map((time) => ({ time })),
-        },
       },
       include: { appointments: { orderBy: { time: "asc" } } },
     });
   } else {
     config = await prisma.scheduleConfig.create({
       data: {
+        name: `${startTime} - ${endTime}`,
         startTime,
         endTime,
         intervalMinutes: intervalNum,
         price: priceNum,
         businessProfileId: businessProfile.id,
-        appointments: {
-          create: slots.map((time) => ({ time })),
-        },
       },
       include: { appointments: { orderBy: { time: "asc" } } },
     });
