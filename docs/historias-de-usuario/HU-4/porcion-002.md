@@ -4,6 +4,7 @@
 **Par:** —
 **Tipo:** FRONT
 **Prerequisitos:** Ninguno
+**Estado:** completada
 
 ## Descripción
 
