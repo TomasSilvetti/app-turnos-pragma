@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NumericInput } from "@/components/ui/NumericInput";
 import { cn } from "@/lib/utils";
 
 export type TipoDeTurnoFormValues = {
@@ -30,6 +31,7 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isValid, isDirty },
   } = useForm<TipoDeTurnoFormValues>({
     mode: "onChange",
@@ -119,23 +121,23 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
             <label htmlFor="precio" className="text-sm font-medium text-[#2A2829]">
               Precio ($) <span aria-hidden="true" className="text-red-500">*</span>
             </label>
-            <input
-              id="precio"
-              type="number"
-              inputMode="decimal"
-              step="0.01"
-              placeholder="Ej: 5000"
-              aria-invalid={!!errors.precio}
-              className={cn(
-                "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-                "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-                errors.precio ? "border-red-400" : "border-[#E0E0DB]"
-              )}
-              {...register("precio", {
+            <Controller
+              name="precio"
+              control={control}
+              rules={{
                 required: "El precio es obligatorio",
-                validate: (value) =>
-                  Number(value) > 0 || "El precio debe ser mayor a cero",
-              })}
+                validate: (value) => Number(value) > 0 || "El precio debe ser mayor a cero",
+              }}
+              render={({ field }) => (
+                <NumericInput
+                  id="precio"
+                  value={field.value}
+                  onChange={(val) => field.onChange(val ?? 0)}
+                  placeholder="Ej: 5.000"
+                  hasError={!!errors.precio}
+                  aria-invalid={!!errors.precio}
+                />
+              )}
             />
             {errors.precio && (
               <p role="alert" className="text-xs text-red-500">{errors.precio.message}</p>

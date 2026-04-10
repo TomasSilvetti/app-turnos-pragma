@@ -23,8 +23,21 @@ model ServiceProvider {
   businessProfile BusinessProfile?
   appointments    Appointment[]
   serviceTypes    ServiceType[]
+  expenses        Expense[]
 
   @@map("service_providers")
+}
+
+model Expense {
+  id                String          @id @default(cuid())
+  descripcion       String
+  monto             Decimal
+  serviceProviderId String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+
+  @@map("expenses")
 }
 
 model BusinessProfile {

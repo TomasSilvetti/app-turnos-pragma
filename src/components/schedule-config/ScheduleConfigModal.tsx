@@ -24,7 +24,7 @@ export type ScheduleConfigFormData = {
 type ScheduleConfigModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: ScheduleConfigFormData) => boolean | void;
+  onSubmit: (data: ScheduleConfigFormData) => Promise<boolean | void> | boolean | void;
   initialData?: ScheduleConfig & { serviceTypeIds?: string[] };
   serviceTypes: ServiceType[];
   error?: string;
@@ -102,9 +102,9 @@ export function ScheduleConfigModal({
     );
   }
 
-  function handleSubmit() {
+  async function handleSubmit() {
     if (saveDisabled) return;
-    const result = onSubmit({ nombre: nombre.trim(), startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds });
+    const result = await onSubmit({ nombre: nombre.trim(), startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds });
     if (result !== false) onClose();
   }
 

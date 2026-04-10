@@ -35,6 +35,15 @@ export const POST = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "El precio debe ser un número mayor a cero" }, { status: 400 });
   }
 
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { id: req.auth.user.id },
+    select: { id: true },
+  });
+
+  if (!provider) {
+    return NextResponse.json({ error: "Proveedor no encontrado. Cerrá sesión y volvé a iniciarla." }, { status: 404 });
+  }
+
   const serviceType = await prisma.serviceType.create({
     data: {
       title,

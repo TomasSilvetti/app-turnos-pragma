@@ -37,6 +37,7 @@ export default function HorariosPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<(ScheduleConfig & { serviceTypeIds?: string[] }) | undefined>();
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [modalError, setModalError] = useState<string | undefined>();
 
   useEffect(() => {
     async function load() {
@@ -62,12 +63,14 @@ export default function HorariosPage() {
 
   function handleAdd() {
     setEditingConfig(undefined);
+    setModalError(undefined);
     setModalOpen(true);
   }
 
   function handleEdit(config: ScheduleConfig) {
     const full = configs.find((c) => c.id === config.id);
     setEditingConfig({ ...config, serviceTypeIds: full?.serviceTypeIds ?? [] });
+    setModalError(undefined);
     setModalOpen(true);
   }
 
@@ -81,20 +84,44 @@ export default function HorariosPage() {
     );
   }
 
-  function handleSubmit(data: ScheduleConfigFormData) {
+  async function handleSubmit(data: ScheduleConfigFormData) {
+    setModalError(undefined);
+
+    const url = editingConfig
+      ? `/api/schedule-configs/${editingConfig.id}`
+      : "/api/schedule-configs";
+    const method = editingConfig ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.nombre,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        intervalMinutes: data.intervalMinutes,
+        daysOfWeek: data.daysOfWeek,
+        serviceTypeIds: data.serviceTypeIds,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 404 && body?.error?.includes("perfil")) {
+        setModalError("Tenés que completar tu perfil de negocio antes de crear una configuración de horarios.");
+      } else {
+        setModalError(body?.error ?? "Ocurrió un error al guardar. Intentá de nuevo.");
+      }
+      return false;
+    }
+
+    const saved = await res.json();
+    const mapped = mapApiConfig(saved);
+
     if (editingConfig) {
-      setConfigs((prev) =>
-        prev.map((c) =>
-          c.id === editingConfig.id ? { ...c, ...data } : c
-        )
-      );
+      setConfigs((prev) => prev.map((c) => (c.id === editingConfig.id ? mapped : c)));
     } else {
-      const newConfig: ConfigWithServiceTypes = {
-        id: Date.now().toString(),
-        isActive: true,
-        ...data,
-      };
-      setConfigs((prev) => [...prev, newConfig]);
+      setConfigs((prev) => [...prev, mapped]);
     }
   }
 
@@ -150,6 +177,7 @@ export default function HorariosPage() {
         onSubmit={handleSubmit}
         initialData={editingConfig}
         serviceTypes={serviceTypes}
+        error={modalError}
       />
     </div>
   );
