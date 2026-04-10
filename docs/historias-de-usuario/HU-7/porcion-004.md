@@ -1,6 +1,6 @@
 # porcion-004 — Endpoint: confirmar reprogramación (crear nueva reserva) [BACK]
 
-**Estado:** 🔄 En progreso
+**Estado:** completada
 
 **Historia de usuario:** HU-7: Reprogramación de clientes con reservas en conflicto
 **Par:** porcion-003

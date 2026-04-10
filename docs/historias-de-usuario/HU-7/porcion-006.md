@@ -1,6 +1,6 @@
 # porcion-006 — Endpoint: conteo de bookings pendientes de reprogramación [BACK]
 
-**Estado:** 🔄 En progreso
+**Estado:** completada
 
 **Historia de usuario:** HU-7: Reprogramación de clientes con reservas en conflicto
 **Par:** porcion-005
