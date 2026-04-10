@@ -22,6 +22,7 @@ model ServiceProvider {
   updatedAt       DateTime         @updatedAt
   businessProfile BusinessProfile?
   appointments    Appointment[]
+  serviceTypes    ServiceType[]
 
   @@map("service_providers")
 }
@@ -59,17 +60,33 @@ model ScheduleConfig {
   @@map("schedule_configs")
 }
 
+model ServiceType {
+  id                String          @id @default(cuid())
+  title             String
+  description       String?
+  price             Decimal
+  serviceProviderId String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  appointments      Appointment[]
+
+  @@map("service_types")
+}
+
 model Appointment {
-  id                String         @id @default(cuid())
+  id                String          @id @default(cuid())
   time              String
   date              String
-  isActive          Boolean        @default(true)
+  isActive          Boolean         @default(true)
   scheduleConfigId  String
   serviceProviderId String
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
-  scheduleConfig    ScheduleConfig @relation(fields: [scheduleConfigId], references: [id])
+  serviceTypeId     String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  scheduleConfig    ScheduleConfig  @relation(fields: [scheduleConfigId], references: [id])
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  serviceType       ServiceType?    @relation(fields: [serviceTypeId], references: [id])
   booking           Booking?
 
   @@map("appointments")
