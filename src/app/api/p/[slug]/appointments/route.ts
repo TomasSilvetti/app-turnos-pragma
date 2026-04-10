@@ -47,7 +47,7 @@ export async function GET(
   const result = appointments.map((a) => ({
     id: a.id,
     time: a.time,
-    price: Number(a.scheduleConfig.price),
+    price: a.scheduleConfig ? Number(a.scheduleConfig.price) : null,
   }));
 
   return NextResponse.json({ appointments: result });
