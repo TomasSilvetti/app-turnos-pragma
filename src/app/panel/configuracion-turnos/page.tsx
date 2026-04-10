@@ -1,23 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-config/ScheduleConfigList";
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
 import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfigSlots";
 
-const mockServiceTypes: ServiceType[] = [
-  { id: "1", titulo: "Consulta general" },
-  { id: "2", titulo: "Control de seguimiento" },
-  { id: "3", titulo: "Primera vez" },
-];
+const DIAS_LABEL: Record<string, string> = {
+  L: "Lunes", M: "Martes", X: "Miércoles", J: "Jueves", V: "Viernes", S: "Sábado", D: "Domingo",
+};
 
-const mockConfigs: ScheduleConfig[] = [];
+type ApiScheduleConfig = {
+  id: string;
+  name: string;
+  isActive: boolean;
+  startTime: string;
+  endTime: string;
+  intervalMinutes: number;
+  daysOfWeek: string[];
+  serviceTypes: { id: string; title: string }[];
+};
+
+function mapFromApi(c: ApiScheduleConfig): ScheduleConfig {
+  return {
+    id: c.id,
+    nombre: c.name,
+    isActive: c.isActive,
+    startTime: c.startTime,
+    endTime: c.endTime,
+    intervalMinutes: c.intervalMinutes,
+    daysOfWeek: c.daysOfWeek,
+  };
+}
 
 function getConflictingDays(configs: ScheduleConfig[], targetId: string, targetDays: string[]): string[] {
-  const DIAS_LABEL: Record<string, string> = {
-    L: "Lunes", M: "Martes", X: "Miércoles", J: "Jueves", V: "Viernes", S: "Sábado", D: "Domingo",
-  };
   const activeDays = new Set<string>();
   for (const c of configs) {
     if (c.id !== targetId && c.isActive) {
@@ -28,12 +44,28 @@ function getConflictingDays(configs: ScheduleConfig[], targetId: string, targetD
 }
 
 export default function ConfiguracionTurnosPage() {
-  const [configs, setConfigs] = useState<ScheduleConfig[]>(mockConfigs);
+  const [configs, setConfigs] = useState<ScheduleConfig[]>([]);
+  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingConfig, setEditingConfig] = useState<ScheduleConfig | null>(null);
+  const [editingConfig, setEditingConfig] = useState<ScheduleConfig & { serviceTypeIds?: string[] } | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/schedule-configs").then((r) => r.json()),
+      fetch("/api/service-types").then((r) => r.json()),
+    ]).then(([configsData, typesData]) => {
+      if (Array.isArray(configsData)) {
+        setConfigs((configsData as ApiScheduleConfig[]).map(mapFromApi));
+      }
+      if (Array.isArray(typesData)) {
+        setServiceTypes(typesData.map((t: { id: string; title: string }) => ({ id: t.id, titulo: t.title })));
+      }
+    }).finally(() => setLoading(false));
+  }, []);
 
   function handleAdd() {
     setEditingConfig(null);
@@ -47,61 +79,90 @@ export default function ConfiguracionTurnosPage() {
     setModalOpen(true);
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/schedule-configs/${id}`, { method: "DELETE" });
+    if (!res.ok) return;
     setConfigs((prev) => prev.filter((c) => c.id !== id));
     setToggleError(null);
   }
 
-  function handleToggle(id: string) {
-    const config = configs.find((c) => c.id === id);
-    if (!config) return;
+  async function handleToggle(id: string) {
+    setToggleError(null);
+    const res = await fetch(`/api/schedule-configs/${id}/toggle`, { method: "PATCH" });
 
-    // Si se está desactivando, siempre permitir
-    if (config.isActive) {
-      setConfigs((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: false } : c)));
-      setToggleError(null);
-      return;
-    }
-
-    // Si se está activando, validar conflictos
-    const conflicting = getConflictingDays(configs, id, config.daysOfWeek);
-    if (conflicting.length > 0) {
+    if (res.status === 409) {
+      const json = await res.json();
+      const days: string[] = (json.conflictingDays ?? []).map((d: string) => DIAS_LABEL[d] ?? d);
+      const config = configs.find((c) => c.id === id);
       setToggleError(
-        `No se puede activar "${config.nombre}" porque comparte días con otra configuración activa: ${conflicting.join(", ")}.`
+        `No se puede activar "${config?.nombre}" porque comparte días con otra configuración activa: ${days.join(", ")}.`
       );
       return;
     }
 
-    setToggleError(null);
-    setConfigs((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: true } : c)));
+    if (!res.ok) return;
+
+    const updated: ApiScheduleConfig = await res.json();
+    setConfigs((prev) => prev.map((c) => (c.id === id ? mapFromApi(updated) : c)));
   }
 
-  function handleSubmit(data: ScheduleConfigFormData): boolean | void {
+  async function handleSubmit(data: ScheduleConfigFormData): Promise<boolean | void> {
     setToggleError(null);
+
     if (editingConfig) {
+      const res = await fetch(`/api/schedule-configs/${editingConfig.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.nombre,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          intervalMinutes: data.intervalMinutes,
+          daysOfWeek: data.daysOfWeek,
+          serviceTypeIds: data.serviceTypeIds,
+          price: 0,
+        }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        setModalError(json.error ?? "Error al actualizar la configuración.");
+        return false;
+      }
+
+      const updated: ApiScheduleConfig = await res.json();
       setModalError(null);
-      setConfigs((prev) =>
-        prev.map((c) => (c.id === editingConfig.id ? { ...c, ...data } : c))
-      );
+      setConfigs((prev) => prev.map((c) => (c.id === editingConfig.id ? mapFromApi(updated) : c)));
     } else {
       const conflicting = getConflictingDays(configs, "", data.daysOfWeek);
       if (conflicting.length > 0) {
-        setModalError(
-          `Estos días ya están en una configuración activa: ${conflicting.join(", ")}.`
-        );
+        setModalError(`Estos días ya están en una configuración activa: ${conflicting.join(", ")}.`);
         return false;
       }
+
+      const res = await fetch("/api/schedule-configs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: data.nombre,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          intervalMinutes: data.intervalMinutes,
+          daysOfWeek: data.daysOfWeek,
+          serviceTypeIds: data.serviceTypeIds,
+          price: 0,
+        }),
+      });
+
+      if (!res.ok) {
+        const json = await res.json();
+        setModalError(json.error ?? "Error al crear la configuración.");
+        return false;
+      }
+
+      const created: ApiScheduleConfig = await res.json();
       setModalError(null);
-      const nueva: ScheduleConfig = {
-        id: crypto.randomUUID(),
-        isActive: true,
-        nombre: data.nombre,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        intervalMinutes: data.intervalMinutes,
-        daysOfWeek: data.daysOfWeek,
-      };
-      setConfigs((prev) => [...prev, nueva]);
+      setConfigs((prev) => [...prev, mapFromApi(created)]);
     }
   }
 
@@ -116,26 +177,36 @@ export default function ConfiguracionTurnosPage() {
         </p>
       </div>
 
-      <ScheduleConfigList
-        configs={configs}
-        onAdd={handleAdd}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggle={handleToggle}
-      />
-
-      {toggleError && (
-        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-          {toggleError}
+      {loading ? (
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="h-20 rounded-lg border border-[#E0E0DB] bg-white animate-pulse" />
+          ))}
         </div>
-      )}
+      ) : (
+        <>
+          <ScheduleConfigList
+            configs={configs}
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggle={handleToggle}
+          />
 
-      {hasActiveConfigs && (
-        <div className="mt-6 space-y-3">
-          <h2 className="font-heading text-base text-[#253551]">Vista previa de turnos</h2>
-          <ScheduleConfigCalendar configs={configs} onDaySelect={setSelectedDay} />
-          <ScheduleConfigSlots configs={configs} selectedDay={selectedDay} />
-        </div>
+          {toggleError && (
+            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              {toggleError}
+            </div>
+          )}
+
+          {hasActiveConfigs && (
+            <div className="mt-6 space-y-3">
+              <h2 className="font-heading text-base text-[#253551]">Vista previa de turnos</h2>
+              <ScheduleConfigCalendar configs={configs} onDaySelect={setSelectedDay} />
+              <ScheduleConfigSlots configs={configs} selectedDay={selectedDay} />
+            </div>
+          )}
+        </>
       )}
 
       <ScheduleConfigModal
@@ -143,7 +214,7 @@ export default function ConfiguracionTurnosPage() {
         onClose={() => { setModalOpen(false); setModalError(null); }}
         onSubmit={handleSubmit}
         initialData={editingConfig ?? undefined}
-        serviceTypes={mockServiceTypes}
+        serviceTypes={serviceTypes}
         error={modalError ?? undefined}
       />
     </div>

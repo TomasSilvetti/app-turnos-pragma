@@ -5,6 +5,19 @@ import type { NextAuthRequest } from "next-auth";
 
 const prisma = new PrismaClient();
 
+const DAYS_LABELS = ["L", "M", "X", "J", "V", "S", "D"] as const;
+const DAYS_MAP: Record<string, number> = { L: 0, M: 1, X: 2, J: 3, V: 4, S: 5, D: 6 };
+
+function intsToStrings(days: number[]): string[] {
+  return days.map((d) => DAYS_LABELS[d]).filter(Boolean) as string[];
+}
+
+function stringsToInts(days: (string | number)[]): number[] {
+  return days
+    .map((d) => (typeof d === "number" ? d : (DAYS_MAP[d] ?? -1)))
+    .filter((d) => d !== -1);
+}
+
 export const PUT = auth(async (
   req: NextAuthRequest,
   context: { params: Promise<{ id: string }> }
@@ -62,7 +75,7 @@ export const PUT = auth(async (
       startTime,
       endTime,
       intervalMinutes: Number(intervalMinutes),
-      daysOfWeek,
+      daysOfWeek: stringsToInts(daysOfWeek),
       price: parsedPrice,
       serviceTypes: {
         set: Array.isArray(serviceTypeIds)
@@ -83,7 +96,10 @@ export const PUT = auth(async (
     },
   });
 
-  return NextResponse.json(updated, { status: 200 });
+  return NextResponse.json(
+    { ...updated, daysOfWeek: intsToStrings(updated.daysOfWeek) },
+    { status: 200 }
+  );
 });
 
 export const DELETE = auth(async (

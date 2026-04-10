@@ -1,6 +1,7 @@
 import { MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import BookingSection from "@/components/public/BookingSection";
 
 type BusinessPublicData = {
   name: string;
@@ -34,8 +35,8 @@ export default async function PublicBusinessPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#F4F5F7] flex items-start justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12">
+      <div className="w-full max-w-md flex flex-col gap-6">
         {/* Card del negocio */}
         <div className="rounded-lg bg-white border border-[#E0E0DB] p-8 flex flex-col items-center gap-6">
           {/* Logo */}
@@ -89,15 +90,10 @@ export default async function PublicBusinessPage({
               </div>
             )}
           </div>
-
-          {/* CTA reservar turno */}
-          <button
-            type="button"
-            className="mt-2 w-full h-11 rounded-lg bg-[#253551] text-white text-sm font-medium hover:bg-[#1c2a40] transition-colors"
-          >
-            Reservar turno
-          </button>
         </div>
+
+        {/* Calendario y turnos */}
+        <BookingSection slug={slug} businessName={business.name} />
       </div>
     </main>
   );

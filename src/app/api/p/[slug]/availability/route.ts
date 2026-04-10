@@ -8,19 +8,21 @@ function parseTimeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
-function generateSlotsForMonth(
+function generateSlotsForConfig(
   year: number,
   month: number, // 0-indexed
   startTime: string,
   endTime: string,
   intervalMinutes: number,
   daysOfWeek: number[],
+  scheduleConfigId: string,
+  serviceProviderId: string,
   skipBefore: Date
-): { date: string; time: string }[] {
+): { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean }[] {
   const startTotal = parseTimeToMinutes(startTime);
   const endTotal = parseTimeToMinutes(endTime);
   const daysSet = new Set(daysOfWeek);
-  const slots: { date: string; time: string }[] = [];
+  const slots: { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean }[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -31,7 +33,7 @@ function generateSlotsForMonth(
     for (let t = startTotal; t < endTotal; t += intervalMinutes) {
       const h = Math.floor(t / 60).toString().padStart(2, "0");
       const m = (t % 60).toString().padStart(2, "0");
-      slots.push({ date: dateStr, time: `${h}:${m}` });
+      slots.push({ date: dateStr, time: `${h}:${m}`, scheduleConfigId, serviceProviderId, isActive: true });
     }
   }
   return slots;
@@ -53,9 +55,8 @@ export async function GET(
 
   const [yearStr, monthStr] = month.split("-");
   const year = Number(yearStr);
-  const monthIndex = Number(monthStr) - 1; // 0-indexed
+  const monthIndex = Number(monthStr) - 1;
 
-  // Reject months fully in the past
   const lastDayOfMonth = new Date(year, monthIndex + 1, 0);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -67,7 +68,8 @@ export async function GET(
     where: { slug },
     select: {
       serviceProviderId: true,
-      scheduleConfig: {
+      scheduleConfigs: {
+        where: { isActive: true },
         select: {
           id: true,
           startTime: true,
@@ -83,48 +85,45 @@ export async function GET(
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  if (!profile.scheduleConfig) {
+  if (profile.scheduleConfigs.length === 0) {
     return NextResponse.json({ slots: [] });
   }
 
-  const config = profile.scheduleConfig;
   const serviceProviderId = profile.serviceProviderId;
 
-  // Check if appointments already exist for this month
-  const existingCount = await prisma.appointment.count({
-    where: {
-      serviceProviderId,
-      date: { startsWith: month },
-    },
-  });
+  // Generate appointments for each active config if they don't exist yet for this month
+  for (const config of profile.scheduleConfigs) {
+    const existingCount = await prisma.appointment.count({
+      where: {
+        scheduleConfigId: config.id,
+        date: { startsWith: month },
+      },
+    });
 
-  if (existingCount === 0) {
-    const slots = generateSlotsForMonth(
-      year,
-      monthIndex,
-      config.startTime,
-      config.endTime,
-      config.intervalMinutes,
-      config.daysOfWeek,
-      today
-    );
+    if (existingCount === 0) {
+      const slots = generateSlotsForConfig(
+        year,
+        monthIndex,
+        config.startTime,
+        config.endTime,
+        config.intervalMinutes,
+        config.daysOfWeek,
+        config.id,
+        serviceProviderId,
+        today
+      );
 
-    if (slots.length > 0) {
-      await prisma.appointment.createMany({
-        data: slots.map((s) => ({
-          date: s.date,
-          time: s.time,
-          scheduleConfigId: config.id,
-          serviceProviderId,
-          isActive: true,
-        })),
-      });
+      if (slots.length > 0) {
+        await prisma.appointment.createMany({ data: slots });
+      }
     }
   }
 
+  const configIds = profile.scheduleConfigs.map((c) => c.id);
+
   const appointments = await prisma.appointment.findMany({
     where: {
-      serviceProviderId,
+      scheduleConfigId: { in: configIds },
       date: { startsWith: month },
       isActive: true,
       OR: [
@@ -132,9 +131,21 @@ export async function GET(
         { booking: { status: { not: "confirmed" } } },
       ],
     },
-    select: { id: true, date: true, time: true },
+    select: {
+      id: true,
+      date: true,
+      time: true,
+      scheduleConfig: { select: { price: true } },
+    },
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });
 
-  return NextResponse.json({ slots: appointments });
+  return NextResponse.json({
+    slots: appointments.map((a) => ({
+      id: a.id,
+      date: a.date,
+      time: a.time,
+      price: a.scheduleConfig.price,
+    })),
+  });
 }

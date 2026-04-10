@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   startOfMonth,
   endOfMonth,
@@ -18,6 +17,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 type Props = {
   availableDates: string[]; // YYYY-MM-DD
   selectedDate: string | null;
+  viewMonth: Date;
+  onMonthChange: (month: Date) => void;
   onDaySelect: (date: string) => void;
 };
 
@@ -26,19 +27,16 @@ const WEEK_DAYS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 export default function MiniCalendar({
   availableDates,
   selectedDate,
+  viewMonth,
+  onMonthChange,
   onDaySelect,
 }: Props) {
   const today = new Date();
-  const [viewMonth, setViewMonth] = useState<Date>(
-    startOfMonth(selectedDate ? parseISO(selectedDate) : today)
-  );
-
   const monthStart = startOfMonth(viewMonth);
   const monthEnd = endOfMonth(viewMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
-  // Lunes=0 ... Domingo=6, JS: 0=Dom, 1=Lun...
-  const firstDayOfWeek = (getDay(monthStart) + 6) % 7; // shift to Mon=0
+  const firstDayOfWeek = (getDay(monthStart) + 6) % 7;
 
   const availableSet = new Set(availableDates);
 
@@ -65,7 +63,7 @@ export default function MiniCalendar({
       {/* Header del mes */}
       <div className="flex items-center justify-between mb-4">
         <button
-          onClick={() => setViewMonth((m) => subMonths(m, 1))}
+          onClick={() => onMonthChange(subMonths(viewMonth, 1))}
           className="p-1 rounded hover:bg-[#F4F5F7] transition-colors"
           aria-label="Mes anterior"
         >
@@ -77,7 +75,7 @@ export default function MiniCalendar({
         </span>
 
         <button
-          onClick={() => setViewMonth((m) => addMonths(m, 1))}
+          onClick={() => onMonthChange(addMonths(viewMonth, 1))}
           className="p-1 rounded hover:bg-[#F4F5F7] transition-colors"
           aria-label="Mes siguiente"
         >
@@ -99,7 +97,6 @@ export default function MiniCalendar({
 
       {/* Grilla de días */}
       <div className="grid grid-cols-7">
-        {/* Espacios vacíos iniciales */}
         {Array.from({ length: firstDayOfWeek }).map((_, i) => (
           <div key={`empty-${i}`} />
         ))}
@@ -129,7 +126,6 @@ export default function MiniCalendar({
                 {format(day, "d")}
               </span>
 
-              {/* Punto de disponibilidad */}
               {available && !selected && (
                 <span
                   className="absolute bottom-1 h-1 w-1 rounded-full bg-[#253551]"

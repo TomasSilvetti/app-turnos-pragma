@@ -95,7 +95,7 @@ export default async function PublicBookingPage({
         </div>
 
         {/* Calendario y turnos */}
-        <BookingSection businessName={business.name} />
+        <BookingSection slug={slug} businessName={business.name} />
       </div>
     </main>
   );
