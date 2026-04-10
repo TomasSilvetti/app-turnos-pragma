@@ -2,6 +2,9 @@ import { MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
+import { PrismaClient } from "@prisma/client";
+
+const prisma = new PrismaClient();
 
 type BusinessPublicData = {
   name: string;
@@ -15,13 +18,18 @@ type BusinessPublicData = {
 async function getBusinessBySlug(
   slug: string
 ): Promise<BusinessPublicData | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3001";
-  const res = await fetch(`${baseUrl}/api/public/business/${slug}`, {
-    cache: "no-store",
+  const profile = await prisma.businessProfile.findUnique({
+    where: { slug },
+    select: {
+      name: true,
+      logoUrl: true,
+      address: true,
+      phone: true,
+      cbu: true,
+      alias: true,
+    },
   });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("Error al obtener datos del negocio");
-  return res.json();
+  return profile;
 }
 
 export default async function PublicBusinessPage({
