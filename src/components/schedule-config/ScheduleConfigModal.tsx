@@ -24,9 +24,10 @@ export type ScheduleConfigFormData = {
 type ScheduleConfigModalProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: ScheduleConfigFormData) => void;
+  onSubmit: (data: ScheduleConfigFormData) => boolean | void;
   initialData?: ScheduleConfig & { serviceTypeIds?: string[] };
   serviceTypes: ServiceType[];
+  error?: string;
 };
 
 const DIAS = ["L", "M", "X", "J", "V", "S", "D"] as const;
@@ -47,6 +48,7 @@ export function ScheduleConfigModal({
   onSubmit,
   initialData,
   serviceTypes,
+  error,
 }: ScheduleConfigModalProps) {
   const isEditing = !!initialData;
 
@@ -102,8 +104,8 @@ export function ScheduleConfigModal({
 
   function handleSubmit() {
     if (saveDisabled) return;
-    onSubmit({ nombre: nombre.trim(), startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds });
-    onClose();
+    const result = onSubmit({ nombre: nombre.trim(), startTime, endTime, intervalMinutes, daysOfWeek, serviceTypeIds });
+    if (result !== false) onClose();
   }
 
   function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
@@ -291,6 +293,13 @@ export function ScheduleConfigModal({
             </div>
           )}
         </div>
+
+        {/* Error de conflicto */}
+        {error && (
+          <div className="mx-5 mb-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {error}
+          </div>
+        )}
 
         {/* Footer */}
         <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E0E0DB] shrink-0">

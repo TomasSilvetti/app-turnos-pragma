@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-config/ScheduleConfigList";
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
+import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfigSlots";
 
 // --- Mock data ---
 const mockServiceTypes: ServiceType[] = [
@@ -37,6 +38,7 @@ export default function HorariosPage() {
   const [configs, setConfigs] = useState<ScheduleConfig[]>(mockConfigs);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<(ScheduleConfig & { serviceTypeIds?: string[] }) | undefined>();
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   function handleAdd() {
     setEditingConfig(undefined);
@@ -96,7 +98,12 @@ export default function HorariosPage() {
 
       <ScheduleConfigCalendar
         configs={configs}
-        onDaySelect={(date) => console.log("Día seleccionado:", date)}
+        onDaySelect={(date) => setSelectedDay(date)}
+      />
+
+      <ScheduleConfigSlots
+        configs={configs}
+        selectedDay={selectedDay}
       />
       </div>
 

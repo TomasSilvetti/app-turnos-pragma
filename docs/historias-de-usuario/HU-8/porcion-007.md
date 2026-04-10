@@ -4,6 +4,7 @@
 **Par:** porcion-006
 **Tipo:** BACK
 **Prerequisitos:** porcion-001
+**estado:** completada
 
 ## Descripción
 
