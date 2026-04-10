@@ -50,26 +50,29 @@ model ScheduleConfig {
   startTime         String
   endTime           String
   intervalMinutes   Int
+  daysOfWeek        Int[]
   price             Decimal
   businessProfileId String          @unique
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id])
   appointments      Appointment[]
+  serviceTypes      ServiceType[]
 
   @@map("schedule_configs")
 }
 
 model ServiceType {
-  id                String          @id @default(cuid())
+  id                String           @id @default(cuid())
   title             String
   description       String?
   price             Decimal
   serviceProviderId String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  serviceProvider   ServiceProvider  @relation(fields: [serviceProviderId], references: [id])
   appointments      Appointment[]
+  scheduleConfigs   ScheduleConfig[]
 
   @@map("service_types")
 }
@@ -96,6 +99,7 @@ enum BookingStatus {
   pending
   confirmed
   cancelled
+  requires_reschedule
 }
 
 model Booking {

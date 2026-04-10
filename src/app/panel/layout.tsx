@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { label: "Tipos de turno", href: "/panel/tipos-de-turno" },
+  { label: "Configuración de turnos", href: "/panel/configuracion-turnos" },
 ];
 
 export default function PanelLayout({ children }: { children: React.ReactNode }) {
