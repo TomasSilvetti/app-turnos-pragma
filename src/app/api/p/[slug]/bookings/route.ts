@@ -70,7 +70,7 @@ export async function POST(
         appointmentId,
         time: appointment.time,
         date: appointment.date,
-        price: Number(appointment.scheduleConfig.price),
+        price: appointment.scheduleConfig ? Number(appointment.scheduleConfig.price) : null,
         businessName: profile.name,
       };
     });
