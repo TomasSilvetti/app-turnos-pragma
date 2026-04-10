@@ -5,6 +5,7 @@ import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-c
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
 import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfigSlots";
+import { DeleteScheduleConfigDialog } from "@/components/schedule-config/DeleteScheduleConfigDialog";
 
 const DIAS_LABEL: Record<string, string> = {
   L: "Lunes", M: "Martes", X: "Miércoles", J: "Jueves", V: "Viernes", S: "Sábado", D: "Domingo",
@@ -52,6 +53,8 @@ export default function ConfiguracionTurnosPage() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [toggleError, setToggleError] = useState<string | null>(null);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -79,10 +82,18 @@ export default function ConfiguracionTurnosPage() {
     setModalOpen(true);
   }
 
-  async function handleDelete(id: string) {
-    const res = await fetch(`/api/schedule-configs/${id}`, { method: "DELETE" });
+  function handleDelete(id: string) {
+    setDeletingId(id);
+  }
+
+  async function confirmDelete() {
+    if (!deletingId) return;
+    setIsDeleting(true);
+    const res = await fetch(`/api/schedule-configs/${deletingId}`, { method: "DELETE" });
+    setIsDeleting(false);
     if (!res.ok) return;
-    setConfigs((prev) => prev.filter((c) => c.id !== id));
+    setConfigs((prev) => prev.filter((c) => c.id !== deletingId));
+    setDeletingId(null);
     setToggleError(null);
   }
 
@@ -207,6 +218,16 @@ export default function ConfiguracionTurnosPage() {
             </div>
           )}
         </>
+      )}
+
+      {deletingId && (
+        <DeleteScheduleConfigDialog
+          configId={deletingId}
+          configName={configs.find((c) => c.id === deletingId)?.nombre ?? ""}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeletingId(null)}
+          isDeleting={isDeleting}
+        />
       )}
 
       <ScheduleConfigModal

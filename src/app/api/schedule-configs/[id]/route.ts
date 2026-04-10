@@ -129,7 +129,32 @@ export const DELETE = auth(async (
     return NextResponse.json({ error: "Configuración no encontrada" }, { status: 403 });
   }
 
-  await prisma.scheduleConfig.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    // Marcar como requires_reschedule los bookings pendientes/confirmados
+    await tx.booking.updateMany({
+      where: {
+        appointment: { scheduleConfigId: id },
+        status: { in: ["pending", "confirmed"] },
+      },
+      data: { status: "requires_reschedule" },
+    });
+
+    // Desconectar los appointments con booking activo (para que sigan existiendo en reprogramación)
+    await tx.appointment.updateMany({
+      where: {
+        scheduleConfigId: id,
+        booking: { status: "requires_reschedule" },
+      },
+      data: { scheduleConfigId: null },
+    });
+
+    // Eliminar los appointments sin booking activo
+    await tx.appointment.deleteMany({
+      where: { scheduleConfigId: id },
+    });
+
+    await tx.scheduleConfig.delete({ where: { id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 });

@@ -12,6 +12,8 @@ type Slot = {
   date: string;
   time: string;
   price: number;
+  booked?: boolean;
+  serviceTypes?: string[];
 };
 
 type BookingResult = {
@@ -60,8 +62,14 @@ export default function BookingSection({ slug, businessName }: Props) {
   const availableDates = [...new Set(slots.map((s) => s.date))];
 
   const appointmentsForDate: Appointment[] = slots
-    .filter((s) => s.date === selectedDate && !bookedIds.has(s.id))
-    .map((s) => ({ id: s.id, time: s.time, price: s.price }));
+    .filter((s) => s.date === selectedDate)
+    .map((s) => ({
+      id: s.id,
+      time: s.time,
+      price: s.price,
+      booked: s.booked || bookedIds.has(s.id),
+      serviceTypes: s.serviceTypes,
+    }));
 
   const handleMonthChange = useCallback((month: Date) => {
     setViewMonth(month);

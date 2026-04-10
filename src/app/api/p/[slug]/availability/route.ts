@@ -28,7 +28,8 @@ function generateSlotsForConfig(
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
     if (date < skipBefore) continue;
-    if (!daysSet.has(date.getDay())) continue;
+    const isoDay = (date.getDay() + 6) % 7;
+    if (!daysSet.has(isoDay)) continue;
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     for (let t = startTotal; t < endTotal; t += intervalMinutes) {
       const h = Math.floor(t / 60).toString().padStart(2, "0");
@@ -93,30 +94,34 @@ export async function GET(
 
   // Generate appointments for each active config if they don't exist yet for this month
   for (const config of profile.scheduleConfigs) {
-    const existingCount = await prisma.appointment.count({
+    // Always delete unbooked appointments and regenerate to stay in sync with config changes
+    await prisma.appointment.deleteMany({
       where: {
         scheduleConfigId: config.id,
         date: { startsWith: month },
+        OR: [
+          { booking: { is: null } },
+          { booking: { status: { not: "confirmed" } } },
+        ],
       },
     });
 
-    if (existingCount === 0) {
-      const slots = generateSlotsForConfig(
-        year,
-        monthIndex,
-        config.startTime,
-        config.endTime,
-        config.intervalMinutes,
-        config.daysOfWeek,
-        config.id,
-        serviceProviderId,
-        today
-      );
+    const slots = generateSlotsForConfig(
+      year,
+      monthIndex,
+      config.startTime,
+      config.endTime,
+      config.intervalMinutes,
+      config.daysOfWeek,
+      config.id,
+      serviceProviderId,
+      today
+    );
 
-      if (slots.length > 0) {
-        await prisma.appointment.createMany({ data: slots });
-      }
+    if (slots.length > 0) {
+      await prisma.appointment.createMany({ data: slots });
     }
+
   }
 
   const configIds = profile.scheduleConfigs.map((c) => c.id);
@@ -126,16 +131,18 @@ export async function GET(
       scheduleConfigId: { in: configIds },
       date: { startsWith: month },
       isActive: true,
-      OR: [
-        { booking: { is: null } },
-        { booking: { status: { not: "confirmed" } } },
-      ],
     },
     select: {
       id: true,
       date: true,
       time: true,
-      scheduleConfig: { select: { price: true } },
+      booking: { select: { status: true } },
+      scheduleConfig: {
+        select: {
+          price: true,
+          serviceTypes: { select: { id: true, title: true, price: true } },
+        },
+      },
     },
     orderBy: [{ date: "asc" }, { time: "asc" }],
   });
@@ -146,6 +153,8 @@ export async function GET(
       date: a.date,
       time: a.time,
       price: a.scheduleConfig.price,
+      booked: a.booking?.status === "confirmed",
+      serviceTypes: a.scheduleConfig.serviceTypes,
     })),
   });
 }

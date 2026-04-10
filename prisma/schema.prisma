@@ -84,12 +84,12 @@ model Appointment {
   time              String
   date              String
   isActive          Boolean         @default(true)
-  scheduleConfigId  String
+  scheduleConfigId  String?
   serviceProviderId String
   serviceTypeId     String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
-  scheduleConfig    ScheduleConfig  @relation(fields: [scheduleConfigId], references: [id])
+  scheduleConfig    ScheduleConfig? @relation(fields: [scheduleConfigId], references: [id])
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   serviceType       ServiceType?    @relation(fields: [serviceTypeId], references: [id])
   booking           Booking?
