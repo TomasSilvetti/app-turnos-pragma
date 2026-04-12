@@ -17,16 +17,16 @@ export type RescheduleItem = {
 
 function SkeletonRow() {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] animate-pulse">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] animate-pulse">
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-40 bg-[#E0E0DB] rounded" />
-        <div className="h-3 w-24 bg-[#E0E0DB] rounded" />
+        <div className="h-3.5 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
       </div>
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-32 bg-[#E0E0DB] rounded" />
-        <div className="h-3 w-44 bg-[#E0E0DB] rounded" />
+        <div className="h-3.5 w-32 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3 w-44 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
       </div>
-      <div className="h-9 w-full sm:w-28 bg-[#E0E0DB] rounded-md" />
+      <div className="h-9 w-full sm:w-28 bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
     </div>
   );
 }
@@ -61,7 +61,7 @@ export default function RescheduleList() {
 
   return (
     <>
-      <div className="rounded-lg bg-white border border-[#E0E0DB] overflow-hidden">
+      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
         {/* Header de tabla — solo en sm+ */}
         <div className="hidden sm:grid grid-cols-[1fr_1fr_auto] bg-[#253551] text-white text-xs uppercase tracking-[0.05em] font-body px-4 py-2.5">
           <span>Cliente</span>
@@ -78,7 +78,7 @@ export default function RescheduleList() {
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-14 text-center px-4">
             <CalendarClock size={36} className="text-[#E0E0DB]" aria-hidden="true" />
-            <p className="font-body text-sm text-[#2A2829] opacity-50">
+            <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50">
               No hay reprogramaciones pendientes.
             </p>
           </div>
@@ -92,24 +92,24 @@ export default function RescheduleList() {
             return (
               <div
                 key={item.bookingId}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] last:border-b-0 hover:bg-[#eef1f6] transition-colors"
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#1e293b] transition-colors"
               >
                 {/* Cliente */}
                 <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-                  <span className="font-body text-sm text-[#2A2829] font-medium truncate">
+                  <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium truncate">
                     {item.clientName}
                   </span>
-                  <span className="font-small text-xs text-[#2A2829] opacity-60">
+                  <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">
                     {item.clientPhone}
                   </span>
                 </div>
 
                 {/* Turno original */}
                 <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-                  <span className="font-body text-sm text-[#2A2829] truncate">
+                  <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] truncate">
                     {item.appointmentType}
                   </span>
-                  <span className="font-small text-xs text-[#2A2829] opacity-60 capitalize">
+                  <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100 capitalize">
                     {formattedDate}, {item.appointmentTime} hs
                   </span>
                 </div>

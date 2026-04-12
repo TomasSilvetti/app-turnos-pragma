@@ -57,14 +57,14 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
       aria-modal="true"
       aria-labelledby="form-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] bg-white p-5 shadow-lg">
+      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
         <div className="mb-5 flex items-center justify-between">
-          <h2 id="form-title" className="font-heading text-lg text-[#253551]">
+          <h2 id="form-title" className="font-heading text-lg text-[#253551] dark:text-[#93c5fd]">
             {initialValues ? "Editar tipo de turno" : "Nuevo tipo de turno"}
           </h2>
           <button
             onClick={onCancel}
-            className="text-[#2A2829] hover:text-[#253551] transition-colors"
+            className="text-[#2A2829] dark:text-[#e2e8f0] hover:text-[#253551] transition-colors"
             aria-label="Cerrar formulario"
           >
             <X size={18} />
@@ -74,7 +74,7 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
         <form onSubmit={handleSubmit(onSave)} noValidate className="flex flex-col gap-5">
           {/* Título */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="titulo" className="text-sm font-medium text-[#2A2829]">
+            <label htmlFor="titulo" className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
               Título <span aria-hidden="true" className="text-red-500">*</span>
             </label>
             <input
@@ -83,9 +83,9 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
               placeholder="Ej: Consulta general"
               aria-invalid={!!errors.titulo}
               className={cn(
-                "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-                errors.titulo ? "border-red-400" : "border-[#E0E0DB]"
+                errors.titulo ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
               )}
               {...register("titulo", { required: "El título es obligatorio" })}
             />
@@ -96,7 +96,7 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
 
           {/* Descripción */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="descripcion" className="text-sm font-medium text-[#2A2829]">
+            <label htmlFor="descripcion" className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
               Descripción <span aria-hidden="true" className="text-red-500">*</span>
             </label>
             <textarea
@@ -105,9 +105,9 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
               placeholder="Ej: Atención médica de primer nivel"
               aria-invalid={!!errors.descripcion}
               className={cn(
-                "rounded-lg border bg-white px-3 py-2 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors resize-none",
+                "rounded-lg border bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors resize-none",
                 "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-                errors.descripcion ? "border-red-400" : "border-[#E0E0DB]"
+                errors.descripcion ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
               )}
               {...register("descripcion", { required: "La descripción es obligatoria" })}
             />
@@ -118,7 +118,7 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
 
           {/* Precio */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="precio" className="text-sm font-medium text-[#2A2829]">
+            <label htmlFor="precio" className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
               Precio ($) <span aria-hidden="true" className="text-red-500">*</span>
             </label>
             <Controller

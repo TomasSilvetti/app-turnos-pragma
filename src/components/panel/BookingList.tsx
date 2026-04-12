@@ -18,14 +18,14 @@ export type BookingItem = {
 
 function SkeletonRow() {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] animate-pulse">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] animate-pulse">
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-36 bg-[#E0E0DB] rounded" />
-        <div className="h-3 w-24 bg-[#E0E0DB] rounded" />
+        <div className="h-3.5 w-36 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
       </div>
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-28 bg-[#E0E0DB] rounded" />
-        <div className="h-3 w-40 bg-[#E0E0DB] rounded" />
+        <div className="h-3.5 w-28 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
       </div>
       <div className="flex gap-2">
         <div className="h-9 w-24 bg-[#E0E0DB] rounded-md" />
@@ -62,16 +62,16 @@ function BookingRow({
       : null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] last:border-b-0 hover:bg-[#eef1f6] transition-colors">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#1e293b] transition-colors">
       <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-        <span className="font-body text-sm text-[#2A2829] font-medium truncate">{item.clientName}</span>
-        <span className="font-small text-xs text-[#2A2829] opacity-60">{item.clientPhone}</span>
+        <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium truncate">{item.clientName}</span>
+        <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">{item.clientPhone}</span>
       </div>
       <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-        <span className="font-body text-sm text-[#2A2829] truncate capitalize">
+        <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] truncate capitalize">
           {formattedDate} · {item.appointmentTime} hs
         </span>
-        <span className="font-small text-xs text-[#2A2829] opacity-60">
+        <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">
           {item.serviceTypeTitle}
           {formattedPrice !== null && ` · ${formattedPrice}`}
         </span>
@@ -142,7 +142,7 @@ export default function BookingList() {
     <div className="flex flex-col gap-8">
       {/* Pendientes de pago */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-base text-[#253551] uppercase tracking-wide">
+        <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd] uppercase tracking-wide">
           Pendientes de pago
           {!isLoading && pending.length > 0 && (
             <span className="ml-2 text-xs font-bold bg-[#253551] text-white rounded-full px-2 py-0.5">
@@ -150,7 +150,7 @@ export default function BookingList() {
             </span>
           )}
         </h2>
-        <div className="rounded-lg bg-white border border-[#E0E0DB] overflow-hidden">
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
           {isLoading ? (
             <>
               <SkeletonRow />
@@ -182,7 +182,7 @@ export default function BookingList() {
 
       {/* Confirmados */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-base text-[#253551] uppercase tracking-wide">
+        <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd] uppercase tracking-wide">
           Confirmados
           {!isLoading && confirmed.length > 0 && (
             <span className="ml-2 text-xs font-bold bg-[#253551] text-white rounded-full px-2 py-0.5">
@@ -190,7 +190,7 @@ export default function BookingList() {
             </span>
           )}
         </h2>
-        <div className="rounded-lg bg-white border border-[#E0E0DB] overflow-hidden">
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
           {isLoading ? (
             <>
               <SkeletonRow />
@@ -218,7 +218,7 @@ export default function BookingList() {
                     <button
                       onClick={() => handleCancel(item.bookingId)}
                       disabled={loadingId === item.bookingId}
-                      className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] transition-colors disabled:opacity-50"
+                      className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
                       aria-label="Cancelar turno"
                     >
                       <X size={15} />

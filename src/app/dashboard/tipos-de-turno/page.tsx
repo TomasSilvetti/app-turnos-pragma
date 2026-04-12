@@ -104,8 +104,8 @@ export default function TiposDeTurnoPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <div className="mb-6">
-          <h1 className="font-heading text-2xl text-[#253551]">Tipos de turno</h1>
-          <p className="mt-0.5 text-sm text-[#2A2829]/60">
+          <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Tipos de turno</h1>
+          <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
             Administrá los tipos de turno que ofrecés a tus clientes.
           </p>
         </div>
@@ -118,8 +118,8 @@ export default function TiposDeTurnoPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-heading text-2xl text-[#253551]">Tipos de turno</h1>
-          <p className="mt-0.5 text-sm text-[#2A2829]/60">
+          <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Tipos de turno</h1>
+          <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
             Administrá los tipos de turno que ofrecés a tus clientes.
           </p>
         </div>

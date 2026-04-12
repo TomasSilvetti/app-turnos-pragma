@@ -19,7 +19,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
+  const [isDark, setIsDark] = useState(false);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const dark = saved === "dark" || (!saved && prefersDark);
+    setIsDark(dark);
+    document.documentElement.classList.toggle("dark", dark);
+  }, []);
+
+  function toggleTheme() {
+    const next = !isDark;
+    setIsDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("theme", next ? "dark" : "light");
+  }
 
   const userName = session?.user?.name ?? "";
   const userEmail = session?.user?.email ?? "";
@@ -38,7 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0f172a]">
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 lg:hidden"
@@ -49,21 +65,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full z-30 border-r border-[#E0E0DB] bg-white flex flex-col transition-transform duration-300",
+          "fixed top-0 left-0 h-full z-30 flex flex-col transition-transform duration-300",
+          "border-r border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#111827]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ width: "14rem" }}
         aria-label="Menú de navegación"
       >
-        <div className="px-5 py-6 border-b border-[#E0E0DB] flex items-center gap-3">
+        <div className="px-5 py-6 border-b border-[#E0E0DB] dark:border-[#2d3548] flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(false)}
-            className="text-[#253551] hover:text-[#1c2a40] transition-colors"
+            className="text-[#253551] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
             aria-label="Cerrar menú"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
           </button>
-          <span className="font-heading text-lg text-[#253551]">Panel</span>
+          <span className="font-heading text-lg text-[#253551] dark:text-white">Panel</span>
         </div>
 
         <nav className="flex flex-col gap-1 p-3 flex-1" aria-label="Navegación principal">
@@ -79,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-[#253551] text-white font-medium"
-                    : "text-[#2A2829] hover:bg-[#F4F5F7]"
+                    : "text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                 )}
               >
                 <span className="flex items-center gap-2">
@@ -104,19 +121,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] bg-[#F4F5F7] flex flex-col gap-2">
+        <button
+          onClick={toggleTheme}
+          className="mx-3 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
+          aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+          aria-pressed={isDark}
+        >
+          <span className="flex items-center gap-2">
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+              {isDark ? "light_mode" : "dark_mode"}
+            </span>
+            {isDark ? "Modo claro" : "Modo oscuro"}
+          </span>
+          <span
+            className={cn(
+              "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
+              isDark ? "bg-[#253551]" : "bg-[#D1D5DB]"
+            )}
+            aria-hidden="true"
+          >
+            <span
+              className={cn(
+                "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200",
+                isDark ? "translate-x-4" : "translate-x-0"
+              )}
+            />
+          </span>
+        </button>
+
+        <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#1e293b] flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[#253551] text-white flex items-center justify-center font-small text-[11px] font-bold shrink-0">
               {initials}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-[#2A2829] truncate leading-tight">{userName}</span>
-              <span className="font-small text-[10px] text-[#6b7280] truncate leading-tight">{userEmail}</span>
+              <span className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] truncate leading-tight">{userName}</span>
+              <span className="font-small text-[10px] text-[#6b7280] dark:text-[#94a3b8] truncate leading-tight">{userEmail}</span>
             </div>
           </div>
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-1.5 text-[11px] text-[#2A2829] hover:text-[#ef4444] transition-colors w-fit"
+            className="flex items-center gap-1.5 text-[11px] text-[#2A2829] dark:text-[#cbd5e1] hover:text-[#ef4444] dark:hover:text-[#ef4444] transition-colors w-fit"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>logout</span>
             Cerrar sesión

@@ -182,8 +182,8 @@ export default function ConfiguracionTurnosPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl text-[#253551]">Configuración de turnos</h1>
-        <p className="mt-0.5 text-sm text-[#2A2829]/60">
+        <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Configuración de turnos</h1>
+        <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
           Definí tu disponibilidad semanal para la generación de turnos.
         </p>
       </div>
@@ -191,7 +191,7 @@ export default function ConfiguracionTurnosPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-20 rounded-lg border border-[#E0E0DB] bg-white animate-pulse" />
+            <div key={i} className="h-20 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] animate-pulse" />
           ))}
         </div>
       ) : (
@@ -205,14 +205,14 @@ export default function ConfiguracionTurnosPage() {
           />
 
           {toggleError && (
-            <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="mt-3 rounded-md border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
               {toggleError}
             </div>
           )}
 
           {hasActiveConfigs && (
             <div className="mt-6 space-y-3">
-              <h2 className="font-heading text-base text-[#253551]">Vista previa de turnos</h2>
+              <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd]">Vista previa de turnos</h2>
               <ScheduleConfigCalendar configs={configs} onDaySelect={setSelectedDay} />
               <ScheduleConfigSlots configs={configs} selectedDay={selectedDay} />
             </div>

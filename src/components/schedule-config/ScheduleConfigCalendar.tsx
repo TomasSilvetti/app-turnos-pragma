@@ -58,9 +58,9 @@ export function ScheduleConfigCalendar({
   const monthLabel = format(today, "MMMM yyyy", { locale: es });
 
   return (
-    <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-5">
+    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
       {/* Encabezado del mes */}
-      <p className="font-heading text-sm font-semibold text-[#2A2829] mb-5 capitalize tracking-wide">
+      <p className="font-heading text-sm font-semibold text-[#2A2829] dark:text-[#e2e8f0] mb-5 capitalize tracking-wide">
         {monthLabel}
       </p>
 
@@ -69,14 +69,14 @@ export function ScheduleConfigCalendar({
         {WEEKDAY_LABELS.map((label) => (
           <div
             key={label}
-            className="text-center text-[10px] font-medium text-gray-400 py-1 uppercase tracking-widest"
+            className="text-center text-[10px] font-medium text-gray-400 dark:text-slate-500 py-1 uppercase tracking-widest"
             aria-hidden="true"
           >
             {label}
           </div>
         ))}
       </div>
-      <div className="border-t border-gray-50 mb-2" />
+      <div className="border-t border-gray-50 dark:border-[#2d3548] mb-2" />
 
       {/* Grilla de días */}
       <div
@@ -107,9 +107,9 @@ export function ScheduleConfigCalendar({
                   "h-8 w-8 rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#253551] focus-visible:ring-offset-1",
                   !inMonth && "invisible pointer-events-none",
                   inMonth && enabled &&
-                    "bg-[#eef1f6] text-[#253551] hover:bg-[#253551] hover:text-white cursor-pointer",
+                    "bg-[#eef1f6] dark:bg-[#253551]/20 text-[#253551] dark:text-[#93c5fd] hover:bg-[#253551] hover:text-white cursor-pointer",
                   inMonth && !enabled &&
-                    "text-[#2A2829]/25 cursor-default"
+                    "text-[#2A2829]/25 dark:text-slate-600 cursor-default"
                 )}
               >
                 {inMonth ? format(day, "d") : ""}
@@ -120,13 +120,13 @@ export function ScheduleConfigCalendar({
       </div>
 
       {/* Leyenda */}
-      <div className="mt-4 flex items-center gap-4 text-xs text-gray-400">
+      <div className="mt-4 flex items-center gap-4 text-xs text-gray-400 dark:text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#eef1f6] border border-[#253551]/20" aria-hidden="true" />
+          <span className="inline-block h-3 w-3 rounded-full bg-[#eef1f6] dark:bg-[#253551]/20 border border-[#253551]/20" aria-hidden="true" />
           Día habilitado
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-full bg-gray-100" aria-hidden="true" />
+          <span className="inline-block h-3 w-3 rounded-full bg-gray-100 dark:bg-[#2d3548]" aria-hidden="true" />
           Sin cobertura
         </span>
       </div>

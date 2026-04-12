@@ -103,13 +103,13 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
       aria-modal="true"
       aria-labelledby="reschedule-modal-title"
     >
-      <div className="w-full max-w-md rounded-lg bg-white border border-[#E0E0DB] shadow-lg flex flex-col gap-5 p-5 my-auto">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
             <h2
               id="reschedule-modal-title"
-              className="font-heading text-lg text-[#2A2829] leading-tight"
+              className="font-heading text-lg text-[#2A2829] dark:text-[#e2e8f0] leading-tight"
             >
               Reprogramar turno
             </h2>
@@ -119,7 +119,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829]" />
@@ -127,11 +127,11 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
         </div>
 
         {/* Datos del cliente (precargados, no editables) */}
-        <div className="rounded-lg bg-[#F4F5F7] border border-[#E0E0DB] p-4 flex flex-col gap-3">
+        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label
               htmlFor="reschedule-name"
-              className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide opacity-60"
+              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide opacity-60 dark:opacity-100"
             >
               Nombre del cliente
             </label>
@@ -140,13 +140,13 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
               type="text"
               value={item.clientName}
               disabled
-              className="font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 bg-white opacity-60 cursor-not-allowed"
+              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#1e293b] opacity-60 cursor-not-allowed"
             />
           </div>
           <div className="flex flex-col gap-1">
             <label
               htmlFor="reschedule-phone"
-              className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide opacity-60"
+              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide opacity-60 dark:opacity-100"
             >
               Teléfono
             </label>
@@ -155,7 +155,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
               type="tel"
               value={item.clientPhone}
               disabled
-              className="font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 bg-white opacity-60 cursor-not-allowed"
+              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#1e293b] opacity-60 cursor-not-allowed"
             />
           </div>
         </div>
@@ -171,14 +171,14 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
 
         {/* Slots del día seleccionado */}
         {MOCK_APPOINTMENTS.length === 0 ? (
-          <div className="rounded-lg bg-white border border-[#E0E0DB] p-5 text-center">
+          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 text-center">
             <p className="font-body text-sm text-[#2A2829] opacity-50">
               No hay turnos disponibles. Revisá tu configuración de horarios.
             </p>
           </div>
         ) : (
-          <div className="rounded-lg bg-white border border-[#E0E0DB] p-5">
-            <h3 className="font-heading text-sm text-[#2A2829] mb-4 uppercase tracking-wide">
+          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+            <h3 className="font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] mb-4 uppercase tracking-wide">
               Elegí el nuevo turno
             </h3>
             <div className="grid grid-cols-2 gap-3">
@@ -189,13 +189,13 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                   className={[
                     "flex flex-col items-start gap-1 rounded-lg border p-4 transition-colors text-left",
                     selectedSlot?.id === slot.id
-                      ? "border-[#253551] bg-[#eef1f6]"
-                      : "border-[#E0E0DB] bg-[#F4F5F7] hover:border-[#253551] hover:bg-[#eef1f6]",
+                      ? "border-[#253551] bg-[#eef1f6] dark:bg-[#253551]/20"
+                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] hover:border-[#253551] hover:bg-[#eef1f6] dark:hover:bg-[#253551]/20",
                   ].join(" ")}
                   aria-pressed={selectedSlot?.id === slot.id}
                   aria-label={`Turno a las ${slot.time} por $${slot.price.toLocaleString("es-AR")}`}
                 >
-                  <span className="font-heading text-base text-[#2A2829]">{slot.time}</span>
+                  <span className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">{slot.time}</span>
                   <span className="font-body text-sm text-[#253551] font-medium">
                     ${slot.price.toLocaleString("es-AR")}
                   </span>
@@ -221,7 +221,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md py-2.5 hover:bg-[#F4F5F7] transition-colors"
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
           >
             Cancelar
           </button>

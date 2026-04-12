@@ -120,17 +120,17 @@ export function ScheduleConfigModal({
       aria-labelledby="schedule-modal-title"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-lg rounded-lg border border-[#E0E0DB] bg-white shadow-lg flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-lg rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] shadow-lg flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0DB] shrink-0">
-          <h2 id="schedule-modal-title" className="font-heading text-lg text-[#253551]">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0DB] dark:border-[#2d3548] shrink-0">
+          <h2 id="schedule-modal-title" className="font-heading text-lg text-[#253551] dark:text-[#93c5fd]">
             {isEditing ? "Editar horario" : "Agregar horario"}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Cerrar modal"
-            className="rounded-md p-1 text-[#2A2829]/50 hover:bg-[#F4F5F7] hover:text-[#2A2829] transition-colors"
+            className="rounded-md p-1 text-[#2A2829]/50 dark:text-[#94a3b8] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] hover:text-[#2A2829] transition-colors"
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -141,7 +141,7 @@ export function ScheduleConfigModal({
 
           {/* Nombre */}
           <div>
-            <label htmlFor="schedule-nombre" className="block text-sm font-medium text-[#2A2829] mb-1">
+            <label htmlFor="schedule-nombre" className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-1">
               Nombre <span className="text-[#ef4444]" aria-hidden="true">*</span>
             </label>
             <input
@@ -150,18 +150,18 @@ export function ScheduleConfigModal({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Lunes a viernes mañana"
-              className="w-full rounded-md border border-[#E0E0DB] bg-white px-3 py-2 text-sm text-[#2A2829] placeholder:text-[#2A2829]/40 focus:border-[#253551] focus:outline-none focus:ring-1 focus:ring-[#253551]"
+              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[#253551] focus:outline-none focus:ring-1 focus:ring-[#253551]"
             />
           </div>
 
           {/* Horario */}
           <div>
-            <p className="block text-sm font-medium text-[#2A2829] mb-2">
+            <p className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-2">
               Horario de atención <span className="text-[#ef4444]" aria-hidden="true">*</span>
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="schedule-start" className="block text-xs text-[#2A2829]/60 mb-1">
+                <label htmlFor="schedule-start" className="block text-xs text-[#2A2829]/60 dark:text-[#94a3b8] mb-1">
                   Apertura
                 </label>
                 <TimePicker24h
@@ -172,7 +172,7 @@ export function ScheduleConfigModal({
                 />
               </div>
               <div>
-                <label htmlFor="schedule-end" className="block text-xs text-[#2A2829]/60 mb-1">
+                <label htmlFor="schedule-end" className="block text-xs text-[#2A2829]/60 dark:text-[#94a3b8] mb-1">
                   Cierre
                 </label>
                 <TimePicker24h
@@ -193,7 +193,7 @@ export function ScheduleConfigModal({
 
           {/* Intervalo */}
           <div>
-            <p className="block text-sm font-medium text-[#2A2829] mb-2">
+            <p className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-2">
               Intervalo entre turnos
             </p>
             <div
@@ -211,7 +211,7 @@ export function ScheduleConfigModal({
                     "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
                     intervalMinutes === min
                       ? "border-[#253551] bg-[#253551] text-white"
-                      : "border-[#E0E0DB] bg-white text-[#2A2829] hover:bg-[#F4F5F7]"
+                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                   )}
                 >
                   {min} min
@@ -222,7 +222,7 @@ export function ScheduleConfigModal({
 
           {/* Días */}
           <div>
-            <p className="block text-sm font-medium text-[#2A2829] mb-2">
+            <p className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-2">
               Días habilitados <span className="text-[#ef4444]" aria-hidden="true">*</span>
             </p>
             <div
@@ -240,7 +240,7 @@ export function ScheduleConfigModal({
                     "h-10 w-12 rounded-md border text-xs font-medium transition-colors",
                     daysOfWeek.includes(dia)
                       ? "border-[#253551] bg-[#253551] text-white"
-                      : "border-[#E0E0DB] bg-white text-[#2A2829] hover:bg-[#F4F5F7]"
+                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                   )}
                 >
                   {DIAS_NOMBRE[dia]}
@@ -252,7 +252,7 @@ export function ScheduleConfigModal({
           {/* Tipos de turno */}
           {serviceTypes.length > 0 && (
             <div>
-              <p className="block text-sm font-medium text-[#2A2829] mb-2">
+              <p className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-2">
                 Tipos de turno disponibles
               </p>
               <div className="space-y-2">
@@ -265,7 +265,7 @@ export function ScheduleConfigModal({
                         "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
                         checked
                           ? "border-[#253551] bg-[#eef1f6] text-[#253551]"
-                          : "border-[#E0E0DB] text-[#2A2829] hover:bg-[#F4F5F7]"
+                          : "border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                       )}
                     >
                       <input
@@ -280,7 +280,7 @@ export function ScheduleConfigModal({
                           "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
                           checked
                             ? "border-[#253551] bg-[#253551]"
-                            : "border-[#C8C8C2] bg-white"
+                            : "border-[#C8C8C2] dark:border-[#2d3548] bg-white dark:bg-[#0f172a]"
                         )}
                         aria-hidden="true"
                       >
@@ -303,7 +303,7 @@ export function ScheduleConfigModal({
         )}
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E0E0DB] shrink-0">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E0E0DB] dark:border-[#2d3548] shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>

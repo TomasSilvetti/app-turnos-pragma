@@ -66,8 +66,8 @@ export default function FinanzasPage() {
   return (
     <div className="w-full max-w-3xl">
       <div className="mb-8">
-        <h1 className="font-heading text-2xl text-[#2A2829]">Finanzas</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="font-heading text-2xl text-[#2A2829] dark:text-[#e2e8f0]">Finanzas</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Resumen de ingresos, egresos y balance de tu negocio.
         </p>
       </div>

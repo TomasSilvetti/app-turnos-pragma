@@ -51,19 +51,19 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
   ].sort((a, b) => (a.sortKey < b.sortKey ? 1 : -1));
 
   return (
-    <div className="rounded-lg bg-white border border-[#E0E0DB] p-5 flex flex-col gap-4">
-      <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280]">
+    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-4">
+      <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8]">
         Movimientos
       </p>
 
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-[#F4F5F7] rounded animate-pulse" />
+            <div key={i} className="h-10 bg-[#F4F5F7] dark:bg-[#2d3548] rounded animate-pulse" />
           ))}
         </div>
       ) : transactions.length === 0 ? (
-        <p className="text-sm text-[#9ca3af]">Sin movimientos registrados.</p>
+        <p className="text-sm text-[#9ca3af] dark:text-slate-500">Sin movimientos registrados.</p>
       ) : (
         <ul className="space-y-1">
           {transactions.map((tx, idx) => {
@@ -72,13 +72,13 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
               return (
                 <li
                   key={`ing-${idx}`}
-                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] last:border-0"
+                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-0"
                 >
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm text-[#2A2829]">
+                    <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0]">
                       {formatFechaIngreso(ing.fecha, ing.hora)}
                     </span>
-                    <span className="font-small text-[11px] text-[#6b7280] truncate">
+                    <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8] truncate">
                       {ing.clienteNombre.toLowerCase()}
                     </span>
                   </div>
@@ -92,13 +92,13 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
               return (
                 <li
                   key={`eg-${eg.id}`}
-                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] last:border-0"
+                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-0"
                 >
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm text-[#2A2829] truncate">
+                    <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0] truncate">
                       {eg.descripcion}
                     </span>
-                    <span className="font-small text-[11px] text-[#6b7280]">
+                    <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8]">
                       {formatFechaEgreso(eg.createdAt)}
                     </span>
                   </div>
