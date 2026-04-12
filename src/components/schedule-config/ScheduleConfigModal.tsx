@@ -180,6 +180,7 @@ export function ScheduleConfigModal({
                   value={endTime}
                   onChange={setEndTime}
                   hasError={endTimeInvalid}
+                  dropdownAlign="right"
                 />
               </div>
             </div>

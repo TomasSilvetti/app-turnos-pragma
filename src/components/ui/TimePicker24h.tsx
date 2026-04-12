@@ -8,12 +8,13 @@ interface TimePicker24hProps {
   value: string; // "HH:MM"
   onChange: (value: string) => void;
   hasError?: boolean;
+  dropdownAlign?: "left" | "right";
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
 const MINUTES = ["00", "15", "30", "45"];
 
-export function TimePicker24h({ id, value, onChange, hasError }: TimePicker24hProps) {
+export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "left" }: TimePicker24hProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hourRef = useRef<HTMLDivElement>(null);
@@ -94,7 +95,7 @@ export function TimePicker24h({ id, value, onChange, hasError }: TimePicker24hPr
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] bg-white shadow-lg overflow-hidden">
+        <div className={cn("absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] bg-white shadow-lg overflow-hidden", dropdownAlign === "right" ? "right-0" : "left-0")}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#E0E0DB] px-4 py-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#253551]/60">
