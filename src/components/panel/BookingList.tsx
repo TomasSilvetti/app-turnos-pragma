@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarCheck, MessageCircle, X, CheckCircle } from "lucide-react";
+import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle } from "lucide-react";
+import MiniCalendar from "@/components/public/MiniCalendar";
 
 export type BookingItem = {
   bookingId: string;
@@ -92,6 +93,9 @@ export default function BookingList() {
   const [items, setItems] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [viewMonth, setViewMonth] = useState(new Date());
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
@@ -135,11 +139,54 @@ export default function BookingList() {
     }
   }
 
-  const pending = items.filter((i) => i.status === "pending");
-  const confirmed = items.filter((i) => i.status === "confirmed");
+  const availableDates = [...new Set(items.map((i) => i.appointmentDate))];
+
+  const filteredItems = selectedDate
+    ? items.filter((i) => i.appointmentDate === selectedDate)
+    : items;
+
+  const pending = filteredItems.filter((i) => i.status === "pending");
+  const confirmed = filteredItems.filter((i) => i.status === "confirmed");
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Dropdown calendario */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setCalendarOpen((prev) => !prev)}
+            className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-lg px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+          >
+            <CalendarCheck size={15} className="text-[var(--brand-color)]" />
+            {calendarOpen ? "Ocultar calendario" : "Mostrar calendario"}
+            {calendarOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+
+          {selectedDate && (
+            <button
+              onClick={() => setSelectedDate(null)}
+              className="flex items-center gap-1.5 font-body text-sm text-[#ef4444] border border-[#ef4444] rounded-lg px-3 py-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors"
+            >
+              <XCircle size={14} />
+              Quitar selección
+            </button>
+          )}
+        </div>
+
+        {calendarOpen && (
+          <div className="max-w-xs">
+            <MiniCalendar
+              availableDates={availableDates}
+              selectedDate={selectedDate}
+              viewMonth={viewMonth}
+              onMonthChange={setViewMonth}
+              onDaySelect={(date) => {
+                setSelectedDate((prev) => (prev === date ? null : date));
+              }}
+            />
+          </div>
+        )}
+      </div>
       {/* Pendientes de pago */}
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd] uppercase tracking-wide">
