@@ -88,7 +88,8 @@ export function ScheduleConfigModal({
     startTime === "" ||
     endTime === "" ||
     endTimeInvalid ||
-    daysOfWeek.length === 0;
+    daysOfWeek.length === 0 ||
+    serviceTypeIds.length === 0;
 
   function toggleDay(dia: string) {
     setDaysOfWeek((prev) =>
@@ -255,6 +256,11 @@ export function ScheduleConfigModal({
               <p className="block text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0] mb-2">
                 Tipos de turno disponibles
               </p>
+              {serviceTypeIds.length === 0 && (
+                <p className="mb-2 text-xs text-red-500 dark:text-red-400">
+                  Seleccioná al menos un tipo de turno para guardar.
+                </p>
+              )}
               <div className="space-y-2">
                 {serviceTypes.map((tipo) => {
                   const checked = serviceTypeIds.includes(tipo.id);

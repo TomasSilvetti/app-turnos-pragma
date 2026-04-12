@@ -121,9 +121,9 @@ export default function MiniCalendar({
                 selected
                   ? "bg-[var(--brand-color)] text-white shadow-md rounded-lg"
                   : todayDay && !available
-                  ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] font-bold rounded-lg"
+                  ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] dark:text-[#93c5fd] font-bold rounded-lg"
                   : available
-                  ? "rounded-full bg-[#eef1f6] dark:bg-[#2d3548] text-[var(--brand-color)] font-semibold hover:bg-[var(--brand-color)] hover:text-white cursor-pointer"
+                  ? "rounded-full bg-[#eef1f6] dark:bg-[#2d3548] text-[var(--brand-color)] dark:text-[#e2e8f0] font-semibold hover:bg-[var(--brand-color)] hover:text-white cursor-pointer"
                   : "text-gray-300 dark:text-[#475569] cursor-default rounded-lg",
               ].join(" ")}
             >

@@ -2,33 +2,11 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { format, parseISO } from "date-fns";
-import { X, AlertCircle } from "lucide-react";
+import { X, AlertCircle, Loader2 } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
-import AppointmentSlots, {
-  type Appointment,
-} from "@/components/public/AppointmentSlots";
 import type { RescheduleItem } from "./RescheduleList";
 
-// Mock de fechas y slots — se reemplaza al conectar con porcion-004
-const MOCK_AVAILABLE_DATES = (() => {
-  const today = new Date();
-  const dates: string[] = [];
-  for (let i = 1; i <= 20; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() + i * 2);
-    dates.push(format(d, "yyyy-MM-dd"));
-  }
-  return dates;
-})();
-
-const MOCK_APPOINTMENTS: Appointment[] = [
-  { id: "1", time: "09:00", price: 2500 },
-  { id: "2", time: "10:00", price: 2500 },
-  { id: "3", time: "11:00", price: 2500 },
-  { id: "4", time: "14:00", price: 3000 },
-  { id: "5", time: "15:00", price: 3000 },
-  { id: "6", time: "16:00", price: 3000 },
-];
+type Slot = { id: string; time: string };
 
 type Props = {
   item: RescheduleItem;
@@ -37,11 +15,20 @@ type Props = {
 };
 
 export default function RescheduleModal({ item, onClose, onRescheduled }: Props) {
-  const [selectedDate, setSelectedDate] = useState<string>(MOCK_AVAILABLE_DATES[0]);
-  const [viewMonth, setViewMonth] = useState<Date>(() => parseISO(MOCK_AVAILABLE_DATES[0]));
-  const [selectedSlot, setSelectedSlot] = useState<Appointment | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const today = new Date();
+  const initialMonth = format(today, "yyyy-MM");
+
+  const [viewMonth, setViewMonth] = useState<Date>(today);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [slots, setSlots] = useState<Slot[]>([]);
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+
+  const [loadingDates, setLoadingDates] = useState(false);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [noConfigs, setNoConfigs] = useState(false);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -58,19 +45,57 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
     if (e.target === overlayRef.current) onClose();
   }
 
-  const handleDaySelect = useCallback((date: string) => {
+  // Fetch available dates when month changes
+  const fetchDates = useCallback(async (month: Date) => {
+    setLoadingDates(true);
+    setAvailableDates([]);
+    setSelectedDate(null);
+    setSlots([]);
+    setSelectedSlot(null);
+    setNoConfigs(false);
+    try {
+      const monthStr = format(month, "yyyy-MM");
+      const res = await fetch(`/api/panel/reschedules/available-slots?month=${monthStr}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setAvailableDates(data.dates ?? []);
+      if (data.noConfigs) setNoConfigs(true);
+    } catch {
+      setAvailableDates([]);
+    } finally {
+      setLoadingDates(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDates(viewMonth);
+  }, [viewMonth, fetchDates]);
+
+  // Fetch slots when date is selected
+  const handleDaySelect = useCallback(async (date: string) => {
     setSelectedDate(date);
     setSelectedSlot(null);
+    setSlots([]);
+    setLoadingSlots(true);
+    try {
+      const res = await fetch(`/api/panel/reschedules/available-slots?date=${date}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setSlots(data.appointments ?? []);
+    } catch {
+      setSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
   }, []);
 
-  const handleSlotSelect = useCallback((slot: Appointment) => {
-    setSelectedSlot(slot);
-    setError(null);
-  }, []);
+  function handleMonthChange(month: Date) {
+    setViewMonth(month);
+  }
 
   async function handleConfirm() {
-    if (!selectedSlot || isLoading) return;
-    setIsLoading(true);
+    if (!selectedSlot || isSubmitting) return;
+    setIsSubmitting(true);
     setError(null);
 
     try {
@@ -90,7 +115,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
     } catch {
       setError("No se pudo reprogramar el turno. Intentá de nuevo.");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   }
 
@@ -113,7 +138,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             >
               Reprogramar turno
             </h2>
-            <p className="font-body text-sm text-[var(--brand-color)] font-medium mt-0.5">
+            <p className="font-body text-sm text-[var(--brand-color)] dark:text-[#93c5fd] font-medium mt-0.5">
               {item.clientName} — {item.clientPhone}
             </p>
           </div>
@@ -122,7 +147,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
             aria-label="Cerrar"
           >
-            <X size={18} className="text-[#2A2829]" />
+            <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
           </button>
         </div>
 
@@ -160,49 +185,74 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           </div>
         </div>
 
-        {/* Selector de fecha */}
-        <MiniCalendar
-          availableDates={MOCK_AVAILABLE_DATES}
-          selectedDate={selectedDate}
-          viewMonth={viewMonth}
-          onMonthChange={setViewMonth}
-          onDaySelect={handleDaySelect}
-        />
-
-        {/* Slots del día seleccionado */}
-        {MOCK_APPOINTMENTS.length === 0 ? (
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 text-center">
-            <p className="font-body text-sm text-[#2A2829] opacity-50">
-              No hay turnos disponibles. Revisá tu configuración de horarios.
+        {/* Sin configuraciones activas */}
+        {noConfigs && !loadingDates && (
+          <div
+            role="alert"
+            className="flex items-start gap-2 rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-3"
+          >
+            <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="font-body text-sm text-amber-700 dark:text-amber-400">
+              No hay configuraciones de turno activas. Por favor creá una nueva configuración para poder reprogramar.
             </p>
           </div>
-        ) : (
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
-            <h3 className="font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] mb-4 uppercase tracking-wide">
-              Elegí el nuevo turno
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              {MOCK_APPOINTMENTS.map((slot) => (
-                <button
-                  key={slot.id}
-                  onClick={() => handleSlotSelect(slot)}
-                  className={[
-                    "flex flex-col items-start gap-1 rounded-lg border p-4 transition-colors text-left",
-                    selectedSlot?.id === slot.id
-                      ? "border-[var(--brand-color)] bg-[#eef1f6] dark:bg-[var(--brand-color)]/20"
-                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/20",
-                  ].join(" ")}
-                  aria-pressed={selectedSlot?.id === slot.id}
-                  aria-label={`Turno a las ${slot.time} por $${slot.price.toLocaleString("es-AR")}`}
-                >
-                  <span className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">{slot.time}</span>
-                  <span className="font-body text-sm text-[var(--brand-color)] font-medium">
-                    ${slot.price.toLocaleString("es-AR")}
-                  </span>
-                </button>
-              ))}
-            </div>
+        )}
+
+        {/* Selector de fecha */}
+        {loadingDates ? (
+          <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-10 flex items-center justify-center">
+            <Loader2 size={22} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
           </div>
+        ) : (
+          <MiniCalendar
+            availableDates={availableDates}
+            selectedDate={selectedDate}
+            viewMonth={viewMonth}
+            onMonthChange={handleMonthChange}
+            onDaySelect={handleDaySelect}
+          />
+        )}
+
+        {/* Slots del día seleccionado */}
+        {selectedDate && (
+          loadingSlots ? (
+            <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex items-center justify-center">
+              <Loader2 size={20} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
+            </div>
+          ) : slots.length === 0 ? (
+            <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 text-center">
+              <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50">
+                No hay turnos disponibles para este día.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+              <h3 className="font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] mb-4 uppercase tracking-wide">
+                Elegí el nuevo turno
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {slots.map((slot) => {
+                  const isSelected = selectedSlot?.id === slot.id;
+                  return (
+                    <button
+                      key={slot.id}
+                      onClick={() => { setSelectedSlot(slot); setError(null); }}
+                      className={[
+                        "flex items-center justify-center rounded-lg border-2 p-4 transition-all duration-150 font-heading text-base",
+                        isSelected
+                          ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white shadow-md scale-[1.02]"
+                          : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#253045] text-[#2A2829] dark:text-[#e2e8f0] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[#2d3548]",
+                      ].join(" ")}
+                      aria-pressed={isSelected}
+                      aria-label={`Turno a las ${slot.time}`}
+                    >
+                      {slot.time}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )
         )}
 
         {/* Error */}
@@ -228,10 +278,11 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           <button
             type="button"
             onClick={handleConfirm}
-            disabled={!selectedSlot || isLoading}
-            className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            disabled={!selectedSlot || isSubmitting}
+            className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {isLoading ? "Confirmando..." : "Confirmar"}
+            {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+            {isSubmitting ? "Confirmando..." : "Confirmar"}
           </button>
         </div>
       </div>
