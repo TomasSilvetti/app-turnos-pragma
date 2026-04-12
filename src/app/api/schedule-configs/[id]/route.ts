@@ -46,7 +46,7 @@ export const PUT = auth(async (
   }
 
   const body = await req.json();
-  const { name, startTime, endTime, intervalMinutes, daysOfWeek, price, serviceTypeIds } = body;
+  const { name, startTime, endTime, intervalMinutes, daysOfWeek, price, serviceTypeIds, markForReschedule } = body;
 
   if (!name || !startTime || !endTime || intervalMinutes === undefined || !daysOfWeek || price === undefined) {
     return NextResponse.json(
@@ -66,6 +66,40 @@ export const PUT = auth(async (
   const parsedPrice = Number(price);
   if (isNaN(parsedPrice) || parsedPrice < 0) {
     return NextResponse.json({ error: "El precio debe ser un número mayor o igual a cero" }, { status: 400 });
+  }
+
+  // Si se solicita marcar los turnos conflictivos para reprogramación, hacerlo antes de actualizar
+  if (markForReschedule) {
+    const newDayInts = new Set(stringsToInts(daysOfWeek));
+
+    const conflictingAppointments = await prisma.appointment.findMany({
+      where: {
+        scheduleConfigId: id,
+        booking: { status: { in: ["pending", "confirmed"] } },
+      },
+      select: { id: true, date: true, time: true },
+    });
+
+    const conflictingIds = conflictingAppointments
+      .filter((a) => {
+        const jsDay = new Date(a.date + "T00:00:00").getDay();
+        const configDay = (jsDay + 6) % 7;
+        const dayConflict = !newDayInts.has(configDay);
+        const timeConflict = a.time < startTime || a.time >= endTime;
+        return dayConflict || timeConflict;
+      })
+      .map((a) => a.id);
+
+    if (conflictingIds.length > 0) {
+      await prisma.booking.updateMany({
+        where: { appointmentId: { in: conflictingIds }, status: "pending" },
+        data: { status: "requires_reschedule", previousStatus: "pending" },
+      });
+      await prisma.booking.updateMany({
+        where: { appointmentId: { in: conflictingIds }, status: "confirmed" },
+        data: { status: "requires_reschedule", previousStatus: "confirmed" },
+      });
+    }
   }
 
   const updated = await prisma.scheduleConfig.update({
@@ -129,26 +163,41 @@ export const DELETE = auth(async (
     return NextResponse.json({ error: "Configuración no encontrada" }, { status: 403 });
   }
 
+  const url = new URL(req.url);
+  const keepBookings = url.searchParams.get("keepBookings") === "true";
+
   await prisma.$transaction(async (tx) => {
-    // Marcar como requires_reschedule los bookings pendientes/confirmados
-    await tx.booking.updateMany({
-      where: {
-        appointment: { scheduleConfigId: id },
-        status: { in: ["pending", "confirmed"] },
-      },
-      data: { status: "requires_reschedule" },
-    });
+    if (keepBookings) {
+      // Mantener los bookings tal como están, solo desconectar sus appointments del config
+      await tx.appointment.updateMany({
+        where: {
+          scheduleConfigId: id,
+          booking: { status: { in: ["pending", "confirmed"] } },
+        },
+        data: { scheduleConfigId: null },
+      });
+    } else {
+      // Marcar como requires_reschedule los bookings pendientes/confirmados
+      await tx.booking.updateMany({
+        where: { appointment: { scheduleConfigId: id }, status: "pending" },
+        data: { status: "requires_reschedule", previousStatus: "pending" },
+      });
+      await tx.booking.updateMany({
+        where: { appointment: { scheduleConfigId: id }, status: "confirmed" },
+        data: { status: "requires_reschedule", previousStatus: "confirmed" },
+      });
 
-    // Desconectar los appointments con booking activo (para que sigan existiendo en reprogramación)
-    await tx.appointment.updateMany({
-      where: {
-        scheduleConfigId: id,
-        booking: { status: "requires_reschedule" },
-      },
-      data: { scheduleConfigId: null },
-    });
+      // Desconectar los appointments con booking activo (para que sigan existiendo en reprogramación)
+      await tx.appointment.updateMany({
+        where: {
+          scheduleConfigId: id,
+          booking: { status: "requires_reschedule" },
+        },
+        data: { scheduleConfigId: null },
+      });
+    }
 
-    // Eliminar los appointments sin booking activo
+    // Eliminar los appointments restantes sin booking activo
     await tx.appointment.deleteMany({
       where: { scheduleConfigId: id },
     });

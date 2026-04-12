@@ -18,7 +18,8 @@ type CheckResult = {
 type Props = {
   configId: string;
   configName: string;
-  onConfirm: () => void;
+  onConfirmKeep: () => void;
+  onConfirmReschedule: () => void;
   onCancel: () => void;
   isDeleting?: boolean;
 };
@@ -26,7 +27,8 @@ type Props = {
 export function DeleteScheduleConfigDialog({
   configId,
   configName,
-  onConfirm,
+  onConfirmKeep,
+  onConfirmReschedule,
   onCancel,
   isDeleting,
 }: Props) {
@@ -103,37 +105,63 @@ export function DeleteScheduleConfigDialog({
                       ))}
                     </div>
 
-                    <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-100 rounded-md px-3 py-2">
-                      Si eliminás esta configuración, estos clientes aparecerán en el módulo de reprogramación para coordinar un nuevo turno.
+                    <p className="mt-3 text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-800/30 rounded-md px-3 py-2">
+                      ¿Qué querés hacer con estos turnos?
                     </p>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={onCancel}
-                disabled={isDeleting}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="button"
-                onClick={onConfirm}
-                disabled={isDeleting}
-                className={`flex-1 text-white disabled:opacity-40 ${
-                  hasReservados
-                    ? "bg-amber-500 hover:bg-amber-600"
-                    : "bg-red-500 hover:bg-red-600"
-                }`}
-              >
-                {isDeleting ? "Eliminando..." : "Eliminar"}
-              </Button>
-            </div>
+            {hasReservados ? (
+              <div className="flex flex-col gap-2">
+                <Button
+                  type="button"
+                  onClick={onConfirmKeep}
+                  disabled={isDeleting}
+                  className="w-full bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] disabled:opacity-40"
+                >
+                  {isDeleting ? "Eliminando..." : "Mantener turno por esta vez"}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onConfirmReschedule}
+                  disabled={isDeleting}
+                  className="w-full bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40"
+                >
+                  Reprogramar
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={onCancel}
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={onCancel}
+                  disabled={isDeleting}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={onConfirmReschedule}
+                  disabled={isDeleting}
+                  className="flex-1 text-white bg-red-500 hover:bg-red-600 disabled:opacity-40"
+                >
+                  {isDeleting ? "Eliminando..." : "Eliminar"}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </div>

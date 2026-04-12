@@ -94,17 +94,25 @@ export async function GET(
 
   // Generate appointments for each active config if they don't exist yet for this month
   for (const config of profile.scheduleConfigs) {
-    // Always delete unbooked appointments and regenerate to stay in sync with config changes
+    // Always delete unbooked appointments and regenerate to stay in sync with config changes.
+    // Preserve appointments with active bookings (confirmed, pending, requires_reschedule).
     await prisma.appointment.deleteMany({
       where: {
         scheduleConfigId: config.id,
         date: { startsWith: month },
         OR: [
           { booking: { is: null } },
-          { booking: { status: { notIn: ["confirmed", "pending"] } } },
+          { booking: { status: "cancelled" } },
         ],
       },
     });
+
+    // Fetch times already occupied by active bookings so we don't create duplicate slots
+    const occupied = await prisma.appointment.findMany({
+      where: { scheduleConfigId: config.id, date: { startsWith: month } },
+      select: { date: true, time: true },
+    });
+    const occupiedKeys = new Set(occupied.map((a) => `${a.date}|${a.time}`));
 
     const slots = generateSlotsForConfig(
       year,
@@ -116,7 +124,7 @@ export async function GET(
       config.id,
       serviceProviderId,
       today
-    );
+    ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
 
     if (slots.length > 0) {
       await prisma.appointment.createMany({ data: slots });

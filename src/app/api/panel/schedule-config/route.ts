@@ -229,7 +229,8 @@ export async function PUT(req: Request) {
 
   // Categorize existing appointments
   const toDelete: string[] = [];
-  const toReschedule: string[] = [];
+  const toReschedulePending: string[] = [];
+  const toRescheduleConfirmed: string[] = [];
   const existingSlotKeys = new Set<string>();
 
   for (const appt of allAppointments) {
@@ -243,7 +244,11 @@ export async function PUT(req: Request) {
 
     if (!isInNewSlots) {
       if (hasActiveBooking) {
-        toReschedule.push(appt.booking!.id);
+        if (appt.booking!.status === "pending") {
+          toReschedulePending.push(appt.booking!.id);
+        } else {
+          toRescheduleConfirmed.push(appt.booking!.id);
+        }
         // Keep the appointment — it has an active booking
       } else {
         toDelete.push(appt.id);
@@ -268,10 +273,16 @@ export async function PUT(req: Request) {
     if (toDelete.length > 0) {
       await tx.appointment.deleteMany({ where: { id: { in: toDelete } } });
     }
-    if (toReschedule.length > 0) {
+    if (toReschedulePending.length > 0) {
       await tx.booking.updateMany({
-        where: { id: { in: toReschedule } },
-        data: { status: "requires_reschedule" },
+        where: { id: { in: toReschedulePending } },
+        data: { status: "requires_reschedule", previousStatus: "pending" },
+      });
+    }
+    if (toRescheduleConfirmed.length > 0) {
+      await tx.booking.updateMany({
+        where: { id: { in: toRescheduleConfirmed } },
+        data: { status: "requires_reschedule", previousStatus: "confirmed" },
       });
     }
     if (newAppointmentsToCreate.length > 0) {

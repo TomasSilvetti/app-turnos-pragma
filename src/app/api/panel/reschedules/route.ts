@@ -77,7 +77,11 @@ export async function POST(req: Request) {
       status: "requires_reschedule",
       appointment: { serviceProviderId },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      previousStatus: true,
+      appointment: { select: { serviceTypeId: true } },
+    },
   });
   if (!originalBooking)
     return NextResponse.json({ error: "Reserva original no encontrada o no pertenece al proveedor" }, { status: 404 });
@@ -98,17 +102,26 @@ export async function POST(req: Request) {
   if (hasActiveBooking)
     return NextResponse.json({ error: "El slot seleccionado ya tiene una reserva activa" }, { status: 409 });
 
+  const newStatus = originalBooking.previousStatus === "pending" ? "pending" : "confirmed";
+  const originalServiceTypeId = originalBooking.appointment.serviceTypeId;
+
   await prisma.$transaction(async (tx) => {
     await tx.booking.update({
       where: { id: bookingId },
       data: { status: "cancelled" },
     });
+    if (originalServiceTypeId) {
+      await tx.appointment.update({
+        where: { id: appointmentId },
+        data: { serviceTypeId: originalServiceTypeId },
+      });
+    }
     await tx.booking.create({
       data: {
         appointmentId,
         clientName,
         clientPhone,
-        status: "confirmed",
+        status: newStatus,
       },
     });
   });

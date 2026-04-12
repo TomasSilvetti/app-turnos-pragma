@@ -62,17 +62,26 @@ async function ensureAppointmentsForMonth(
   today.setHours(0, 0, 0, 0);
 
   for (const config of configs) {
-    // Delete unbooked appointments for this config/month so they stay in sync
+    // Delete unbooked appointments for this config/month so they stay in sync.
+    // Preserve appointments with requires_reschedule bookings — they must remain
+    // until the admin reschedules them manually.
     await prisma.appointment.deleteMany({
       where: {
         scheduleConfigId: config.id,
         date: { startsWith: month },
         OR: [
           { booking: { is: null } },
-          { booking: { status: { notIn: ["confirmed", "pending"] } } },
+          { booking: { status: "cancelled" } },
         ],
       },
     });
+
+    // Fetch times already occupied by active bookings so we don't create duplicate slots
+    const occupied = await prisma.appointment.findMany({
+      where: { scheduleConfigId: config.id, date: { startsWith: month } },
+      select: { date: true, time: true },
+    });
+    const occupiedKeys = new Set(occupied.map((a) => `${a.date}|${a.time}`));
 
     const slots = generateSlotsForConfig(
       year,
@@ -84,7 +93,7 @@ async function ensureAppointmentsForMonth(
       config.id,
       serviceProviderId,
       today
-    );
+    ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
 
     if (slots.length > 0) {
       await prisma.appointment.createMany({ data: slots });
@@ -139,7 +148,7 @@ export async function GET(request: NextRequest) {
         scheduleConfig: { isActive: true },
         OR: [
           { booking: { is: null } },
-          { booking: { status: { notIn: ["confirmed", "pending"] } } },
+          { booking: { status: "cancelled" } },
         ],
       },
       select: { date: true },
@@ -162,7 +171,7 @@ export async function GET(request: NextRequest) {
         scheduleConfig: { isActive: true },
         OR: [
           { booking: { is: null } },
-          { booking: { status: { notIn: ["confirmed", "pending"] } } },
+          { booking: { status: "cancelled" } },
         ],
       },
       select: { id: true, time: true },

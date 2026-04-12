@@ -6,6 +6,8 @@ import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } fr
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
 import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfigSlots";
 import { DeleteScheduleConfigDialog } from "@/components/schedule-config/DeleteScheduleConfigDialog";
+import { EditConflictDialog, type ConflictingBooking } from "@/components/schedule-config/EditConflictDialog";
+import { RescheduleNoticeDialog } from "@/components/schedule-config/RescheduleNoticeDialog";
 
 const DIAS_LABEL: Record<string, string> = {
   L: "Lunes", M: "Martes", X: "Miércoles", J: "Jueves", V: "Viernes", S: "Sábado", D: "Domingo",
@@ -44,6 +46,11 @@ function getConflictingDays(configs: ScheduleConfig[], targetId: string, targetD
   return targetDays.filter((d) => activeDays.has(d)).map((d) => DIAS_LABEL[d] ?? d);
 }
 
+type PendingSubmitData = {
+  configId: string;
+  formData: ScheduleConfigFormData;
+};
+
 export default function ConfiguracionTurnosPage() {
   const [configs, setConfigs] = useState<ScheduleConfig[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
@@ -55,6 +62,12 @@ export default function ConfiguracionTurnosPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Estado para el flujo de conflictos al editar
+  const [editConflicting, setEditConflicting] = useState<ConflictingBooking[] | null>(null);
+  const [pendingSubmit, setPendingSubmit] = useState<PendingSubmitData | null>(null);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [showRescheduleNotice, setShowRescheduleNotice] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -86,15 +99,21 @@ export default function ConfiguracionTurnosPage() {
     setDeletingId(id);
   }
 
-  async function confirmDelete() {
+  async function confirmDelete(keepBookings: boolean) {
     if (!deletingId) return;
     setIsDeleting(true);
-    const res = await fetch(`/api/schedule-configs/${deletingId}`, { method: "DELETE" });
+    const url = keepBookings
+      ? `/api/schedule-configs/${deletingId}?keepBookings=true`
+      : `/api/schedule-configs/${deletingId}`;
+    const res = await fetch(url, { method: "DELETE" });
     setIsDeleting(false);
     if (!res.ok) return;
     setConfigs((prev) => prev.filter((c) => c.id !== deletingId));
     setDeletingId(null);
     setToggleError(null);
+    if (!keepBookings) {
+      setShowRescheduleNotice(true);
+    }
   }
 
   async function handleToggle(id: string) {
@@ -117,33 +136,62 @@ export default function ConfiguracionTurnosPage() {
     setConfigs((prev) => prev.map((c) => (c.id === id ? mapFromApi(updated) : c)));
   }
 
+  async function performSave(configId: string, data: ScheduleConfigFormData, markForReschedule: boolean): Promise<boolean> {
+    const res = await fetch(`/api/schedule-configs/${configId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.nombre,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        intervalMinutes: data.intervalMinutes,
+        daysOfWeek: data.daysOfWeek,
+        serviceTypeIds: data.serviceTypeIds,
+        price: 0,
+        markForReschedule,
+      }),
+    });
+
+    if (!res.ok) {
+      const json = await res.json();
+      setModalError(json.error ?? "Error al actualizar la configuración.");
+      return false;
+    }
+
+    const updated: ApiScheduleConfig = await res.json();
+    setModalError(null);
+    setConfigs((prev) => prev.map((c) => (c.id === configId ? mapFromApi(updated) : c)));
+    return true;
+  }
+
   async function handleSubmit(data: ScheduleConfigFormData): Promise<boolean | void> {
     setToggleError(null);
 
     if (editingConfig) {
-      const res = await fetch(`/api/schedule-configs/${editingConfig.id}`, {
-        method: "PUT",
+      // Verificar si hay turnos conflictivos con la nueva configuración
+      const checkRes = await fetch(`/api/schedule-configs/${editingConfig.id}/edit-check`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.nombre,
+          daysOfWeek: data.daysOfWeek,
           startTime: data.startTime,
           endTime: data.endTime,
-          intervalMinutes: data.intervalMinutes,
-          daysOfWeek: data.daysOfWeek,
-          serviceTypeIds: data.serviceTypeIds,
-          price: 0,
         }),
       });
 
-      if (!res.ok) {
-        const json = await res.json();
-        setModalError(json.error ?? "Error al actualizar la configuración.");
-        return false;
+      if (checkRes.ok) {
+        const { conflicting }: { conflicting: ConflictingBooking[] } = await checkRes.json();
+        if (conflicting.length > 0) {
+          // Hay conflictos: guardar los datos pendientes y mostrar el diálogo
+          setPendingSubmit({ configId: editingConfig.id, formData: data });
+          setEditConflicting(conflicting);
+          return false; // No cerrar el modal todavía
+        }
       }
 
-      const updated: ApiScheduleConfig = await res.json();
-      setModalError(null);
-      setConfigs((prev) => prev.map((c) => (c.id === editingConfig.id ? mapFromApi(updated) : c)));
+      // Sin conflictos: guardar directamente
+      const ok = await performSave(editingConfig.id, data, false);
+      return ok ? undefined : false;
     } else {
       const conflicting = getConflictingDays(configs, "", data.daysOfWeek);
       if (conflicting.length > 0) {
@@ -175,6 +223,36 @@ export default function ConfiguracionTurnosPage() {
       setModalError(null);
       setConfigs((prev) => [...prev, mapFromApi(created)]);
     }
+  }
+
+  async function handleEditKeep() {
+    if (!pendingSubmit) return;
+    setIsSavingEdit(true);
+    const ok = await performSave(pendingSubmit.configId, pendingSubmit.formData, false);
+    setIsSavingEdit(false);
+    if (ok) {
+      setEditConflicting(null);
+      setPendingSubmit(null);
+      setModalOpen(false);
+    }
+  }
+
+  async function handleEditReschedule() {
+    if (!pendingSubmit) return;
+    setIsSavingEdit(true);
+    const ok = await performSave(pendingSubmit.configId, pendingSubmit.formData, true);
+    setIsSavingEdit(false);
+    if (ok) {
+      setEditConflicting(null);
+      setPendingSubmit(null);
+      setModalOpen(false);
+      setShowRescheduleNotice(true);
+    }
+  }
+
+  function handleEditConflictCancel() {
+    setEditConflicting(null);
+    setPendingSubmit(null);
   }
 
   const hasActiveConfigs = configs.some((c) => c.isActive);
@@ -224,10 +302,25 @@ export default function ConfiguracionTurnosPage() {
         <DeleteScheduleConfigDialog
           configId={deletingId}
           configName={configs.find((c) => c.id === deletingId)?.nombre ?? ""}
-          onConfirm={confirmDelete}
+          onConfirmKeep={() => confirmDelete(true)}
+          onConfirmReschedule={() => confirmDelete(false)}
           onCancel={() => setDeletingId(null)}
           isDeleting={isDeleting}
         />
+      )}
+
+      {editConflicting && (
+        <EditConflictDialog
+          conflicting={editConflicting}
+          onKeep={handleEditKeep}
+          onReschedule={handleEditReschedule}
+          onCancel={handleEditConflictCancel}
+          isSaving={isSavingEdit}
+        />
+      )}
+
+      {showRescheduleNotice && (
+        <RescheduleNoticeDialog onClose={() => setShowRescheduleNotice(false)} />
       )}
 
       <ScheduleConfigModal

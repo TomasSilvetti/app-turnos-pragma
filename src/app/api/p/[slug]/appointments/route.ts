@@ -33,7 +33,7 @@ export async function GET(
       isActive: true,
       OR: [
         { booking: { is: null } },
-        { booking: { status: { notIn: ["confirmed", "pending"] } } },
+        { booking: { status: "cancelled" } },
       ],
     },
     select: {

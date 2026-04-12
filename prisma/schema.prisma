@@ -125,7 +125,8 @@ model Booking {
   appointmentId String        @unique
   clientName    String
   clientPhone   String
-  status        BookingStatus @default(pending)
+  status        BookingStatus  @default(pending)
+  previousStatus BookingStatus?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
