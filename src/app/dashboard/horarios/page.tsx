@@ -129,12 +129,12 @@ export default function HorariosPage() {
     return (
       <div className="mx-auto max-w-2xl">
         <div className="mb-6">
-          <h1 className="font-heading text-2xl text-[#253551]">Configuración de horarios</h1>
-          <p className="mt-0.5 text-sm text-[#2A2829]/60">
+          <h1 className="font-heading text-2xl text-[var(--brand-color)] dark:text-[#93c5fd]">Configuración de horarios</h1>
+          <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
             Definí tus bloques de disponibilidad semanal para la generación de turnos.
           </p>
         </div>
-        <div className="flex items-center justify-center py-16 text-sm text-[#2A2829]/40">
+        <div className="flex items-center justify-center py-16 text-sm text-[#2A2829]/40 dark:text-[#64748b]">
           Cargando...
         </div>
       </div>
@@ -145,8 +145,8 @@ export default function HorariosPage() {
     <div className="mx-auto max-w-2xl">
       {/* Encabezado */}
       <div className="mb-6">
-        <h1 className="font-heading text-2xl text-[#253551]">Configuración de horarios</h1>
-        <p className="mt-0.5 text-sm text-[#2A2829]/60">
+        <h1 className="font-heading text-2xl text-[var(--brand-color)]">Configuración de horarios</h1>
+        <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
           Definí tus bloques de disponibilidad semanal para la generación de turnos.
         </p>
       </div>

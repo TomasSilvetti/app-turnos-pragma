@@ -113,7 +113,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             >
               Reprogramar turno
             </h2>
-            <p className="font-body text-sm text-[#253551] font-medium mt-0.5">
+            <p className="font-body text-sm text-[var(--brand-color)] font-medium mt-0.5">
               {item.clientName} — {item.clientPhone}
             </p>
           </div>
@@ -189,14 +189,14 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                   className={[
                     "flex flex-col items-start gap-1 rounded-lg border p-4 transition-colors text-left",
                     selectedSlot?.id === slot.id
-                      ? "border-[#253551] bg-[#eef1f6] dark:bg-[#253551]/20"
-                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] hover:border-[#253551] hover:bg-[#eef1f6] dark:hover:bg-[#253551]/20",
+                      ? "border-[var(--brand-color)] bg-[#eef1f6] dark:bg-[var(--brand-color)]/20"
+                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/20",
                   ].join(" ")}
                   aria-pressed={selectedSlot?.id === slot.id}
                   aria-label={`Turno a las ${slot.time} por $${slot.price.toLocaleString("es-AR")}`}
                 >
                   <span className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">{slot.time}</span>
-                  <span className="font-body text-sm text-[#253551] font-medium">
+                  <span className="font-body text-sm text-[var(--brand-color)] font-medium">
                     ${slot.price.toLocaleString("es-AR")}
                   </span>
                 </button>
@@ -229,7 +229,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             type="button"
             onClick={handleConfirm}
             disabled={!selectedSlot || isLoading}
-            className="flex-1 font-body text-sm text-white bg-[#253551] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {isLoading ? "Confirmando..." : "Confirmar"}
           </button>

@@ -81,7 +81,7 @@ export function TurnosGeneradosList({ turnos, onToggle, onDelete }: TurnosGenera
             <div className="flex items-center gap-2">
               <Clock
                 size={14}
-                className={turno.activo ? "text-[#253551]" : "text-gray-300"}
+                className={turno.activo ? "text-[var(--brand-color)]" : "text-gray-300"}
               />
               <span
                 className={`font-heading text-sm font-semibold ${
@@ -130,7 +130,7 @@ export function TurnosGeneradosList({ turnos, onToggle, onDelete }: TurnosGenera
                   size="sm"
                   variant="outline"
                   onClick={() => onToggle(turno.id)}
-                  className="h-7 flex-1 px-2 text-xs border-gray-200 text-[#2A2829] hover:bg-[#eef1f6] hover:border-[#253551]"
+                  className="h-7 flex-1 px-2 text-xs border-gray-200 text-[#2A2829] hover:bg-[#eef1f6] hover:border-[var(--brand-color)]"
                 >
                   {turno.activo ? "Desactivar" : "Activar"}
                 </Button>

@@ -54,8 +54,8 @@ function Toggle({
       aria-label={label}
       onClick={onChange}
       className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#253551] focus-visible:ring-offset-2",
-        checked ? "bg-[#253551]" : "bg-[#E0E0DB] dark:bg-[#2d3548]"
+        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2",
+        checked ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#2d3548]"
       )}
     >
       <span
@@ -89,7 +89,7 @@ export function ScheduleConfigList({
         </div>
         <Button
           onClick={onAdd}
-          className="bg-[#253551] text-white hover:bg-[#1c2a40]"
+          className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40]"
         >
           Agregar horario
         </Button>
@@ -110,7 +110,7 @@ export function ScheduleConfigList({
           {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <span className="font-heading text-sm text-[#253551] dark:text-[#93c5fd] leading-tight block truncate">
+              <span className="font-heading text-sm text-[var(--brand-color)] dark:text-[#93c5fd] leading-tight block truncate">
                 {config.nombre}
               </span>
               <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#2A2829]/60 dark:text-[#94a3b8]">
@@ -159,7 +159,7 @@ export function ScheduleConfigList({
         <Button
           onClick={onAdd}
           variant="outline"
-          className="w-full border-dashed border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[#253551] hover:border-[#253551]"
+          className="w-full border-dashed border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[var(--brand-color)] hover:border-[var(--brand-color)]"
         >
           + Agregar horario
         </Button>

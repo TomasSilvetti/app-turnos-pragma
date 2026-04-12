@@ -112,7 +112,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
           aria-invalid={!!errors.nombre}
           className={cn(
             "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+            "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
             errors.nombre ? "border-red-400" : "border-[#E0E0DB]"
           )}
           {...register("nombre", { required: "El nombre del negocio es obligatorio" })}
@@ -158,15 +158,15 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
             className={cn(
               "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 cursor-pointer transition-colors",
               isDragging
-                ? "border-[#253551] bg-blue-50"
+                ? "border-[var(--brand-color)] bg-blue-50"
                 : logoError
                 ? "border-red-400 bg-white"
-                : "border-[#E0E0DB] bg-[#F4F5F7] hover:border-[#253551] hover:bg-white"
+                : "border-[#E0E0DB] bg-[#F4F5F7] hover:border-[var(--brand-color)] hover:bg-white"
             )}
           >
             <Upload size={24} className="text-slate-400" />
             <p className="text-sm text-slate-500 text-center">
-              <span className="font-medium text-[#253551]">Seleccioná una imagen</span>
+              <span className="font-medium text-[var(--brand-color)]">Seleccioná una imagen</span>
               {" "}o arrastrala acá
             </p>
             <p className="text-xs text-slate-400">PNG, JPG, WEBP</p>
@@ -201,7 +201,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
           aria-invalid={!!errors.direccion}
           className={cn(
             "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+            "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
             errors.direccion ? "border-red-400" : "border-[#E0E0DB]"
           )}
           {...register("direccion", { required: "La dirección es obligatoria" })}
@@ -225,7 +225,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
           aria-invalid={!!errors.telefono}
           className={cn(
             "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+            "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
             errors.telefono ? "border-red-400" : "border-[#E0E0DB]"
           )}
           {...register("telefono", { required: "El teléfono es obligatorio" })}
@@ -252,7 +252,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
             aria-invalid={!!errors.cbu}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors font-small",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.cbu ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("cbu", {
@@ -282,7 +282,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
             aria-invalid={!!errors.alias}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors font-small",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.alias ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("alias", { required: "El alias es obligatorio" })}
@@ -299,7 +299,7 @@ export function BusinessProfileForm({ onSubmit }: BusinessProfileFormProps) {
         type="submit"
         size="lg"
         disabled={!allFilled || isSubmitting}
-        className="mt-1 w-full bg-[#253551] text-white hover:bg-[#1c2a40] disabled:opacity-40"
+        className="mt-1 w-full bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] disabled:opacity-40"
       >
         {isSubmitting ? "Guardando..." : "Guardar perfil"}
       </Button>

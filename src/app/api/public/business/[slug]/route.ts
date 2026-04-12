@@ -18,6 +18,8 @@ export async function GET(
       phone: true,
       cbu: true,
       alias: true,
+      theme: true,
+      brandColor: true,
     },
   });
 

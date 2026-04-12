@@ -6,6 +6,8 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const DEFAULT_BRAND_COLOR = "#253551";
+
 type BusinessPublicData = {
   name: string;
   logoUrl: string | null;
@@ -13,6 +15,7 @@ type BusinessPublicData = {
   phone: string | null;
   cbu: string | null;
   alias: string | null;
+  brandColor: string;
 };
 
 async function getBusinessBySlug(
@@ -27,9 +30,11 @@ async function getBusinessBySlug(
       phone: true,
       cbu: true,
       alias: true,
+      brandColor: true,
     },
   });
-  return profile;
+  if (!profile) return null;
+  return { ...profile, brandColor: profile.brandColor ?? DEFAULT_BRAND_COLOR };
 }
 
 export default async function PublicBusinessPage({
@@ -45,7 +50,10 @@ export default async function PublicBusinessPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12">
+    <main
+      className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12"
+      style={{ "--brand-color": business.brandColor } as React.CSSProperties}
+    >
       <div className="w-full max-w-md flex flex-col gap-6">
         {/* Card del negocio */}
         <div className="rounded-lg bg-white border border-[#E0E0DB] p-8 flex flex-col items-center gap-6">
@@ -61,7 +69,7 @@ export default async function PublicBusinessPage({
             </div>
           ) : (
             <div className="h-24 w-24 rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] flex items-center justify-center shrink-0">
-              <span className="font-heading text-3xl text-[#253551] uppercase">
+              <span className="font-heading text-3xl text-[var(--brand-color)] uppercase">
                 {business.name.charAt(0)}
               </span>
             </div>
@@ -78,7 +86,7 @@ export default async function PublicBusinessPage({
               <div className="flex items-start gap-3 text-sm text-[#2A2829]">
                 <MapPin
                   size={16}
-                  className="text-[#253551] mt-0.5 shrink-0"
+                  className="text-[var(--brand-color)] mt-0.5 shrink-0"
                   aria-hidden="true"
                 />
                 <span>{business.address}</span>
@@ -88,12 +96,12 @@ export default async function PublicBusinessPage({
               <div className="flex items-center gap-3 text-sm text-[#2A2829]">
                 <Phone
                   size={16}
-                  className="text-[#253551] shrink-0"
+                  className="text-[var(--brand-color)] shrink-0"
                   aria-hidden="true"
                 />
                 <a
                   href={`tel:${business.phone}`}
-                  className="hover:text-[#253551] transition-colors"
+                  className="hover:text-[var(--brand-color)] transition-colors"
                 >
                   {business.phone}
                 </a>

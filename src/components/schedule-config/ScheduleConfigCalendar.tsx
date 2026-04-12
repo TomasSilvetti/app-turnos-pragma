@@ -104,10 +104,10 @@ export function ScheduleConfigCalendar({
                 }
                 aria-disabled={!enabled}
                 className={cn(
-                  "h-8 w-8 rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#253551] focus-visible:ring-offset-1",
+                  "h-8 w-8 rounded-full text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-1",
                   !inMonth && "invisible pointer-events-none",
                   inMonth && enabled &&
-                    "bg-[#eef1f6] dark:bg-[#253551]/20 text-[#253551] dark:text-[#93c5fd] hover:bg-[#253551] hover:text-white cursor-pointer",
+                    "bg-[#eef1f6] dark:bg-[var(--brand-color)]/20 text-[var(--brand-color)] dark:text-[#93c5fd] hover:bg-[var(--brand-color)] hover:text-white cursor-pointer",
                   inMonth && !enabled &&
                     "text-[#2A2829]/25 dark:text-slate-600 cursor-default"
                 )}
@@ -122,7 +122,7 @@ export function ScheduleConfigCalendar({
       {/* Leyenda */}
       <div className="mt-4 flex items-center gap-4 text-xs text-gray-400 dark:text-slate-500">
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#eef1f6] dark:bg-[#253551]/20 border border-[#253551]/20" aria-hidden="true" />
+          <span className="inline-block h-3 w-3 rounded-full bg-[#eef1f6] dark:bg-[var(--brand-color)]/20 border border-[var(--brand-color)]/20" aria-hidden="true" />
           Día habilitado
         </span>
         <span className="flex items-center gap-1.5">

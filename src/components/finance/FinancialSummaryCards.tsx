@@ -62,7 +62,7 @@ export function FinancialSummaryCards({ totalIngresos, totalEgresos, balanceNeto
         </p>
         <p
           className={`font-heading text-2xl ${
-            balancePositivo ? "text-[#253551]" : "text-[#ef4444]"
+            balancePositivo ? "text-[var(--brand-color)]" : "text-[#ef4444]"
           }`}
         >
           {formatARS(balanceNeto)}

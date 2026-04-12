@@ -52,7 +52,7 @@ export function DeleteScheduleConfigDialog({
       <div className="w-full max-w-sm rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 size={20} className="animate-spin text-[#253551]" />
+            <Loader2 size={20} className="animate-spin text-[var(--brand-color)]" />
           </div>
         ) : (
           <>
@@ -71,7 +71,7 @@ export function DeleteScheduleConfigDialog({
                 </h2>
                 <p className="mt-1 text-sm text-[#2A2829]/70 dark:text-[#94a3b8]">
                   Configuración:{" "}
-                  <span className="font-medium text-[#253551]">{configName}</span>
+                  <span className="font-medium text-[var(--brand-color)]">{configName}</span>
                 </p>
 
                 {!hasReservados && (

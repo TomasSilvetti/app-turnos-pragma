@@ -68,9 +68,9 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
         onClick={() => setOpen((p) => !p)}
         className={cn(
           "flex w-full items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors outline-none",
-          "focus:ring-2 focus:ring-[#253551]/30",
+          "focus:ring-2 focus:ring-[var(--brand-color)]/30",
           hasError ? "border-[#ef4444]" : "border-[#E0E0DB]",
-          value ? "text-[#2A2829]" : "text-[#2A2829]/40"
+          value ? "text-[#2A2829] dark:text-[#e2e8f0]" : "text-[#2A2829]/40 dark:text-[#94a3b8]/60"
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -86,7 +86,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-[#2A2829]/40"
+          className="text-[#2A2829]/40 dark:text-[#94a3b8]/60"
         >
           <circle cx="12" cy="12" r="10" />
           <polyline points="12 6 12 12 16 14" />
@@ -95,13 +95,13 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
 
       {/* Dropdown */}
       {open && (
-        <div className={cn("absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] bg-white shadow-lg overflow-hidden", dropdownAlign === "right" ? "right-0" : "left-0")}>
+        <div className={cn("absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] shadow-lg overflow-hidden", dropdownAlign === "right" ? "right-0" : "left-0")}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#E0E0DB] px-4 py-2.5">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[#253551]/60">
+          <div className="flex items-center justify-between border-b border-[#E0E0DB] dark:border-[#2d3548] px-4 py-2.5">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-color)]/60">
               Hora (24h)
             </span>
-            <span className="font-mono text-sm font-semibold text-[#253551]">
+            <span className="font-mono text-sm font-semibold text-[var(--brand-color)]">
               {value || "--:--"}
             </span>
           </div>
@@ -109,8 +109,8 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
           {/* Columns */}
           <div className="flex">
             {/* Hours column */}
-            <div className="flex-1 border-r border-[#E0E0DB]">
-              <div className="border-b border-[#E0E0DB] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40">
+            <div className="flex-1 border-r border-[#E0E0DB] dark:border-[#2d3548]">
+              <div className="border-b border-[#E0E0DB] dark:border-[#2d3548] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
                 HH
               </div>
               <div
@@ -130,8 +130,8 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                     className={cn(
                       "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
                       h === selectedHour
-                        ? "bg-[#253551] text-white font-semibold"
-                        : "text-[#2A2829] hover:bg-[#F4F5F7]"
+                        ? "bg-[var(--brand-color)] text-white font-semibold"
+                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
                     )}
                   >
                     {h}
@@ -142,7 +142,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
 
             {/* Minutes column */}
             <div className="flex-1">
-              <div className="border-b border-[#E0E0DB] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40">
+              <div className="border-b border-[#E0E0DB] dark:border-[#2d3548] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
                 MM
               </div>
               <div
@@ -165,8 +165,8 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                     className={cn(
                       "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
                       m === selectedMinute
-                        ? "bg-[#253551] text-white font-semibold"
-                        : "text-[#2A2829] hover:bg-[#F4F5F7]"
+                        ? "bg-[var(--brand-color)] text-white font-semibold"
+                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
                     )}
                   >
                     {m}
@@ -177,11 +177,11 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
           </div>
 
           {/* Footer */}
-          <div className="border-t border-[#E0E0DB] px-3 py-2 flex justify-end">
+          <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] px-3 py-2 flex justify-end">
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-md px-3 py-1 text-xs font-medium text-white bg-[#253551] hover:bg-[#1c2a40] transition-colors"
+              className="rounded-md px-3 py-1 text-xs font-medium text-white bg-[var(--brand-color)] hover:bg-[#1c2a40] transition-colors"
             >
               Confirmar
             </button>

@@ -182,7 +182,7 @@ export default function ConfiguracionTurnosPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Configuración de turnos</h1>
+        <h1 className="font-heading text-2xl text-[var(--brand-color)] dark:text-[#93c5fd]">Configuración de turnos</h1>
         <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
           Definí tu disponibilidad semanal para la generación de turnos.
         </p>
@@ -212,7 +212,7 @@ export default function ConfiguracionTurnosPage() {
 
           {hasActiveConfigs && (
             <div className="mt-6 space-y-3">
-              <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd]">Vista previa de turnos</h2>
+              <h2 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd]">Vista previa de turnos</h2>
               <ScheduleConfigCalendar configs={configs} onDaySelect={setSelectedDay} />
               <ScheduleConfigSlots configs={configs} selectedDay={selectedDay} />
             </div>

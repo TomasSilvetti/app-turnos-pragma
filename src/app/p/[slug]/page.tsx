@@ -10,6 +10,8 @@ type BusinessPublicData = {
   phone: string | null;
   cbu: string | null;
   alias: string | null;
+  theme: string;
+  brandColor: string | null;
 };
 
 async function getBusinessBySlug(
@@ -36,11 +38,17 @@ export default async function PublicBookingPage({
     notFound();
   }
 
+  const isDark = business.theme === "dark";
+  const brandColor = business.brandColor ?? "#253551";
+
   return (
-    <main className="min-h-screen bg-surface flex flex-col items-center px-4 py-12">
+    <main
+      className={`min-h-screen flex flex-col items-center px-4 py-12 ${isDark ? "dark bg-[#0f172a]" : "bg-gray-50"}`}
+      style={{ "--brand-color": brandColor } as React.CSSProperties}
+    >
       <div className="w-full max-w-md flex flex-col gap-6">
         {/* Card del negocio */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] p-5 flex flex-col items-center gap-5">
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col items-center gap-5">
           {/* Logo */}
           {business.logoUrl ? (
             <div className="relative h-24 w-24 rounded-xl overflow-hidden border border-[#E0E0DB] shrink-0">

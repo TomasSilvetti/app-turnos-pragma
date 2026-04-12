@@ -142,10 +142,10 @@ export default function BookingList() {
     <div className="flex flex-col gap-8">
       {/* Pendientes de pago */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd] uppercase tracking-wide">
+        <h2 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd] uppercase tracking-wide">
           Pendientes de pago
           {!isLoading && pending.length > 0 && (
-            <span className="ml-2 text-xs font-bold bg-[#253551] text-white rounded-full px-2 py-0.5">
+            <span className="ml-2 text-xs font-bold bg-[var(--brand-color)] text-white rounded-full px-2 py-0.5">
               {pending.length}
             </span>
           )}
@@ -167,7 +167,7 @@ export default function BookingList() {
                   <button
                     onClick={() => handleConfirmPayment(item.bookingId)}
                     disabled={loadingId === item.bookingId}
-                    className="flex items-center gap-1.5 font-body text-sm text-white bg-[#253551] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
+                    className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
                     aria-label="Marcar como pagado"
                   >
                     <CheckCircle size={15} />
@@ -182,10 +182,10 @@ export default function BookingList() {
 
       {/* Confirmados */}
       <section className="flex flex-col gap-3">
-        <h2 className="font-heading text-base text-[#253551] dark:text-[#93c5fd] uppercase tracking-wide">
+        <h2 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd] uppercase tracking-wide">
           Confirmados
           {!isLoading && confirmed.length > 0 && (
-            <span className="ml-2 text-xs font-bold bg-[#253551] text-white rounded-full px-2 py-0.5">
+            <span className="ml-2 text-xs font-bold bg-[var(--brand-color)] text-white rounded-full px-2 py-0.5">
               {confirmed.length}
             </span>
           )}

@@ -59,27 +59,27 @@ export default function MiniCalendar({
   }
 
   return (
-    <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-5">
+    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
       {/* Header del mes */}
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => onMonthChange(subMonths(viewMonth, 1))}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#2d3548] transition-colors"
           aria-label="Mes anterior"
         >
-          <ChevronLeft size={16} className="text-gray-500" />
+          <ChevronLeft size={16} className="text-gray-500 dark:text-[#94a3b8]" />
         </button>
 
-        <span className="font-heading text-sm font-semibold text-[#2A2829] capitalize tracking-wide">
+        <span className="font-heading text-sm font-semibold text-[#2A2829] dark:text-[#e2e8f0] capitalize tracking-wide">
           {format(viewMonth, "MMMM yyyy", { locale: es })}
         </span>
 
         <button
           onClick={() => onMonthChange(addMonths(viewMonth, 1))}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#2d3548] transition-colors"
           aria-label="Mes siguiente"
         >
-          <ChevronRight size={16} className="text-gray-500" />
+          <ChevronRight size={16} className="text-gray-500 dark:text-[#94a3b8]" />
         </button>
       </div>
 
@@ -88,7 +88,7 @@ export default function MiniCalendar({
         {WEEK_DAYS.map((d) => (
           <div
             key={d}
-            className="text-center text-[10px] text-gray-400 py-1 uppercase tracking-widest font-medium"
+            className="text-center text-[10px] text-gray-400 dark:text-[#64748b] py-1 uppercase tracking-widest font-medium"
           >
             {d}
           </div>
@@ -96,7 +96,7 @@ export default function MiniCalendar({
       </div>
 
       {/* Separador sutil */}
-      <div className="border-t border-gray-50 mb-2" />
+      <div className="border-t border-gray-50 dark:border-[#2d3548] mb-2" />
 
       {/* Grilla de días */}
       <div className="grid grid-cols-7 gap-y-1">
@@ -119,12 +119,12 @@ export default function MiniCalendar({
               className={[
                 "relative flex flex-col items-center justify-center h-9 w-full text-sm transition-all duration-150",
                 selected
-                  ? "bg-[#253551] text-white shadow-md rounded-lg"
+                  ? "bg-[var(--brand-color)] text-white shadow-md rounded-lg"
                   : todayDay && !available
-                  ? "ring-2 ring-[#253551] ring-offset-1 text-[#253551] font-bold rounded-lg"
+                  ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] font-bold rounded-lg"
                   : available
-                  ? "rounded-full bg-[#eef1f6] text-[#253551] font-semibold hover:bg-[#253551] hover:text-white cursor-pointer"
-                  : "text-gray-300 cursor-default rounded-lg",
+                  ? "rounded-full bg-[#eef1f6] dark:bg-[#2d3548] text-[var(--brand-color)] font-semibold hover:bg-[var(--brand-color)] hover:text-white cursor-pointer"
+                  : "text-gray-300 dark:text-[#475569] cursor-default rounded-lg",
               ].join(" ")}
             >
               <span>{format(day, "d")}</span>

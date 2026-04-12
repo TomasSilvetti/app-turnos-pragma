@@ -63,7 +63,7 @@ export function ExpenseSection({ onExpenseAdded }: Props) {
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               placeholder="Ej: Compra de insumos"
-              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#9ca3af] dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#253551]/30"
+              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#9ca3af] dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)]/30"
               disabled={submitting}
             />
           </div>

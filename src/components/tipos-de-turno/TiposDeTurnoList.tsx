@@ -24,7 +24,7 @@ export function TiposDeTurnoList({ tipos, onEdit, onDelete, onAdd }: TiposDeTurn
         </div>
         <Button
           onClick={onAdd}
-          className="bg-[#253551] text-white hover:bg-[#1c2a40]"
+          className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40]"
         >
           Agregar tipo de turno
         </Button>
@@ -38,7 +38,7 @@ export function TiposDeTurnoList({ tipos, onEdit, onDelete, onAdd }: TiposDeTurn
       <div className="hidden overflow-hidden rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] sm:block">
         <table className="w-full text-sm" aria-label="Lista de tipos de turno">
           <thead>
-            <tr className="bg-[#253551] text-white">
+            <tr className="bg-[var(--brand-color)] text-white">
               <th scope="col" className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">
                 Título
               </th>
@@ -57,7 +57,7 @@ export function TiposDeTurnoList({ tipos, onEdit, onDelete, onAdd }: TiposDeTurn
             {tipos.map((tipo, index) => (
               <tr
                 key={tipo.id}
-                className={`border-b border-[#E0E0DB] dark:border-[#2d3548] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[#253551]/10 ${
+                className={`border-b border-[#E0E0DB] dark:border-[#2d3548] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 ${
                   index === tipos.length - 1 ? "border-b-0" : ""
                 }`}
               >
@@ -103,7 +103,7 @@ export function TiposDeTurnoList({ tipos, onEdit, onDelete, onAdd }: TiposDeTurn
           >
             <div className="mb-1 flex items-start justify-between gap-2">
               <span className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{tipo.titulo}</span>
-              <span className="shrink-0 text-sm font-medium text-[#253551]">
+              <span className="shrink-0 text-sm font-medium text-[var(--brand-color)] dark:text-[#93c5fd]">
                 ${tipo.precio.toLocaleString("es-AR")}
               </span>
             </div>

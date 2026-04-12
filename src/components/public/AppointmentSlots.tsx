@@ -18,11 +18,11 @@ type Props = {
 export default function AppointmentSlots({ appointments, onSelect }: Props) {
   if (appointments.length === 0) {
     return (
-      <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-3 py-12">
-        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
-          <Clock size={22} className="text-gray-300" aria-hidden="true" />
+      <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
+        <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2d3548] flex items-center justify-center">
+          <Clock size={22} className="text-gray-300 dark:text-[#475569]" aria-hidden="true" />
         </div>
-        <p className="font-body text-sm text-gray-400 text-center">
+        <p className="font-body text-sm text-gray-400 dark:text-[#64748b] text-center">
           No hay turnos disponibles para este día
         </p>
       </div>
@@ -30,8 +30,8 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
   }
 
   return (
-    <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-5">
-      <h2 className="font-heading text-xs text-gray-400 mb-4 uppercase tracking-widest">
+    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+      <h2 className="font-heading text-xs text-gray-400 dark:text-[#64748b] mb-4 uppercase tracking-widest">
         Turnos disponibles
       </h2>
 
@@ -48,8 +48,8 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
             }
             className={
               appointment.booked
-                ? "group flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 cursor-not-allowed text-left"
-                : "group flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 hover:border-[#253551] hover:bg-[#253551] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
+                ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
+                : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
             }
           >
             <div className="flex items-center gap-2">
@@ -57,26 +57,26 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
                 size={14}
                 className={
                   appointment.booked
-                    ? "text-gray-300"
-                    : "text-[#253551] group-hover:text-white transition-colors"
+                    ? "text-gray-300 dark:text-[#475569]"
+                    : "text-[var(--brand-color)] group-hover:text-white transition-colors"
                 }
               />
               <span
                 className={
                   appointment.booked
-                    ? "font-heading text-sm text-gray-400"
-                    : "font-heading text-sm text-[#2A2829] group-hover:text-white transition-colors"
+                    ? "font-heading text-sm text-gray-400 dark:text-[#475569]"
+                    : "font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] group-hover:text-white transition-colors"
                 }
               >
                 {appointment.time}
               </span>
             </div>
             {appointment.booked ? (
-              <span className="text-[10px] font-medium text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
                 Ocupado
               </span>
             ) : (
-              <span className="text-[10px] font-medium text-emerald-600 group-hover:text-emerald-300 transition-colors">
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-300 transition-colors">
                 Disponible
               </span>
             )}

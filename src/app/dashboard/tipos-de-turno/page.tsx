@@ -104,12 +104,12 @@ export default function TiposDeTurnoPage() {
     return (
       <div className="mx-auto max-w-4xl">
         <div className="mb-6">
-          <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Tipos de turno</h1>
+          <h1 className="font-heading text-2xl text-[var(--brand-color)] dark:text-[#93c5fd]">Tipos de turno</h1>
           <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
             Administrá los tipos de turno que ofrecés a tus clientes.
           </p>
         </div>
-        <p className="text-sm text-[#2A2829]/60">Cargando...</p>
+        <p className="text-sm text-[#2A2829]/60 dark:text-[#64748b]">Cargando...</p>
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function TiposDeTurnoPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="font-heading text-2xl text-[#253551] dark:text-[#93c5fd]">Tipos de turno</h1>
+          <h1 className="font-heading text-2xl text-[var(--brand-color)] dark:text-[#93c5fd]">Tipos de turno</h1>
           <p className="mt-0.5 text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
             Administrá los tipos de turno que ofrecés a tus clientes.
           </p>
@@ -126,7 +126,7 @@ export default function TiposDeTurnoPage() {
         {tipos.length > 0 && (
           <Button
             onClick={handleAdd}
-            className="bg-[#253551] text-white hover:bg-[#1c2a40] sm:shrink-0"
+            className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] sm:shrink-0"
           >
             <Plus size={16} aria-hidden="true" />
             Agregar tipo de turno

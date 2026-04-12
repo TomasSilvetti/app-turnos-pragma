@@ -87,33 +87,33 @@ export default function BookingModal({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white border border-[#E0E0DB] p-5 flex flex-col gap-5 shadow-lg">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-5 shadow-lg">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
             <h2
               id="modal-title"
-              className="font-heading text-lg text-[#2A2829] leading-tight"
+              className="font-heading text-lg text-[#2A2829] dark:text-[#e2e8f0] leading-tight"
             >
               Confirmar reserva
             </h2>
-            <p className="font-body text-sm text-[#253551] font-medium mt-0.5">
+            <p className="font-body text-sm text-[var(--brand-color)] font-medium mt-0.5">
               {appointment.time} — ${displayPrice.toLocaleString("es-AR")}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
             aria-label="Cerrar modal"
           >
-            <X size={18} className="text-[#2A2829]" />
+            <X size={18} className="text-[#2A2829] dark:text-[#94a3b8]" />
           </button>
         </div>
 
         {/* Selector de tipo de turno */}
         {hasServiceTypes && (
           <div className="flex flex-col gap-2">
-            <p className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide">
+            <p className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide">
               Tipo de turno <span aria-hidden="true" className="text-[#ef4444]">*</span>
             </p>
             <div className="flex flex-col gap-2">
@@ -127,14 +127,14 @@ export default function BookingModal({
                     aria-pressed={isSelected}
                     className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-left transition-colors ${
                       isSelected
-                        ? "border-[#253551] bg-[#253551]/5"
-                        : "border-[#E0E0DB] bg-white hover:bg-[#F4F5F7]"
+                        ? "border-[var(--brand-color)] bg-[var(--brand-color)]/5"
+                        : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
                     }`}
                   >
-                    <span className={`font-body text-sm ${isSelected ? "text-[#253551] font-medium" : "text-[#2A2829]"}`}>
+                    <span className={`font-body text-sm ${isSelected ? "text-[var(--brand-color)] font-medium" : "text-[#2A2829] dark:text-[#e2e8f0]"}`}>
                       {type.title}
                     </span>
-                    <span className={`font-body text-sm font-medium ${isSelected ? "text-[#253551]" : "text-[#2A2829]"}`}>
+                    <span className={`font-body text-sm font-medium ${isSelected ? "text-[var(--brand-color)]" : "text-[#2A2829] dark:text-[#e2e8f0]"}`}>
                       ${type.price.toLocaleString("es-AR")}
                     </span>
                   </button>
@@ -150,7 +150,7 @@ export default function BookingModal({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="booking-name"
-              className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
+              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
             >
               Nombre <span aria-hidden="true" className="text-[#ef4444]">*</span>
             </label>
@@ -162,7 +162,7 @@ export default function BookingModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Tu nombre"
               autoComplete="given-name"
-              className="font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 outline-none focus:border-[#253551] transition-colors bg-white placeholder:text-[#2A2829]/30"
+              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
             />
           </div>
 
@@ -170,7 +170,7 @@ export default function BookingModal({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="booking-surname"
-              className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
+              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
             >
               Apellido <span aria-hidden="true" className="text-[#ef4444]">*</span>
             </label>
@@ -181,7 +181,7 @@ export default function BookingModal({
               onChange={(e) => setSurname(e.target.value)}
               placeholder="Tu apellido"
               autoComplete="family-name"
-              className="font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 outline-none focus:border-[#253551] transition-colors bg-white placeholder:text-[#2A2829]/30"
+              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
             />
           </div>
 
@@ -189,7 +189,7 @@ export default function BookingModal({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="booking-phone"
-              className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
+              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
             >
               Teléfono <span aria-hidden="true" className="text-[#ef4444]">*</span>
             </label>
@@ -200,7 +200,7 @@ export default function BookingModal({
               onChange={(e) => setPhone(e.target.value)}
               placeholder="Ej: 11 1234-5678"
               autoComplete="tel"
-              className="font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 outline-none focus:border-[#253551] transition-colors bg-white placeholder:text-[#2A2829]/30"
+              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
             />
           </div>
 
@@ -219,14 +219,14 @@ export default function BookingModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md py-2.5 hover:bg-[#F4F5F7] transition-colors"
+              className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={!isValid || isLoading}
-              className="flex-1 font-body text-sm text-white bg-[#253551] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isLoading ? "Reservando..." : "Confirmar reserva"}
             </button>

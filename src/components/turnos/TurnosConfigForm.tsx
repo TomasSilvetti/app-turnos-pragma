@@ -53,7 +53,7 @@ export function TurnosConfigForm({ initialValues, onSubmit }: TurnosConfigFormPr
             aria-invalid={!!errors.horaInicio}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] outline-none transition-colors",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.horaInicio ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("horaInicio", { required: "La hora de inicio es obligatoria" })}
@@ -76,7 +76,7 @@ export function TurnosConfigForm({ initialValues, onSubmit }: TurnosConfigFormPr
             aria-invalid={!!errors.horaFin}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] outline-none transition-colors",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.horaFin ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("horaFin", {
@@ -113,7 +113,7 @@ export function TurnosConfigForm({ initialValues, onSubmit }: TurnosConfigFormPr
             aria-invalid={!!errors.intervalo}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.intervalo ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("intervalo", {
@@ -148,7 +148,7 @@ export function TurnosConfigForm({ initialValues, onSubmit }: TurnosConfigFormPr
             aria-invalid={!!errors.precio}
             className={cn(
               "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+              "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
               errors.precio ? "border-red-400" : "border-[#E0E0DB]"
             )}
             {...register("precio", {
@@ -173,7 +173,7 @@ export function TurnosConfigForm({ initialValues, onSubmit }: TurnosConfigFormPr
         type="submit"
         size="lg"
         disabled={!allFilled || isSubmitting}
-        className="mt-1 w-full bg-[#253551] text-white hover:bg-[#1c2a40] disabled:opacity-40"
+        className="mt-1 w-full bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] disabled:opacity-40"
       >
         {isSubmitting ? "Guardando..." : "Guardar configuración"}
       </Button>

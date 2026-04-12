@@ -37,7 +37,7 @@ export function DeleteTipoDeTurnoDialog({
               Esta acción no se puede deshacer.
             </p>
             <p className="mt-1 text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
-              Tipo de turno: <span className="text-[#253551]">{tipo.titulo}</span>
+              Tipo de turno: <span className="text-[var(--brand-color)]">{tipo.titulo}</span>
             </p>
           </div>
         </div>

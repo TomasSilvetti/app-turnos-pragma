@@ -13,9 +13,11 @@ export default auth((req) => {
   const isDashboard = pathname.startsWith(DASHBOARD_PREFIX);
   const isLoginPage = pathname === "/login";
 
-  // Redirect unauthenticated users to login
+  // Redirect unauthenticated users to login, preserving the original URL as callbackUrl
   if (isDashboard && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.nextUrl));
+    const loginUrl = new URL("/login", req.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Redirect authenticated users away from login

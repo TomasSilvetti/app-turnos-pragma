@@ -88,7 +88,7 @@ export function NumericInput({ id, value, onChange, placeholder, disabled, hasEr
       disabled={disabled}
       className={cn(
         "h-10 rounded-lg border bg-white px-3 text-sm text-[#2A2829] placeholder:text-slate-400 outline-none transition-colors",
-        "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
+        "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
         hasError ? "border-red-400" : "border-[#E0E0DB]",
         className
       )}

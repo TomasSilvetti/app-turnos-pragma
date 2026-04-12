@@ -15,11 +15,14 @@ const navItems = [
   { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments" },
 ];
 
+const DEFAULT_BRAND_COLOR = "#253551";
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [isDark, setIsDark] = useState(false);
+  const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -47,6 +50,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     .toUpperCase();
 
   useEffect(() => {
+    fetch("/api/business-profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.brandColor) setBrandColor(data.brandColor);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
     fetch("/api/panel/reschedules/count")
       .then((res) => (res.ok ? res.json() : { count: 0 }))
       .then((data) => setRescheduleCount(data.count ?? 0))
@@ -54,7 +66,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0f172a]">
+    <div
+      className="min-h-screen bg-[#F4F5F7] dark:bg-[#0f172a]"
+      style={{ "--brand-color": brandColor } as React.CSSProperties}
+    >
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 lg:hidden"
@@ -75,12 +90,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-5 py-6 border-b border-[#E0E0DB] dark:border-[#2d3548] flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(false)}
-            className="text-[#253551] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
+            className="text-[var(--brand-color)] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
             aria-label="Cerrar menú"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
           </button>
-          <span className="font-heading text-lg text-[#253551] dark:text-white">Panel</span>
+          <span className="font-heading text-lg text-[var(--brand-color)] dark:text-white">Panel</span>
         </div>
 
         <nav className="flex flex-col gap-1 p-3 flex-1" aria-label="Navegación principal">
@@ -95,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={cn(
                   "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
                   active
-                    ? "bg-[#253551] text-white font-medium"
+                    ? "bg-[var(--brand-color)] text-white font-medium"
                     : "text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                 )}
               >
@@ -108,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     className={cn(
                       "ml-2 min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center font-small text-[10px] font-bold leading-none",
                       active
-                        ? "bg-white text-[#253551]"
+                        ? "bg-white text-[var(--brand-color)] dark:text-[#1e293b]"
                         : "bg-[#ef4444] text-white"
                     )}
                     aria-label={`${rescheduleCount} reprogramaciones pendientes`}
@@ -136,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span
             className={cn(
               "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
-              isDark ? "bg-[#253551]" : "bg-[#D1D5DB]"
+              isDark ? "bg-[var(--brand-color)]" : "bg-[#D1D5DB]"
             )}
             aria-hidden="true"
           >
@@ -151,7 +166,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#1e293b] flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-[#253551] text-white flex items-center justify-center font-small text-[11px] font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[var(--brand-color)] text-white flex items-center justify-center font-small text-[11px] font-bold shrink-0">
               {initials}
             </div>
             <div className="flex flex-col min-w-0">
@@ -173,7 +188,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="mb-4 text-[#253551] hover:text-[#1c2a40] transition-colors"
+            className="mb-4 text-[var(--brand-color)] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
             aria-label="Abrir menú"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>menu</span>

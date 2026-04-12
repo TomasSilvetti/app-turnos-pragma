@@ -123,7 +123,7 @@ export function ScheduleConfigModal({
       <div className="w-full max-w-lg rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] shadow-lg flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0DB] dark:border-[#2d3548] shrink-0">
-          <h2 id="schedule-modal-title" className="font-heading text-lg text-[#253551] dark:text-[#93c5fd]">
+          <h2 id="schedule-modal-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             {isEditing ? "Editar horario" : "Agregar horario"}
           </h2>
           <button
@@ -150,7 +150,7 @@ export function ScheduleConfigModal({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Lunes a viernes mañana"
-              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[#253551] focus:outline-none focus:ring-1 focus:ring-[#253551]"
+              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
             />
           </div>
 
@@ -210,7 +210,7 @@ export function ScheduleConfigModal({
                   className={cn(
                     "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
                     intervalMinutes === min
-                      ? "border-[#253551] bg-[#253551] text-white"
+                      ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
                       : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                   )}
                 >
@@ -239,7 +239,7 @@ export function ScheduleConfigModal({
                   className={cn(
                     "h-10 w-12 rounded-md border text-xs font-medium transition-colors",
                     daysOfWeek.includes(dia)
-                      ? "border-[#253551] bg-[#253551] text-white"
+                      ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
                       : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                   )}
                 >
@@ -264,7 +264,7 @@ export function ScheduleConfigModal({
                       className={cn(
                         "flex cursor-pointer items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
                         checked
-                          ? "border-[#253551] bg-[#eef1f6] text-[#253551]"
+                          ? "border-[var(--brand-color)] bg-[#eef1f6] text-[var(--brand-color)]"
                           : "border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                       )}
                     >
@@ -279,7 +279,7 @@ export function ScheduleConfigModal({
                         className={cn(
                           "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
                           checked
-                            ? "border-[#253551] bg-[#253551]"
+                            ? "border-[var(--brand-color)] bg-[var(--brand-color)]"
                             : "border-[#C8C8C2] dark:border-[#2d3548] bg-white dark:bg-[#0f172a]"
                         )}
                         aria-hidden="true"
@@ -310,7 +310,7 @@ export function ScheduleConfigModal({
           <Button
             onClick={handleSubmit}
             disabled={saveDisabled}
-            className="bg-[#253551] text-white hover:bg-[#1c2a40] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Guardar
           </Button>

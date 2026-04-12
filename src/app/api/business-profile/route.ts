@@ -20,6 +20,7 @@ export async function GET() {
       cbu: true,
       alias: true,
       slug: true,
+      brandColor: true,
     },
   });
 

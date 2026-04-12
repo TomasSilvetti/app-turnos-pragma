@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BusinessProfileEditForm } from "@/components/profile/BusinessProfileEditForm";
 import { BrandColorPicker } from "@/components/profile/BrandColorPicker";
 
+const DEFAULT_COLOR = "#253551";
+
 export default function DashboardPerfilPage() {
-  const [brandColor, setBrandColor] = useState("#253551");
+  const [brandColor, setBrandColor] = useState(DEFAULT_COLOR);
+
+  useEffect(() => {
+    fetch("/api/business-profile")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.brandColor) setBrandColor(data.brandColor);
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleBrandColorConfirm(color: string) {
     setBrandColor(color);
-    // porcion-005 conectará este handler con PATCH /api/business-profile/brand-color
+    await fetch("/api/business-profile/brand-color", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ brandColor: color }),
+    });
   }
 
   return (

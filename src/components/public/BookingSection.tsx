@@ -181,8 +181,8 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
       />
 
       {isLoadingSlots ? (
-        <div className="rounded-lg bg-white border border-[#E0E0DB] p-5 flex items-center justify-center py-10">
-          <p className="font-body text-sm text-[#2A2829] opacity-50">Cargando turnos...</p>
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
         </div>
       ) : (
         <AppointmentSlots

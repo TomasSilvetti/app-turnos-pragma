@@ -63,7 +63,7 @@ export default function RescheduleList() {
     <>
       <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
         {/* Header de tabla — solo en sm+ */}
-        <div className="hidden sm:grid grid-cols-[1fr_1fr_auto] bg-[#253551] text-white text-xs uppercase tracking-[0.05em] font-body px-4 py-2.5">
+        <div className="hidden sm:grid grid-cols-[1fr_1fr_auto] bg-[var(--brand-color)] text-white text-xs uppercase tracking-[0.05em] font-body px-4 py-2.5">
           <span>Cliente</span>
           <span>Turno original</span>
           <span className="w-28" />
@@ -117,7 +117,7 @@ export default function RescheduleList() {
                 {/* Acción */}
                 <button
                   onClick={() => setSelectedItem(item)}
-                  className="shrink-0 font-body text-sm text-white bg-[#253551] rounded-md px-4 py-2 hover:bg-[#1c2a40] transition-colors w-full sm:w-auto"
+                  className="shrink-0 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-4 py-2 hover:bg-[#1c2a40] transition-colors w-full sm:w-auto"
                 >
                   Reprogramar
                 </button>

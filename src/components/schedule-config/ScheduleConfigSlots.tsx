@@ -101,7 +101,7 @@ export function ScheduleConfigSlots({
               className="group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-4 py-3 shadow-sm"
             >
               <div className="flex items-center gap-2">
-                <Clock size={14} className="text-[#253551]" />
+                <Clock size={14} className="text-[var(--brand-color)]" />
                 <span className="font-heading text-sm text-gray-700 dark:text-[#e2e8f0]">{time}</span>
               </div>
               <span className="text-[10px] font-medium text-emerald-600">
