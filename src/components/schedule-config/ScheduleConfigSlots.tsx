@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { getDay } from "date-fns";
+import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ScheduleConfig } from "./ScheduleConfigList";
 
@@ -44,8 +45,11 @@ export function ScheduleConfigSlots({
 }: ScheduleConfigSlotsProps) {
   if (!selectedDay) {
     return (
-      <div className="rounded-lg border border-[#E0E0DB] bg-white p-5">
-        <p className="text-sm text-[#2A2829]/50 text-center py-4">
+      <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-3 py-12">
+        <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center">
+          <Clock size={22} className="text-gray-300" aria-hidden="true" />
+        </div>
+        <p className="text-sm text-gray-400 text-center">
           Seleccioná un día del calendario para ver los turnos disponibles.
         </p>
       </div>
@@ -63,8 +67,8 @@ export function ScheduleConfigSlots({
     : [];
 
   return (
-    <div className="rounded-lg border border-[#E0E0DB] bg-white p-5">
-      <p className="font-heading text-sm text-[#253551] mb-4 capitalize">
+    <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-5">
+      <p className="font-heading text-xs text-gray-400 mb-4 capitalize uppercase tracking-widest">
         {dayLabel}
       </p>
 
@@ -77,13 +81,13 @@ export function ScheduleConfigSlots({
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
-              className="h-12 rounded-lg bg-[#E0E0DB]/50 animate-pulse"
+              className="h-12 rounded-lg bg-gray-100 animate-pulse"
               aria-hidden="true"
             />
           ))}
         </div>
       ) : slots.length === 0 ? (
-        <p className="text-sm text-[#2A2829]/50 text-center py-4">
+        <p className="text-sm text-gray-400 text-center py-4">
           No hay turnos disponibles para este día.
         </p>
       ) : (
@@ -94,10 +98,15 @@ export function ScheduleConfigSlots({
           {slots.map((time) => (
             <li
               key={time}
-              className="flex flex-col items-center justify-center rounded-lg border border-[#E0E0DB] bg-[#F4F5F7] px-3 py-3 gap-0.5"
+              className="group flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm"
             >
-              <span className="font-heading text-sm text-[#253551]">{time}</span>
-              <span className="text-xs text-[#22c55e] font-medium">Disponible</span>
+              <div className="flex items-center gap-2">
+                <Clock size={14} className="text-[#253551]" />
+                <span className="font-heading text-sm text-gray-700">{time}</span>
+              </div>
+              <span className="text-[10px] font-medium text-emerald-600">
+                Disponible
+              </span>
             </li>
           ))}
         </ul>

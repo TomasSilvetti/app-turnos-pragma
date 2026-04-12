@@ -58,24 +58,25 @@ export function ScheduleConfigCalendar({
   const monthLabel = format(today, "MMMM yyyy", { locale: es });
 
   return (
-    <div className="rounded-lg border border-[#E0E0DB] bg-white p-5">
+    <div className="rounded-xl bg-white border border-gray-100 shadow-sm p-5">
       {/* Encabezado del mes */}
-      <p className="font-heading text-sm text-[#253551] mb-4 capitalize">
+      <p className="font-heading text-sm font-semibold text-[#2A2829] mb-5 capitalize tracking-wide">
         {monthLabel}
       </p>
 
       {/* Cabecera días de la semana */}
-      <div className="grid grid-cols-7 mb-1" role="row">
+      <div className="grid grid-cols-7 mb-2" role="row">
         {WEEKDAY_LABELS.map((label) => (
           <div
             key={label}
-            className="text-center text-xs font-medium text-[#2A2829]/40 py-1"
+            className="text-center text-[10px] font-medium text-gray-400 py-1 uppercase tracking-widest"
             aria-hidden="true"
           >
             {label}
           </div>
         ))}
       </div>
+      <div className="border-t border-gray-50 mb-2" />
 
       {/* Grilla de días */}
       <div
@@ -119,13 +120,13 @@ export function ScheduleConfigCalendar({
       </div>
 
       {/* Leyenda */}
-      <div className="mt-4 flex items-center gap-4 text-xs text-[#2A2829]/50">
+      <div className="mt-4 flex items-center gap-4 text-xs text-gray-400">
         <span className="flex items-center gap-1.5">
           <span className="inline-block h-3 w-3 rounded-full bg-[#eef1f6] border border-[#253551]/20" aria-hidden="true" />
           Día habilitado
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-full bg-[#E0E0DB]/50" aria-hidden="true" />
+          <span className="inline-block h-3 w-3 rounded-full bg-gray-100" aria-hidden="true" />
           Sin cobertura
         </span>
       </div>
