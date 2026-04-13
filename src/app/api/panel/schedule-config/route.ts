@@ -320,7 +320,7 @@ export async function PUT(req: Request) {
       intervalMinutes: updatedConfig!.intervalMinutes,
       daysOfWeek: updatedConfig!.daysOfWeek,
       serviceTypes: updatedConfig!.serviceTypes,
-      affectedBookings: toReschedule.length,
+      affectedBookings: toReschedulePending.length + toRescheduleConfirmed.length,
     },
     { status: 200 }
   );
