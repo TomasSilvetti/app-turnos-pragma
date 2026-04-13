@@ -56,6 +56,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (data?.brandColor) setBrandColor(data.brandColor);
       })
       .catch(() => {});
+
+    const handleColorChange = (e: Event) => {
+      const color = (e as CustomEvent<string>).detail;
+      if (color) setBrandColor(color);
+    };
+    window.addEventListener("brand-color-change", handleColorChange);
+    return () => window.removeEventListener("brand-color-change", handleColorChange);
   }, []);
 
   useEffect(() => {

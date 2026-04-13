@@ -20,6 +20,7 @@ export default function DashboardPerfilPage() {
 
   async function handleBrandColorConfirm(color: string) {
     setBrandColor(color);
+    window.dispatchEvent(new CustomEvent("brand-color-change", { detail: color }));
     await fetch("/api/business-profile/brand-color", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
