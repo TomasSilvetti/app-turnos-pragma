@@ -10,7 +10,7 @@ export default function RegisterPage() {
         <div className="rounded-2xl bg-white px-8 py-10 shadow-xl">
           {/* Header */}
           <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600">
+            <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#253551]">
               <span className="text-lg font-bold text-white">T</span>
             </div>
             <h1 className="text-2xl font-semibold text-slate-900">Crear cuenta</h1>
@@ -40,7 +40,7 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-slate-500">
             ¿Ya tenés cuenta?{" "}
-            <a href="/login" className="font-medium text-indigo-600 hover:text-indigo-700">
+            <a href="/login" className="font-medium text-[#253551] hover:text-[#1c2a40]">
               Iniciá sesión
             </a>
           </p>

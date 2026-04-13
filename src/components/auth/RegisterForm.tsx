@@ -57,7 +57,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
           aria-invalid={!!errors.name}
           className={cn(
             "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
-            "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20",
+            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
             errors.name ? "border-red-400" : "border-slate-200"
           )}
           {...register("name", { required: "El nombre es obligatorio" })}
@@ -82,7 +82,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
           aria-invalid={!!errors.email || emailDuplicated}
           className={cn(
             "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
-            "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20",
+            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
             errors.email || emailDuplicated ? "border-red-400" : "border-slate-200"
           )}
           {...register("email", {
@@ -120,7 +120,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             aria-invalid={!!errors.password}
             className={cn(
               "h-10 w-full rounded-lg border bg-white px-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
-              "focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20",
+              "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
               errors.password ? "border-red-400" : "border-slate-200"
             )}
             {...register("password", {
@@ -148,7 +148,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
         type="submit"
         size="lg"
         disabled={!allFilled || isSubmitting}
-        className="mt-1 w-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40"
+        className="mt-1 w-full bg-[#253551] text-white hover:bg-[#1c2a40] disabled:opacity-40"
       >
         {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
       </Button>
