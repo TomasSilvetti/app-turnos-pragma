@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
+import { PushNotificationPrompt } from "@/components/profile/PushNotificationPrompt";
 
 type NavItem = {
   label: string;
@@ -239,6 +240,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </button>
         </div>
       </aside>
+
+      <PushNotificationPrompt />
 
       <main className="px-6 py-8 min-h-screen overflow-y-auto">
         {!sidebarOpen && (

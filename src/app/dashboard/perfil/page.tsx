@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { BusinessProfileEditForm } from "@/components/profile/BusinessProfileEditForm";
 import { BrandColorPicker } from "@/components/profile/BrandColorPicker";
 import { AttendanceToggle } from "@/components/profile/AttendanceToggle";
+import { PushNotificationToggle } from "@/components/profile/PushNotificationToggle";
 
 const DEFAULT_COLOR = "#253551";
 
@@ -41,6 +42,8 @@ export default function DashboardPerfilPage() {
         <BusinessProfileEditForm />
         <hr className="border-[#E0E0DB]" />
         <AttendanceToggle />
+        <hr className="border-[#E0E0DB]" />
+        <PushNotificationToggle />
         <hr className="border-[#E0E0DB]" />
         <BrandColorPicker
           currentColor={brandColor}

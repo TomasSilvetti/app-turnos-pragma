@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getClientSession } from "@/lib/cliente-auth";
+import { sendPushToServiceProvider } from "@/lib/push-notifications";
 
 const prisma = new PrismaClient();
 
@@ -111,6 +112,19 @@ export async function POST(request: NextRequest) {
       where: { id: appointmentId },
       data: { serviceTypeId },
     });
+  }
+
+  // Enviar notificación push al empleado asignado al turno (fire-and-forget)
+  const appointmentFull = await prisma.appointment.findUnique({
+    where: { id: appointmentId },
+    select: { date: true, time: true, serviceProviderId: true },
+  });
+
+  if (appointmentFull) {
+    sendPushToServiceProvider(appointmentFull.serviceProviderId, {
+      title: "Nuevo turno",
+      body: `${booking.clientName} el ${appointmentFull.date} a las ${appointmentFull.time}`,
+    }).catch(() => {});
   }
 
   return NextResponse.json(booking, { status: 201 });

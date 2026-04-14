@@ -34,7 +34,8 @@ model ServiceProvider {
   expenses        Expense[]
   empresas        EmpleadoEmpresa[]
   sucursales      EmpleadoSucursal[]
-  scheduleConfigs ScheduleConfig[]
+  scheduleConfigs   ScheduleConfig[]
+  pushSubscriptions PushSubscription[]
 
   @@map("service_providers")
 }
@@ -201,4 +202,16 @@ model EmpleadoSucursal {
   sucursal          Sucursal        @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
 
   @@map("empleado_sucursales")
+}
+
+model PushSubscription {
+  id                String          @id @default(cuid())
+  endpoint          String          @unique
+  p256dh            String
+  auth              String
+  serviceProviderId String
+  createdAt         DateTime        @default(now())
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }
