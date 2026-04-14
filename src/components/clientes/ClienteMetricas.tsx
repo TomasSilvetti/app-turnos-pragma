@@ -249,7 +249,7 @@ export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(v: number, name: string) => [v, name]}
+                  formatter={(v, name) => [v ?? 0, name]}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E0E0DB" }}
                 />
               </PieChart>
@@ -293,7 +293,7 @@ export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(v: number, name: string) => [v, name]}
+                  formatter={(v, name) => [v ?? 0, name]}
                   contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E0E0DB" }}
                 />
               </PieChart>
