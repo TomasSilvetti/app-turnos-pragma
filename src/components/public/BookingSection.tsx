@@ -23,6 +23,14 @@ type BookingResult = {
   price: number;
   cbu: string | null;
   alias: string | null;
+  clientName: string | null;
+};
+
+type ClientSession = {
+  clienteId: string;
+  nombre: string;
+  apellido: string;
+  email: string;
 };
 
 type Props = {
@@ -30,9 +38,10 @@ type Props = {
   businessName: string;
   cbu: string | null;
   alias: string | null;
+  clientSession?: ClientSession | null;
 };
 
-export default function BookingSection({ slug, businessName, cbu, alias }: Props) {
+export default function BookingSection({ slug, businessName, cbu, alias, clientSession }: Props) {
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -109,16 +118,22 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
     setBookingError(null);
 
     try {
+      const body: Record<string, string | null> = {
+        appointmentId: data.appointmentId,
+        ...(data.serviceTypeId && { serviceTypeId: data.serviceTypeId }),
+      };
+
+      // Flujo autenticado: no enviar nombre ni teléfono
+      if (!clientSession) {
+        body.clientName = data.clientName;
+        body.clientSurname = data.clientSurname;
+        body.clientPhone = data.clientPhone;
+      }
+
       const res = await fetch("/api/public/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientName: data.clientName,
-          clientSurname: data.clientSurname,
-          clientPhone: data.clientPhone,
-          appointmentId: data.appointmentId,
-          ...(data.serviceTypeId && { serviceTypeId: data.serviceTypeId }),
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) {
@@ -133,6 +148,10 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
         ? (appointment.serviceTypes?.find((t) => t.id === data.serviceTypeId)?.price ?? appointment.price)
         : appointment.price;
 
+      const clientDisplayName = clientSession
+        ? `${clientSession.nombre} ${clientSession.apellido}`
+        : `${data.clientName} ${data.clientSurname}`;
+
       setBookedIds((prev) => new Set([...prev, data.appointmentId]));
       setSelectedAppointment(null);
       setBookingResult({
@@ -142,6 +161,7 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
         price: finalPrice,
         cbu,
         alias,
+        clientName: clientDisplayName,
       });
     } catch (err) {
       setBookingError(
@@ -165,6 +185,7 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
         price={bookingResult.price}
         cbu={bookingResult.cbu}
         alias={bookingResult.alias}
+        clientName={bookingResult.clientName}
         onBack={handleBack}
       />
     );
@@ -172,6 +193,34 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
 
   return (
     <>
+      {/* Banner de cliente autenticado */}
+      {clientSession && (
+        <div className="rounded-lg bg-white border border-[#E0E0DB] px-4 py-3 flex items-center gap-3">
+          <div className="h-8 w-8 rounded-full bg-[var(--brand-color)]/10 flex items-center justify-center shrink-0">
+            <span className="font-body text-xs font-semibold text-[var(--brand-color)] uppercase">
+              {clientSession.nombre.charAt(0)}
+            </span>
+          </div>
+          <p className="font-body text-sm text-[#2A2829] flex-1">
+            Reservando como{" "}
+            <span className="font-medium">
+              {clientSession.nombre} {clientSession.apellido}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              await fetch("/api/clientes/logout", { method: "POST" });
+              window.location.reload();
+            }}
+            className="font-body text-xs text-[#2A2829]/50 hover:text-[#ef4444] transition-colors shrink-0"
+            aria-label="Cerrar sesión"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+
       <MiniCalendar
         availableDates={availableDates}
         selectedDate={selectedDate}
@@ -199,6 +248,7 @@ export default function BookingSection({ slug, businessName, cbu, alias }: Props
           error={bookingError}
           onConfirm={handleConfirm}
           onClose={handleModalClose}
+          clientSession={clientSession}
         />
       )}
     </>

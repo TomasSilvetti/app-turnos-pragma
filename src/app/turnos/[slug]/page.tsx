@@ -1,8 +1,10 @@
 import { MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
 import { PrismaClient } from "@prisma/client";
+import { verifyClientToken } from "@/lib/cliente-auth";
 
 const prisma = new PrismaClient();
 
@@ -44,6 +46,11 @@ export default async function PublicBusinessPage({
 }) {
   const { slug } = await params;
   const business = await getBusinessBySlug(slug);
+
+  // Leer sesión del cliente para el flujo autenticado
+  const cookieStore = await cookies();
+  const token = cookieStore.get("cliente-session")?.value;
+  const clientSession = token ? await verifyClientToken(token) : null;
 
   if (!business) {
     notFound();
@@ -116,6 +123,7 @@ export default async function PublicBusinessPage({
           businessName={business.name}
           cbu={business.cbu}
           alias={business.alias}
+          clientSession={clientSession}
         />
       </div>
     </main>

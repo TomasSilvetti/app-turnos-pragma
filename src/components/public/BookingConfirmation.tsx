@@ -12,6 +12,7 @@ type Props = {
   price: number;
   cbu: string | null;
   alias: string | null;
+  clientName: string | null;
   onBack: () => void;
 };
 
@@ -22,6 +23,7 @@ export default function BookingConfirmation({
   price,
   cbu,
   alias,
+  clientName,
   onBack,
 }: Props) {
   const [copiedCbu, setCopiedCbu] = useState(false);
@@ -56,9 +58,18 @@ export default function BookingConfirmation({
         <h2 className="font-heading text-xl text-[#2A2829] dark:text-[#e2e8f0]">
           ¡Reserva confirmada!
         </h2>
-        <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">
-          Te esperamos pronto
-        </p>
+        {clientName ? (
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-70 dark:opacity-100">
+            Tu turno fue reservado,{" "}
+            <span className="font-medium text-[#2A2829] dark:text-[#e2e8f0] opacity-100">
+              {clientName}
+            </span>
+          </p>
+        ) : (
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">
+            Te esperamos pronto
+          </p>
+        )}
       </div>
 
       {/* Resumen */}
@@ -159,13 +170,15 @@ export default function BookingConfirmation({
         </div>
       )}
 
-      {/* Volver */}
-      <button
-        onClick={onBack}
-        className="font-body text-sm text-[var(--brand-color)] underline underline-offset-2 hover:text-[#1c2a40] transition-colors"
-      >
-        Ver otros turnos disponibles
-      </button>
+      {/* Acciones */}
+      <div className="flex flex-col items-center gap-2">
+        <button
+          onClick={onBack}
+          className="font-body text-sm text-[var(--brand-color)] underline underline-offset-2 hover:text-[#1c2a40] transition-colors"
+        >
+          Reservar otro turno
+        </button>
+      </div>
     </div>
   );
 }

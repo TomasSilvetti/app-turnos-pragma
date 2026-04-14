@@ -6,6 +6,13 @@ import type { Appointment } from "./AppointmentSlots";
 
 type ServiceType = { id: string; title: string; price: number };
 
+type ClientSession = {
+  clienteId: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+};
+
 type Props = {
   appointment: Appointment;
   serviceTypes: ServiceType[];
@@ -19,6 +26,7 @@ type Props = {
     serviceTypeId: string | null;
   }) => void;
   onClose: () => void;
+  clientSession?: ClientSession | null;
 };
 
 export default function BookingModal({
@@ -28,6 +36,7 @@ export default function BookingModal({
   error,
   onConfirm,
   onClose,
+  clientSession,
 }: Props) {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
@@ -56,11 +65,14 @@ export default function BookingModal({
     ? (serviceTypes.find((t) => t.id === selectedServiceTypeId)?.price ?? appointment.price)
     : appointment.price;
 
-  const isValid =
-    name.trim() !== "" &&
-    surname.trim() !== "" &&
-    phone.trim() !== "" &&
-    (!hasServiceTypes || selectedServiceTypeId !== null);
+  const isAuthenticated = !!clientSession;
+
+  const isValid = isAuthenticated
+    ? !hasServiceTypes || selectedServiceTypeId !== null
+    : name.trim() !== "" &&
+      surname.trim() !== "" &&
+      phone.trim() !== "" &&
+      (!hasServiceTypes || selectedServiceTypeId !== null);
 
   function handleOverlayClick(e: React.MouseEvent) {
     if (e.target === overlayRef.current) onClose();
@@ -70,9 +82,9 @@ export default function BookingModal({
     e.preventDefault();
     if (!isValid || isLoading) return;
     onConfirm({
-      clientName: name.trim(),
-      clientSurname: surname.trim(),
-      clientPhone: phone.trim(),
+      clientName: isAuthenticated ? clientSession!.nombre : name.trim(),
+      clientSurname: isAuthenticated ? clientSession!.apellido : surname.trim(),
+      clientPhone: isAuthenticated ? "" : phone.trim(),
       appointmentId: appointment.id,
       serviceTypeId: selectedServiceTypeId,
     });
@@ -146,63 +158,77 @@ export default function BookingModal({
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-          {/* Nombre */}
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="booking-name"
-              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
-            >
-              Nombre <span aria-hidden="true" className="text-[#ef4444]">*</span>
-            </label>
-            <input
-              ref={firstInputRef}
-              id="booking-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Tu nombre"
-              autoComplete="given-name"
-              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
-            />
-          </div>
+          {isAuthenticated ? (
+            /* Flujo autenticado: mostrar nombre del cliente sin campos editables */
+            <div className="rounded-md bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-3 py-2.5">
+              <p className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide mb-0.5">
+                Reservando como
+              </p>
+              <p className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium">
+                {clientSession!.nombre} {clientSession!.apellido}
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Nombre */}
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="booking-name"
+                  className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
+                >
+                  Nombre <span aria-hidden="true" className="text-[#ef4444]">*</span>
+                </label>
+                <input
+                  ref={firstInputRef}
+                  id="booking-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Tu nombre"
+                  autoComplete="given-name"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                />
+              </div>
 
-          {/* Apellido */}
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="booking-surname"
-              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
-            >
-              Apellido <span aria-hidden="true" className="text-[#ef4444]">*</span>
-            </label>
-            <input
-              id="booking-surname"
-              type="text"
-              value={surname}
-              onChange={(e) => setSurname(e.target.value)}
-              placeholder="Tu apellido"
-              autoComplete="family-name"
-              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
-            />
-          </div>
+              {/* Apellido */}
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="booking-surname"
+                  className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
+                >
+                  Apellido <span aria-hidden="true" className="text-[#ef4444]">*</span>
+                </label>
+                <input
+                  id="booking-surname"
+                  type="text"
+                  value={surname}
+                  onChange={(e) => setSurname(e.target.value)}
+                  placeholder="Tu apellido"
+                  autoComplete="family-name"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                />
+              </div>
 
-          {/* Teléfono */}
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="booking-phone"
-              className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
-            >
-              Teléfono <span aria-hidden="true" className="text-[#ef4444]">*</span>
-            </label>
-            <input
-              id="booking-phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="Ej: 11 1234-5678"
-              autoComplete="tel"
-              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
-            />
-          </div>
+              {/* Teléfono */}
+              <div className="flex flex-col gap-1.5">
+                <label
+                  htmlFor="booking-phone"
+                  className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide"
+                >
+                  Teléfono <span aria-hidden="true" className="text-[#ef4444]">*</span>
+                </label>
+                <input
+                  id="booking-phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Ej: 11 1234-5678"
+                  autoComplete="tel"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                />
+              </div>
+            </>
+          )}
 
           {/* Error del backend */}
           {error && (

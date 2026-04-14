@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getClientSession } from "@/lib/cliente-auth";
 
 const prisma = new PrismaClient();
 
@@ -12,10 +13,21 @@ export async function POST(request: NextRequest) {
 
   const { clientName, clientSurname, clientPhone, appointmentId, serviceTypeId } = body;
 
-  if (!clientName || !clientSurname || !clientPhone || !appointmentId) {
+  if (!appointmentId) {
+    return NextResponse.json({ error: "El campo appointmentId es requerido" }, { status: 400 });
+  }
+
+  // Intentar leer la sesión del cliente autenticado
+  const clientSession = await getClientSession(request);
+
+  // Determinar si es flujo autenticado o legacy
+  const isAuthenticatedFlow = !!clientSession;
+  const isLegacyFlow = !clientSession && clientName && clientSurname && clientPhone;
+
+  if (!isAuthenticatedFlow && !isLegacyFlow) {
     return NextResponse.json(
-      { error: "Los campos clientName, clientSurname, clientPhone y appointmentId son requeridos" },
-      { status: 400 }
+      { error: "Se requiere autenticación o los campos clientName, clientSurname y clientPhone" },
+      { status: 401 }
     );
   }
 
@@ -52,25 +64,34 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const fullName = `${clientName.trim()} ${clientSurname.trim()}`;
+  // Preparar datos del booking según el flujo
+  const bookingClientName = isAuthenticatedFlow
+    ? `${clientSession.nombre} ${clientSession.apellido}`
+    : `${clientName.trim()} ${clientSurname.trim()}`;
+
+  const bookingClientPhone = isAuthenticatedFlow ? "" : clientPhone.trim();
+  const bookingClienteId = isAuthenticatedFlow ? clientSession.clienteId : null;
 
   const booking = await prisma.booking.upsert({
     where: { appointmentId },
     update: {
-      clientName: fullName,
-      clientPhone: clientPhone.trim(),
+      clientName: bookingClientName,
+      clientPhone: bookingClientPhone,
+      clienteId: bookingClienteId,
       status: "pending",
     },
     create: {
       appointmentId,
-      clientName: fullName,
-      clientPhone: clientPhone.trim(),
+      clientName: bookingClientName,
+      clientPhone: bookingClientPhone,
+      clienteId: bookingClienteId,
       status: "pending",
     },
     select: {
       id: true,
       clientName: true,
       clientPhone: true,
+      clienteId: true,
       status: true,
     },
   });
