@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import { cn } from "@/lib/utils";
 
 const RUBROS = [
@@ -41,6 +42,7 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
   const {
     register,
     handleSubmit,
+    control,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<Step2Values>({ mode: "onSubmit" });
@@ -118,29 +120,24 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
 
       {/* Rubro */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="empresa-rubro" className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-slate-700">
           Rubro
         </label>
-        <select
-          id="empresa-rubro"
-          aria-invalid={!!errors.rubro}
-          className={cn(
-            "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none transition-colors appearance-none cursor-pointer",
-            "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-            errors.rubro ? "border-red-400" : "border-slate-200",
-            !values.rubro && "text-slate-400"
+        <Controller
+          name="rubro"
+          control={control}
+          rules={{ required: "El rubro es obligatorio" }}
+          render={({ field }) => (
+            <CustomSelect
+              value={field.value ?? ""}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder="Seleccioná un rubro"
+              hasError={!!errors.rubro}
+              options={RUBROS.map((r) => ({ value: r, label: r }))}
+            />
           )}
-          {...register("rubro", { required: "El rubro es obligatorio" })}
-        >
-          <option value="" disabled hidden>
-            Seleccioná un rubro
-          </option>
-          {RUBROS.map((r) => (
-            <option key={r} value={r} className="text-slate-900">
-              {r}
-            </option>
-          ))}
-        </select>
+        />
         {errors.rubro && (
           <p role="alert" className="text-xs text-red-500">
             {errors.rubro.message}

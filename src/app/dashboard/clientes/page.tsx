@@ -5,6 +5,7 @@ import { ClienteMetricas, MetricasData } from "@/components/clientes/ClienteMetr
 import { ClienteListado } from "@/components/clientes/ClienteListado";
 import { ClienteResumen } from "@/components/clientes/ClienteCard";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { DatePickerInput } from "@/components/ui/DatePickerInput";
 
 type Periodo = "semana" | "mes" | "año" | "personalizado";
 
@@ -129,23 +130,13 @@ export default function ClientesPage() {
               <label className="text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8]">
                 Desde
               </label>
-              <input
-                type="date"
-                value={desde}
-                onChange={(e) => setDesde(e.target.value)}
-                className="rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] text-sm text-[#2A2829] dark:text-[#e2e8f0] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)]"
-              />
+              <DatePickerInput value={desde} onChange={setDesde} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8]">
                 Hasta
               </label>
-              <input
-                type="date"
-                value={hasta}
-                onChange={(e) => setHasta(e.target.value)}
-                className="rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] text-sm text-[#2A2829] dark:text-[#e2e8f0] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)]"
-              />
+              <DatePickerInput value={hasta} onChange={setHasta} />
             </div>
             <button
               onClick={fetchMetricas}

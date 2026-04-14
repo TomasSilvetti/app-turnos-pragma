@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 import { cn } from "@/lib/utils";
 import type { Empleado, EditEmpleadoValues, SucursalRef } from "./types";
 
@@ -83,21 +84,25 @@ export function EditEmpleadoModal({
         <form onSubmit={handleSubmit(onSave)} noValidate className="flex flex-col gap-4">
           {/* Rol */}
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="edit-rol" className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
+            <label className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
               Rol
             </label>
-            <select
-              id="edit-rol"
-              className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] outline-none transition-colors",
-                "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                "border-[#E0E0DB] dark:border-[#2d3548]"
+            <Controller
+              name="rol"
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <CustomSelect
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  options={[
+                    { value: "empleado", label: "Empleado" },
+                    { value: "administrador", label: "Administrador" },
+                  ]}
+                />
               )}
-              {...register("rol", { required: true })}
-            >
-              <option value="empleado">Empleado</option>
-              <option value="administrador">Administrador</option>
-            </select>
+            />
           </div>
 
           {/* Sucursales */}

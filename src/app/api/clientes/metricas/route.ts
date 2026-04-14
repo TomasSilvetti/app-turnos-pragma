@@ -10,28 +10,52 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const serviceProviderId = session.user.id;
   const { searchParams } = new URL(request.url);
   const desde = searchParams.get("desde");
   const hasta = searchParams.get("hasta");
   const granularidad = searchParams.get("granularidad") ?? "mes"; // "dia" | "mes"
 
-  const appointmentWhere =
-    desde && hasta
-      ? { serviceProviderId, date: { gte: desde, lte: hasta } }
-      : { serviceProviderId };
+  // Obtener el businessProfile del admin logueado
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: session.user.id },
+    select: { id: true, serviceProviderId: true },
+  });
 
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
+  // IDs de empleados del negocio vía raw query (evita dependencia del cliente generado)
+  const empleadoRows = await prisma.$queryRaw<{ serviceProviderId: string }[]>`
+    SELECT "serviceProviderId" FROM empleado_empresas WHERE "businessProfileId" = ${businessProfile.id}
+  `;
+
+  // IDs de todos los proveedores del negocio (admin + empleados)
+  const allProviderIds: string[] = [
+    businessProfile.serviceProviderId,
+    ...empleadoRows.map((e) => e.serviceProviderId),
+  ];
+
+  const dateFilter = desde && hasta ? { gte: desde, lte: hasta } : undefined;
+
+  const appointmentWhere = {
+    serviceProviderId: { in: allProviderIds },
+    ...(dateFilter ? { date: dateFilter } : {}),
+  };
+
+  // Traer TODOS los bookings del negocio (con o sin clienteId registrado)
   const bookings = await prisma.booking.findMany({
     where: {
-      clienteId: { not: null },
       appointment: appointmentWhere,
     },
     select: {
+      clienteId: true,
       cliente: { select: { sexo: true, edad: true } },
       appointment: {
         select: {
           date: true,
-          serviceType: { select: { title: true } },
+          serviceType: { select: { title: true, price: true } },
+          serviceProvider: { select: { id: true, name: true } },
         },
       },
     },
@@ -49,8 +73,10 @@ export async function GET(request: Request) {
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([mes, cantidad]) => ({ mes, cantidad }));
 
-  // edadPromedio: promedio ignorando nulls
-  const edades = bookings
+  // edadPromedio y distribucionSexos: solo clientes registrados
+  const bookingsConCliente = bookings.filter((b) => b.clienteId != null);
+
+  const edades = bookingsConCliente
     .map((b) => b.cliente?.edad)
     .filter((e): e is number => e != null);
   const edadPromedio =
@@ -58,9 +84,8 @@ export async function GET(request: Request) {
       ? Math.round(edades.reduce((a, b) => a + b, 0) / edades.length)
       : null;
 
-  // distribucionSexos: agrupar por sexo (ignorar nulls)
   const sexoCount: Record<string, number> = {};
-  for (const b of bookings) {
+  for (const b of bookingsConCliente) {
     const sexo = b.cliente?.sexo;
     if (sexo) sexoCount[sexo] = (sexoCount[sexo] ?? 0) + 1;
   }
@@ -69,7 +94,7 @@ export async function GET(request: Request) {
     cantidad,
   }));
 
-  // distribucionTiposTurno: agrupar por tipo de turno
+  // distribucionTiposTurno: todos los bookings
   const tipoCount: Record<string, number> = {};
   for (const b of bookings) {
     const tipo = b.appointment.serviceType?.title ?? "Sin tipo";
@@ -80,8 +105,33 @@ export async function GET(request: Request) {
     cantidad,
   }));
 
+  // turnosPorEmpleado: todos los bookings, agrupados por empleado
+  const empleadoTurnosCount: Record<string, { nombre: string; cantidad: number }> = {};
+  for (const b of bookings) {
+    const id = b.appointment.serviceProvider.id;
+    const nombre = b.appointment.serviceProvider.name;
+    if (!empleadoTurnosCount[id]) {
+      empleadoTurnosCount[id] = { nombre, cantidad: 0 };
+    }
+    empleadoTurnosCount[id].cantidad += 1;
+  }
+  const turnosPorEmpleado = Object.values(empleadoTurnosCount);
+
+  // ingresosPorEmpleado: todos los bookings, agrupados por empleado
+  const empleadoIngresosMap: Record<string, { nombre: string; ingreso: number }> = {};
+  for (const b of bookings) {
+    const id = b.appointment.serviceProvider.id;
+    const nombre = b.appointment.serviceProvider.name;
+    const monto = b.appointment.serviceType ? Number(b.appointment.serviceType.price) : 0;
+    if (!empleadoIngresosMap[id]) {
+      empleadoIngresosMap[id] = { nombre, ingreso: 0 };
+    }
+    empleadoIngresosMap[id].ingreso += monto;
+  }
+  const ingresosPorEmpleado = Object.values(empleadoIngresosMap);
+
   return NextResponse.json(
-    { turnosPorMes, edadPromedio, distribucionSexos, distribucionTiposTurno },
+    { turnosPorMes, edadPromedio, distribucionSexos, distribucionTiposTurno, turnosPorEmpleado, ingresosPorEmpleado },
     { status: 200 }
   );
 }

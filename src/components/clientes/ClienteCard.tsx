@@ -15,6 +15,7 @@ type Visita = {
   fecha: string;
   tipoTurno: string;
   monto: number;
+  empleado?: string;
 };
 
 type HistorialData = {
@@ -135,9 +136,16 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
                       <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8] w-20 shrink-0">
                         {formatFecha(visita.fecha)}
                       </span>
-                      <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0]">
-                        {visita.tipoTurno}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0]">
+                          {visita.tipoTurno}
+                        </span>
+                        {visita.empleado && (
+                          <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8]">
+                            {visita.empleado}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <span className="text-sm font-medium text-[var(--brand-color)]">
                       {formatARS(visita.monto)}

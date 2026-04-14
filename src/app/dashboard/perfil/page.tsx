@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BusinessProfileEditForm } from "@/components/profile/BusinessProfileEditForm";
 import { BrandColorPicker } from "@/components/profile/BrandColorPicker";
+import { AttendanceToggle } from "@/components/profile/AttendanceToggle";
 
 const DEFAULT_COLOR = "#253551";
 
@@ -38,6 +39,8 @@ export default function DashboardPerfilPage() {
       </div>
       <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 sm:p-8 flex flex-col gap-6">
         <BusinessProfileEditForm />
+        <hr className="border-[#E0E0DB]" />
+        <AttendanceToggle />
         <hr className="border-[#E0E0DB]" />
         <BrandColorPicker
           currentColor={brandColor}

@@ -18,6 +18,8 @@ export type MetricasData = {
   edadPromedio: number | null;
   distribucionSexos: { sexo: string; cantidad: number }[];
   distribucionTiposTurno: { tipo: string; cantidad: number }[];
+  turnosPorEmpleado: { nombre: string; cantidad: number }[];
+  ingresosPorEmpleado: { nombre: string; ingreso: number }[];
 };
 
 type Periodo = "semana" | "mes" | "año" | "personalizado";
@@ -35,6 +37,15 @@ const PIE_COLORS = [
   "#94a3b8",
   "#cbd5e1",
   "#475569",
+];
+
+const LINE_COLORS = [
+  "var(--brand-color)",
+  "#f59e0b",
+  "#10b981",
+  "#6366f1",
+  "#ef4444",
+  "#8b5cf6",
 ];
 
 function renderPieLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) {
@@ -138,14 +149,24 @@ const chartTitleMap: Record<Periodo, string> = {
   personalizado: "Turnos por período",
 };
 
+function formatARS(value: number): string {
+  return "$" + value.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
 export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SkeletonBlock />
-        <SkeletonBlock />
-        <SkeletonBlock />
-        <SkeletonBlock />
+      <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <SkeletonBlock />
+          <SkeletonBlock />
+          <SkeletonBlock />
+          <SkeletonBlock />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SkeletonBlock />
+          <SkeletonBlock />
+        </div>
       </div>
     );
   }
@@ -154,13 +175,22 @@ export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props
     data.turnosPorMes.length === 0 &&
     data.edadPromedio === null &&
     data.distribucionSexos.length === 0 &&
-    data.distribucionTiposTurno.length === 0
+    data.distribucionTiposTurno.length === 0 &&
+    data.turnosPorEmpleado.length === 0 &&
+    data.ingresosPorEmpleado.length === 0
   );
 
   const chartTitle = chartTitleMap[periodo];
   const chartData = isEmpty ? [] : buildChartData(data.turnosPorMes, periodo, range);
 
+  // Gráfico de líneas por empleado: una línea por empleado con su cantidad de turnos
+  // Formato: [{ nombre: "Empleado A", cantidad: 5 }, ...]
+  const turnosPorEmpleado = data?.turnosPorEmpleado ?? [];
+  const ingresosPorEmpleado = data?.ingresosPorEmpleado ?? [];
+  const totalIngresos = ingresosPorEmpleado.reduce((acc, e) => acc + e.ingreso, 0);
+
   return (
+    <div className="flex flex-col gap-4">
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {/* Turnos por período */}
       <MetricCard title={chartTitle}>
@@ -312,6 +342,106 @@ export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props
           </div>
         )}
       </MetricCard>
+    </div>
+
+    {/* Gráficos por empleado */}
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {/* Turnos por empleado — barras horizontales simples */}
+      <MetricCard title="Turnos por empleado">
+        {isEmpty || turnosPorEmpleado.length === 0 ? (
+          <div className="flex items-center justify-center h-32 text-sm text-[#6b7280] dark:text-[#94a3b8] italic">
+            Sin atenciones en el período seleccionado
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={Math.max(100, turnosPorEmpleado.length * 36)}>
+            <BarChart
+              data={turnosPorEmpleado}
+              layout="vertical"
+              margin={{ top: 4, right: 16, left: 4, bottom: 4 }}
+            >
+              <XAxis
+                type="number"
+                allowDecimals={false}
+                tick={{ fontSize: 10, fill: "#6b7280" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                type="category"
+                dataKey="nombre"
+                tick={{ fontSize: 11, fill: "#6b7280" }}
+                axisLine={false}
+                tickLine={false}
+                width={90}
+              />
+              <Tooltip
+                formatter={(v) => [v, "Turnos"]}
+                contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E0E0DB" }}
+              />
+              <Bar dataKey="cantidad" radius={[0, 3, 3, 0]}>
+                {turnosPorEmpleado.map((_, i) => (
+                  <Cell key={i} fill={LINE_COLORS[i % LINE_COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </MetricCard>
+
+      {/* Ingresos por empleado — torta */}
+      <MetricCard title="Ingresos por empleado">
+        {isEmpty || ingresosPorEmpleado.length === 0 ? (
+          <div className="flex items-center justify-center h-32 text-sm text-[#6b7280] dark:text-[#94a3b8] italic">
+            Sin atenciones en el período seleccionado
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <ResponsiveContainer width="50%" height={130}>
+              <PieChart>
+                <Pie
+                  data={ingresosPorEmpleado}
+                  dataKey="ingreso"
+                  nameKey="nombre"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={55}
+                  strokeWidth={0}
+                  label={renderPieLabel}
+                  labelLine={false}
+                >
+                  {ingresosPorEmpleado.map((_, i) => (
+                    <Cell key={i} fill={LINE_COLORS[i % LINE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(v) => [formatARS(Number(v)), "Ingresos"]}
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #E0E0DB" }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex flex-col gap-2 text-xs min-w-0">
+              {ingresosPorEmpleado.map((item, i) => {
+                const pct = totalIngresos > 0 ? Math.round((item.ingreso / totalIngresos) * 100) : 0;
+                return (
+                  <div key={item.nombre} className="flex flex-col gap-0.5">
+                    <span className="flex items-center gap-1 text-[#2A2829] dark:text-[#cbd5e1] truncate">
+                      <span
+                        className="inline-block w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: LINE_COLORS[i % LINE_COLORS.length] }}
+                      />
+                      <span className="truncate">{item.nombre}</span>
+                    </span>
+                    <span className="text-[#6b7280] dark:text-[#94a3b8] pl-3">
+                      {formatARS(item.ingreso)} · {pct}%
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </MetricCard>
+    </div>
     </div>
   );
 }

@@ -13,19 +13,37 @@ export const GET = auth(async (
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const serviceProviderId = req.auth.user.id;
   const { id: clienteId } = await context.params;
+
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: req.auth.user.id },
+    select: { id: true, serviceProviderId: true },
+  });
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
+  const empleadoRows = await prisma.$queryRaw<{ serviceProviderId: string }[]>`
+    SELECT "serviceProviderId" FROM empleado_empresas WHERE "businessProfileId" = ${businessProfile.id}
+  `;
+
+  const allProviderIds: string[] = [
+    businessProfile.serviceProviderId,
+    ...empleadoRows.map((e) => e.serviceProviderId),
+  ];
 
   const bookings = await prisma.booking.findMany({
     where: {
       clienteId,
-      appointment: { serviceProviderId },
+      appointment: { serviceProviderId: { in: allProviderIds } },
     },
     select: {
       appointment: {
         select: {
           date: true,
           serviceType: { select: { title: true, price: true } },
+          serviceProvider: { select: { name: true } },
         },
       },
     },
@@ -40,6 +58,7 @@ export const GET = auth(async (
       fecha: b.appointment.date,
       tipoTurno: b.appointment.serviceType?.title ?? "Sin tipo",
       monto: b.appointment.serviceType ? Number(b.appointment.serviceType.price) : 0,
+      empleado: b.appointment.serviceProvider.name,
     }))
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 

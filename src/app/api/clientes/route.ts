@@ -10,12 +10,28 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const serviceProviderId = session.user.id;
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: session.user.id },
+    select: { id: true, serviceProviderId: true },
+  });
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
+  const empleadoRows = await prisma.$queryRaw<{ serviceProviderId: string }[]>`
+    SELECT "serviceProviderId" FROM empleado_empresas WHERE "businessProfileId" = ${businessProfile.id}
+  `;
+
+  const allProviderIds: string[] = [
+    businessProfile.serviceProviderId,
+    ...empleadoRows.map((e) => e.serviceProviderId),
+  ];
 
   const bookings = await prisma.booking.findMany({
     where: {
       clienteId: { not: null },
-      appointment: { serviceProviderId },
+      appointment: { serviceProviderId: { in: allProviderIds } },
     },
     select: {
       clienteId: true,

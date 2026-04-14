@@ -24,7 +24,8 @@ model ServiceProvider {
   name            String
   email           String              @unique
   hashedPassword  String
-  isActive        Boolean             @default(true)
+  isActive            Boolean             @default(true)
+  attendsAppointments Boolean             @default(true)
   rol             ServiceProviderRol  @default(propietario)
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
