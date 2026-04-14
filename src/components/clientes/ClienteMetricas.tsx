@@ -198,7 +198,7 @@ export function ClienteMetricas({ data, loading, periodo = "mes", range }: Props
                 }}
               />
               <Tooltip
-                formatter={(v: number) => [v, "Turnos"]}
+                formatter={(v) => [v ?? 0, "Turnos"]}
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 8,
