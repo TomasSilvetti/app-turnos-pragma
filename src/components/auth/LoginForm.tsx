@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,13 @@ export function LoginForm() {
     if (result?.error) {
       setInvalidCredentials(true);
     } else {
-      window.location.href = "/dashboard";
+      const session = await getSession();
+      const pendingStep = (session?.user as { pendingStep?: string | null } | undefined)?.pendingStep;
+      if (pendingStep === "business") {
+        window.location.href = "/registro?step=2";
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
   }
 

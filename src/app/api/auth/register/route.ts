@@ -30,6 +30,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (password.length < 8) {
+    return NextResponse.json(
+      { error: "La contraseña debe tener al menos 8 caracteres" },
+      { status: 400 }
+    );
+  }
+
   if (!EMAIL_REGEX.test(email)) {
     return NextResponse.json(
       { error: "El formato del email no es válido" },
@@ -44,7 +51,7 @@ export async function POST(request: NextRequest) {
   if (existing) {
     return NextResponse.json(
       { error: "Ya existe una cuenta con ese email" },
-      { status: 400 }
+      { status: 409 }
     );
   }
 

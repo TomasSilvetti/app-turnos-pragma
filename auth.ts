@@ -57,6 +57,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session({ session, token }) {
       session.user.id = token.id as string;
       (session.user as { hasProfile?: boolean }).hasProfile = token.hasProfile as boolean;
+      (session.user as { pendingStep?: string | null }).pendingStep =
+        token.hasProfile ? null : "business";
       return session;
     },
   },

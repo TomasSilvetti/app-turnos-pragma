@@ -49,6 +49,7 @@ model BusinessProfile {
   cbu               String?
   alias             String?
   slug              String          @unique
+  rubro             String
   serviceProviderId String          @unique
   theme             String          @default("light")
   brandColor        String          @default("#1e3a5f")
