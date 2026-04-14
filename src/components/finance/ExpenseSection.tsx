@@ -86,7 +86,7 @@ export function ExpenseSection({ onExpenseAdded }: Props) {
             aria-label="Agregar egreso"
             className="mt-1 flex items-center justify-center gap-1.5 rounded-md bg-[#ef4444] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>add</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">add</span>
             {submitting ? "Guardando..." : "Agregar"}
           </button>
         </form>

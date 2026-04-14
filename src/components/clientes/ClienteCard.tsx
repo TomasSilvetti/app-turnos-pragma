@@ -88,6 +88,7 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
           }`}
           style={{ fontSize: "18px" }}
           aria-hidden="true"
+          translate="no"
         >
           expand_more
         </span>
@@ -100,7 +101,7 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
         >
           {loadingHistorial && (
             <div className="flex items-center gap-2 text-sm text-[#6b7280] dark:text-[#94a3b8] animate-pulse">
-              <span className="material-symbols-outlined" style={{ fontSize: "16px" }}>
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">
                 hourglass_empty
               </span>
               Cargando historial...

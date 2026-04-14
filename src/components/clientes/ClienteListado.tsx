@@ -33,7 +33,7 @@ export function ClienteListado({ clientes, loading }: Props) {
   if (clientes.length === 0) {
     return (
       <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-10 text-center">
-        <span className="material-symbols-outlined text-[#6b7280] dark:text-[#94a3b8] mb-3 block" style={{ fontSize: "32px" }}>
+        <span className="material-symbols-outlined text-[#6b7280] dark:text-[#94a3b8] mb-3 block" style={{ fontSize: "32px" }} translate="no">
           group
         </span>
         <p className="text-sm text-[#6b7280] dark:text-[#94a3b8]">

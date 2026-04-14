@@ -8,6 +8,7 @@ export default function SlugNotFound() {
           <span
             className="material-symbols-outlined text-3xl text-primary"
             aria-hidden="true"
+            translate="no"
           >
             search_off
           </span>

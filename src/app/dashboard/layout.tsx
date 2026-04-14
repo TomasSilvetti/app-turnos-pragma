@@ -101,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="text-[var(--brand-color)] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
             aria-label="Cerrar menú"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>close</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }} translate="no">close</span>
           </button>
           <span className="font-heading text-lg text-[var(--brand-color)] dark:text-white">Panel</span>
         </div>
@@ -123,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 )}
               >
                 <span className="flex items-center gap-2">
-                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>{item.icon}</span>
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">{item.icon}</span>
                   {item.label}
                 </span>
                 {showBadge && (
@@ -151,7 +151,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           aria-pressed={isDark}
         >
           <span className="flex items-center gap-2">
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>
+            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">
               {isDark ? "light_mode" : "dark_mode"}
             </span>
             {isDark ? "Modo claro" : "Modo oscuro"}
@@ -186,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="flex items-center gap-1.5 text-[11px] text-[#2A2829] dark:text-[#cbd5e1] hover:text-[#ef4444] dark:hover:text-[#ef4444] transition-colors w-fit"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "14px" }}>logout</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "14px" }} translate="no">logout</span>
             Cerrar sesión
           </button>
         </div>
@@ -199,7 +199,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="mb-4 text-[var(--brand-color)] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
             aria-label="Abrir menú"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>menu</span>
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }} translate="no">menu</span>
           </button>
         )}
         {children}
