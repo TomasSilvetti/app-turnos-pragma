@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { ClienteMetricas, MetricasData } from "@/components/clientes/ClienteMetricas";
 import { ClienteListado } from "@/components/clientes/ClienteListado";
 import { ClienteResumen } from "@/components/clientes/ClienteCard";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 type Periodo = "semana" | "mes" | "año" | "personalizado";
 
@@ -111,17 +112,15 @@ export default function ClientesPage() {
           <label className="text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8]">
             Período
           </label>
-          <select
+          <CustomSelect
             value={periodo}
-            onChange={(e) => setPeriodo(e.target.value as Periodo)}
-            className="rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] text-sm text-[#2A2829] dark:text-[#e2e8f0] px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)]"
-          >
-            {(["semana", "mes", "año", "personalizado"] as Periodo[]).map((p) => (
-              <option key={p} value={p}>
-                {labelMap[p]}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setPeriodo(val as Periodo)}
+            options={(["semana", "mes", "año", "personalizado"] as Periodo[]).map((p) => ({
+              value: p,
+              label: labelMap[p],
+            }))}
+            className="w-44"
+          />
         </div>
 
         {periodo === "personalizado" && (

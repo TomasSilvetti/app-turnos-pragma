@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CustomSelect } from "@/components/ui/CustomSelect";
 
 type Props = {
   slug: string;
@@ -207,21 +208,20 @@ export default function RegisterForm({ slug, onSwitchToLogin }: Props) {
         <label htmlFor="reg-sexo" className={labelClass}>
           Sexo <span aria-hidden="true" className="text-[#ef4444]">*</span>
         </label>
-        <select
+        <CustomSelect
           id="reg-sexo"
           value={formData.sexo}
-          onChange={(e) => handleChange("sexo", e.target.value)}
+          onChange={(val) => handleChange("sexo", val)}
           onBlur={() => handleBlur("sexo")}
-          className={`w-full font-body text-sm text-[#2A2829] border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white ${
-            showError("sexo") ? "border-[#ef4444]" : "border-[#E0E0DB]"
-          }`}
-        >
-          <option value="">Seleccioná una opción</option>
-          <option value="masculino">Masculino</option>
-          <option value="femenino">Femenino</option>
-          <option value="otro">Otro</option>
-          <option value="prefiero_no_decir">Prefiero no decir</option>
-        </select>
+          placeholder="Seleccioná una opción"
+          hasError={!!showError("sexo")}
+          options={[
+            { value: "masculino", label: "Masculino" },
+            { value: "femenino", label: "Femenino" },
+            { value: "otro", label: "Otro" },
+            { value: "prefiero_no_decir", label: "Prefiero no decir" },
+          ]}
+        />
         {showError("sexo") && (
           <p className="font-body text-xs text-[#ef4444]">{showError("sexo")}</p>
         )}

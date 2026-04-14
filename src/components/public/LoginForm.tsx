@@ -136,13 +136,27 @@ export default function LoginForm({ slug }: Props) {
       </div>
 
       {/* Recuérdame */}
-      <label className="flex items-center gap-2 cursor-pointer select-none w-fit">
+      <label className="flex items-center gap-2.5 cursor-pointer select-none w-fit group">
         <input
           type="checkbox"
           checked={rememberMe}
           onChange={(e) => setRememberMe(e.target.checked)}
-          className="w-4 h-4 rounded border-[#E0E0DB] accent-[var(--brand-color)] cursor-pointer"
+          className="sr-only"
         />
+        <span
+          aria-hidden="true"
+          className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+            rememberMe
+              ? "bg-[var(--brand-color)] border-[var(--brand-color)]"
+              : "bg-white border-[#E0E0DB] group-hover:border-[var(--brand-color)]/60"
+          }`}
+        >
+          {rememberMe && (
+            <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+            </svg>
+          )}
+        </span>
         <span className="font-body text-sm text-[#2A2829]">Recordarme</span>
       </label>
 
