@@ -58,8 +58,21 @@ model BusinessProfile {
   updatedAt         DateTime        @updatedAt
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   scheduleConfigs   ScheduleConfig[]
+  sucursales        Sucursal[]
 
   @@map("business_profiles")
+}
+
+model Sucursal {
+  id                String          @id @default(cuid())
+  name              String
+  address           String
+  businessProfileId String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  @@map("sucursales")
 }
 
 model ScheduleConfig {

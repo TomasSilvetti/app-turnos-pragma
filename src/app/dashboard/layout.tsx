@@ -14,6 +14,7 @@ const navItems = [
   { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat" },
   { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments" },
   { label: "Clientes", href: "/dashboard/clientes", icon: "group" },
+  { label: "Sucursales", href: "/dashboard/sucursales", icon: "store" },
 ];
 
 const DEFAULT_BRAND_COLOR = "#253551";

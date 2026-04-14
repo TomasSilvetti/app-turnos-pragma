@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  const { name, address, phone, cbu, alias, logo } = body as Record<string, string | undefined>;
+  const { name, address, phone, cbu, alias, logo, rubro } = body as Record<string, string | undefined>;
 
   const missingFields: string[] = [];
   if (!name?.trim()) missingFields.push("name");
@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
   if (!cbu?.trim()) missingFields.push("cbu");
   if (!alias?.trim()) missingFields.push("alias");
   if (!logo) missingFields.push("logo");
+  if (!rubro?.trim()) missingFields.push("rubro");
 
   if (missingFields.length > 0) {
     return NextResponse.json(
@@ -176,6 +177,7 @@ export async function POST(request: NextRequest) {
       alias: alias!.trim(),
       logoUrl: logo!,
       slug,
+      rubro: rubro!.trim(),
       serviceProviderId,
     },
   });
