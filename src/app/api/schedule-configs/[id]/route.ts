@@ -18,6 +18,20 @@ function stringsToInts(days: (string | number)[]): number[] {
     .filter((d) => d !== -1);
 }
 
+async function getBusinessProfileId(userId: string): Promise<string | null> {
+  const bp = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: userId },
+    select: { id: true },
+  });
+  if (bp) return bp.id;
+
+  const rel = await prisma.empleadoEmpresa.findFirst({
+    where: { serviceProviderId: userId },
+    select: { businessProfileId: true },
+  });
+  return rel?.businessProfileId ?? null;
+}
+
 export const PUT = auth(async (
   req: NextAuthRequest,
   context: { params: Promise<{ id: string }> }
@@ -26,23 +40,29 @@ export const PUT = auth(async (
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const userId = req.auth.user.id;
   const { id } = await context.params;
 
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: req.auth.user.id },
-    select: { id: true },
-  });
-
-  if (!businessProfile) {
+  const businessProfileId = await getBusinessProfileId(userId);
+  if (!businessProfileId) {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });
   }
 
   const existing = await prisma.scheduleConfig.findFirst({
-    where: { id, businessProfileId: businessProfile.id },
+    where: { id, businessProfileId },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "Configuración no encontrada" }, { status: 403 });
+  }
+
+  // Empleados solo pueden editar sus propias configs
+  const isPropietario = !!(await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: userId },
+    select: { id: true },
+  }));
+  if (!isPropietario && existing.serviceProviderId !== userId) {
+    return NextResponse.json({ error: "No tenés permiso para editar esta configuración" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -68,7 +88,6 @@ export const PUT = auth(async (
     return NextResponse.json({ error: "El precio debe ser un número mayor o igual a cero" }, { status: 400 });
   }
 
-  // Si se solicita marcar los turnos conflictivos para reprogramación, hacerlo antes de actualizar
   if (markForReschedule) {
     const newDayInts = new Set(stringsToInts(daysOfWeek));
 
@@ -144,23 +163,29 @@ export const DELETE = auth(async (
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const userId = req.auth.user.id;
   const { id } = await context.params;
 
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: req.auth.user.id },
-    select: { id: true },
-  });
-
-  if (!businessProfile) {
+  const businessProfileId = await getBusinessProfileId(userId);
+  if (!businessProfileId) {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });
   }
 
   const existing = await prisma.scheduleConfig.findFirst({
-    where: { id, businessProfileId: businessProfile.id },
+    where: { id, businessProfileId },
   });
 
   if (!existing) {
     return NextResponse.json({ error: "Configuración no encontrada" }, { status: 403 });
+  }
+
+  // Empleados solo pueden eliminar sus propias configs
+  const isPropietario = !!(await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: userId },
+    select: { id: true },
+  }));
+  if (!isPropietario && existing.serviceProviderId !== userId) {
+    return NextResponse.json({ error: "No tenés permiso para eliminar esta configuración" }, { status: 403 });
   }
 
   const url = new URL(req.url);
@@ -168,7 +193,6 @@ export const DELETE = auth(async (
 
   await prisma.$transaction(async (tx) => {
     if (keepBookings) {
-      // Mantener los bookings tal como están, solo desconectar sus appointments del config
       await tx.appointment.updateMany({
         where: {
           scheduleConfigId: id,
@@ -177,7 +201,6 @@ export const DELETE = auth(async (
         data: { scheduleConfigId: null },
       });
     } else {
-      // Marcar como requires_reschedule los bookings pendientes/confirmados
       await tx.booking.updateMany({
         where: { appointment: { scheduleConfigId: id }, status: "pending" },
         data: { status: "requires_reschedule", previousStatus: "pending" },
@@ -187,7 +210,6 @@ export const DELETE = auth(async (
         data: { status: "requires_reschedule", previousStatus: "confirmed" },
       });
 
-      // Desconectar los appointments con booking activo (para que sigan existiendo en reprogramación)
       await tx.appointment.updateMany({
         where: {
           scheduleConfigId: id,
@@ -197,7 +219,6 @@ export const DELETE = auth(async (
       });
     }
 
-    // Eliminar los appointments restantes sin booking activo
     await tx.appointment.deleteMany({
       where: { scheduleConfigId: id },
     });

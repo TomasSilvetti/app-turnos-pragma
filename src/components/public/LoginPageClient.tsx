@@ -8,9 +8,10 @@ type Props = {
   slug: string;
   businessName: string;
   brandColor: string;
+  employeeId?: string | null;
 };
 
-export default function LoginPageClient({ slug, businessName, brandColor }: Props) {
+export default function LoginPageClient({ slug, businessName, brandColor, employeeId }: Props) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
   return (
@@ -67,9 +68,9 @@ export default function LoginPageClient({ slug, businessName, brandColor }: Prop
           {/* Contenido del tab activo */}
           <div className="p-6">
             {activeTab === "login" ? (
-              <LoginForm slug={slug} />
+              <LoginForm slug={slug} employeeId={employeeId ?? null} />
             ) : (
-              <RegisterForm slug={slug} onSwitchToLogin={() => setActiveTab("login")} />
+              <RegisterForm slug={slug} employeeId={employeeId ?? null} onSwitchToLogin={() => setActiveTab("login")} />
             )}
           </div>
         </div>

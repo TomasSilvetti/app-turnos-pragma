@@ -1,7 +1,9 @@
 import { MapPin, Phone } from "lucide-react";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
+import { verifyClientToken } from "@/lib/cliente-auth";
 
 type BusinessPublicData = {
   name: string;
@@ -28,11 +30,18 @@ async function getBusinessBySlug(
 
 export default async function PublicBookingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ employee?: string }>;
 }) {
   const { slug } = await params;
+  const { employee: initialEmployeeId } = await searchParams;
   const business = await getBusinessBySlug(slug);
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get("cliente-session")?.value;
+  const clientSession = token ? await verifyClientToken(token) : null;
 
   if (!business) {
     notFound();
@@ -105,7 +114,7 @@ export default async function PublicBookingPage({
         </div>
 
         {/* Calendario y turnos */}
-        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} />
+        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} />
       </div>
     </main>
   );

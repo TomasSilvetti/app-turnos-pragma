@@ -18,22 +18,44 @@ function stringsToInts(days: (string | number)[]): number[] {
     .filter((d) => d !== -1);
 }
 
+async function getBusinessProfileId(userId: string): Promise<{ businessProfileId: string; isEmployee: boolean } | null> {
+  // Intentar como propietario primero
+  const bp = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: userId },
+    select: { id: true },
+  });
+  if (bp) return { businessProfileId: bp.id, isEmployee: false };
+
+  // Intentar como empleado
+  const rel = await prisma.empleadoEmpresa.findFirst({
+    where: { serviceProviderId: userId },
+    select: { businessProfileId: true },
+  });
+  if (rel) return { businessProfileId: rel.businessProfileId, isEmployee: true };
+
+  return null;
+}
+
 export const GET = auth(async (req: NextAuthRequest) => {
   if (!req.auth?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: req.auth.user.id },
-    select: { id: true },
-  });
+  const userId = req.auth.user.id;
+  const result = await getBusinessProfileId(userId);
 
-  if (!businessProfile) {
+  if (!result) {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });
   }
 
+  const { businessProfileId, isEmployee } = result;
+
   const scheduleConfigs = await prisma.scheduleConfig.findMany({
-    where: { businessProfileId: businessProfile.id },
+    where: {
+      businessProfileId,
+      // Empleados solo ven sus propias configs; propietarios ven todas
+      ...(isEmployee ? { serviceProviderId: userId } : {}),
+    },
     select: {
       id: true,
       name: true,
@@ -58,14 +80,14 @@ export const POST = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: req.auth.user.id },
-    select: { id: true },
-  });
+  const userId = req.auth.user.id;
+  const result = await getBusinessProfileId(userId);
 
-  if (!businessProfile) {
+  if (!result) {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });
   }
+
+  const { businessProfileId } = result;
 
   const body = await req.json();
   const { name, startTime, endTime, intervalMinutes, daysOfWeek, price, serviceTypeIds } = body;
@@ -100,7 +122,8 @@ export const POST = auth(async (req: NextAuthRequest) => {
       intervalMinutes: Number(intervalMinutes),
       daysOfWeek: daysOfWeekInts,
       price: parsedPrice,
-      businessProfileId: businessProfile.id,
+      businessProfileId,
+      serviceProviderId: userId,
       ...(Array.isArray(serviceTypeIds) && serviceTypeIds.length > 0
         ? { serviceTypes: { connect: serviceTypeIds.map((id: string) => ({ id })) } }
         : {}),

@@ -7,6 +7,7 @@ import { CustomSelect } from "@/components/ui/CustomSelect";
 type Props = {
   slug: string;
   onSwitchToLogin: () => void;
+  employeeId?: string | null;
 };
 
 type FormData = {
@@ -51,7 +52,7 @@ const inputClass = (hasError: boolean) =>
 const labelClass =
   "font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide";
 
-export default function RegisterForm({ slug, onSwitchToLogin }: Props) {
+export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Props) {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     nombre: "",
@@ -120,7 +121,7 @@ export default function RegisterForm({ slug, onSwitchToLogin }: Props) {
         return;
       }
 
-      router.push(`/turnos/${slug}`);
+      router.push(employeeId ? `/turnos/${slug}?employee=${employeeId}` : `/turnos/${slug}`);
       router.refresh();
     } catch {
       setServerError("Error de conexión. Intentá de nuevo.");

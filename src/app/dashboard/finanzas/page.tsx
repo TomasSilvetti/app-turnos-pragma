@@ -9,6 +9,7 @@ export type Ingreso = {
   hora: string;
   fecha: string;
   clienteNombre: string;
+  empleadoNombre: string;
   monto: number;
 };
 
@@ -17,6 +18,7 @@ export type Egreso = {
   descripcion: string;
   monto: number;
   createdAt: string;
+  adminNombre: string;
 };
 
 export type FinancialSummary = {

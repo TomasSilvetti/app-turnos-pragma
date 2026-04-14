@@ -6,9 +6,10 @@ import { Eye, EyeOff } from "lucide-react";
 
 type Props = {
   slug: string;
+  employeeId?: string | null;
 };
 
-export default function LoginForm({ slug }: Props) {
+export default function LoginForm({ slug, employeeId }: Props) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,7 +65,7 @@ export default function LoginForm({ slug }: Props) {
         return;
       }
 
-      window.location.href = `/turnos/${slug}`;
+      window.location.href = employeeId ? `/turnos/${slug}?employee=${employeeId}` : `/turnos/${slug}`;
     } catch {
       setServerError("Error de conexión. Intentá de nuevo.");
     } finally {

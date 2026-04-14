@@ -41,10 +41,13 @@ async function getBusinessBySlug(
 
 export default async function PublicBusinessPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ employee?: string }>;
 }) {
   const { slug } = await params;
+  const { employee: initialEmployeeId } = await searchParams;
   const business = await getBusinessBySlug(slug);
 
   // Leer sesión del cliente para el flujo autenticado
@@ -124,6 +127,7 @@ export default async function PublicBusinessPage({
           cbu={business.cbu}
           alias={business.alias}
           clientSession={clientSession}
+          initialEmployeeId={initialEmployeeId ?? null}
         />
       </div>
     </main>

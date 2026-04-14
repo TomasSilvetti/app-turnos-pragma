@@ -33,6 +33,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [isDark, setIsDark] = useState(false);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
+  const [myLink, setMyLink] = useState<string | null>(null);
+  const [linkCopied, setLinkCopied] = useState(false);
   const { data: session } = useSession();
 
   useEffect(() => {
@@ -69,6 +71,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((r) => r.json())
       .then((data) => {
         if (data?.brandColor) setBrandColor(data.brandColor);
+      })
+      .catch(() => {});
+
+    fetch("/api/my-link")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.slug && data?.employeeId) {
+          const base = window.location.origin;
+          setMyLink(`${base}/turnos/${data.slug}?employee=${data.employeeId}`);
+        }
       })
       .catch(() => {});
 
@@ -157,6 +169,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             );
           })}
         </nav>
+
+        {myLink && (
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText(myLink).then(() => {
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+              });
+            }}
+            className="mx-3 mb-1 flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
+            aria-label="Copiar mi link de reservas"
+          >
+            <span className="flex items-center gap-2">
+              <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">link</span>
+              Mi link de reservas
+            </span>
+            <span className="material-symbols-outlined text-[var(--brand-color)]" style={{ fontSize: "16px" }} translate="no">
+              {linkCopied ? "check" : "content_copy"}
+            </span>
+          </button>
+        )}
 
         <button
           onClick={toggleTheme}

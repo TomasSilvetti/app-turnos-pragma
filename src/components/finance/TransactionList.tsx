@@ -81,6 +81,9 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
                     <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8] truncate">
                       {ing.clienteNombre.toLowerCase()}
                     </span>
+                    <span className="font-small text-[11px] text-[#9ca3af] dark:text-slate-500 truncate">
+                      atendido por {ing.empleadoNombre.toLowerCase()}
+                    </span>
                   </div>
                   <span className="font-small text-sm text-[#22c55e] font-medium ml-2 shrink-0">
                     +{formatARS(ing.monto)}
@@ -100,6 +103,9 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
                     </span>
                     <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8]">
                       {formatFechaEgreso(eg.createdAt)}
+                    </span>
+                    <span className="font-small text-[11px] text-[#9ca3af] dark:text-slate-500 truncate">
+                      cargado por {eg.adminNombre.toLowerCase()}
                     </span>
                   </div>
                   <span className="font-small text-sm text-[#ef4444] font-medium ml-2 shrink-0">

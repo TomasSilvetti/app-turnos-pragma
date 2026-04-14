@@ -11,11 +11,31 @@ export async function GET() {
   }
 
   const serviceProviderId = session.user.id;
-  // Turnos confirmados
+
+  // Obtener el businessProfile del usuario autenticado (propietario) junto con sus empleados
+  const businessProfile = await prisma.businessProfile.findUnique({
+    where: { serviceProviderId },
+    select: {
+      id: true,
+      empleados: { select: { serviceProviderId: true } },
+    },
+  }) as { id: string; empleados: { serviceProviderId: string }[] } | null;
+
+  // Obtener todos los serviceProviderIds de la empresa
+  const allProviderIds: string[] = businessProfile
+    ? Array.from(
+        new Set([
+          serviceProviderId,
+          ...businessProfile.empleados.map((e) => e.serviceProviderId),
+        ])
+      )
+    : [serviceProviderId];
+
+  // Turnos confirmados de todos los miembros de la empresa
   const confirmedBookings = await prisma.booking.findMany({
     where: {
       status: "confirmed",
-      appointment: { serviceProviderId },
+      appointment: { serviceProviderId: { in: allProviderIds } },
     },
     select: {
       clientName: true,
@@ -24,6 +44,7 @@ export async function GET() {
           date: true,
           time: true,
           serviceType: { select: { price: true } },
+          serviceProvider: { select: { name: true } },
         },
       },
     },
@@ -34,7 +55,7 @@ export async function GET() {
       hora: b.appointment.time,
       fecha: b.appointment.date,
       clienteNombre: b.clientName,
-      // Si no tiene serviceType, se omite del cálculo (monto 0)
+      empleadoNombre: b.appointment.serviceProvider.name,
       monto: b.appointment.serviceType ? Number(b.appointment.serviceType.price) : 0,
     }))
     .sort((a, b) => {
@@ -43,9 +64,16 @@ export async function GET() {
       return dateB.getTime() - dateA.getTime();
     });
 
+  // Gastos de todos los miembros de la empresa
   const expenses = await prisma.expense.findMany({
-    where: { serviceProviderId },
-    select: { id: true, descripcion: true, monto: true, createdAt: true },
+    where: { serviceProviderId: { in: allProviderIds } },
+    select: {
+      id: true,
+      descripcion: true,
+      monto: true,
+      createdAt: true,
+      serviceProvider: { select: { name: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -54,6 +82,7 @@ export async function GET() {
     descripcion: e.descripcion,
     monto: Number(e.monto),
     createdAt: e.createdAt.toISOString(),
+    adminNombre: e.serviceProvider.name,
   }));
 
   const totalIngresos = ingresos.reduce((sum, i) => sum + i.monto, 0);

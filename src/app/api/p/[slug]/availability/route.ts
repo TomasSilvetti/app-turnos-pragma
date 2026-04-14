@@ -46,6 +46,7 @@ export async function GET(
 ) {
   const { slug } = await params;
   const month = request.nextUrl.searchParams.get("month");
+  const employeeId = request.nextUrl.searchParams.get("employeeId");
 
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     return NextResponse.json(
@@ -70,13 +71,23 @@ export async function GET(
     select: {
       serviceProviderId: true,
       scheduleConfigs: {
-        where: { isActive: true },
+        where: {
+          isActive: true,
+          // Si se pasa employeeId, filtrar por ese empleado.
+          // Para el propietario (employeeId = profile.serviceProviderId):
+          //   incluir configs con serviceProviderId = propietarioId O serviceProviderId = null (configs legacy)
+          // Para otros empleados: solo sus configs
+          ...(employeeId
+            ? { serviceProviderId: employeeId }
+            : {}),
+        },
         select: {
           id: true,
           startTime: true,
           endTime: true,
           intervalMinutes: true,
           daysOfWeek: true,
+          serviceProviderId: true,
         },
       },
     },
@@ -86,16 +97,35 @@ export async function GET(
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  if (profile.scheduleConfigs.length === 0) {
+  // Para el propietario, también incluir configs legacy (serviceProviderId = null)
+  let scheduleConfigs = profile.scheduleConfigs;
+  if (employeeId && employeeId === profile.serviceProviderId) {
+    const legacyConfigs = await prisma.scheduleConfig.findMany({
+      where: {
+        businessProfile: { slug },
+        isActive: true,
+        serviceProviderId: null,
+      },
+      select: {
+        id: true,
+        startTime: true,
+        endTime: true,
+        intervalMinutes: true,
+        daysOfWeek: true,
+        serviceProviderId: true,
+      },
+    });
+    scheduleConfigs = [...scheduleConfigs, ...legacyConfigs];
+  }
+
+  if (scheduleConfigs.length === 0) {
     return NextResponse.json({ slots: [] });
   }
 
-  const serviceProviderId = profile.serviceProviderId;
+  // El serviceProviderId de los appointments se asigna al empleado seleccionado (o al propietario si no hay employeeId)
+  const appointmentOwner = employeeId ?? profile.serviceProviderId;
 
-  // Generate appointments for each active config if they don't exist yet for this month
-  for (const config of profile.scheduleConfigs) {
-    // Always delete unbooked appointments and regenerate to stay in sync with config changes.
-    // Preserve appointments with active bookings (confirmed, pending, requires_reschedule).
+  for (const config of scheduleConfigs) {
     await prisma.appointment.deleteMany({
       where: {
         scheduleConfigId: config.id,
@@ -107,7 +137,6 @@ export async function GET(
       },
     });
 
-    // Fetch times already occupied by active bookings so we don't create duplicate slots
     const occupied = await prisma.appointment.findMany({
       where: { scheduleConfigId: config.id, date: { startsWith: month } },
       select: { date: true, time: true },
@@ -122,17 +151,16 @@ export async function GET(
       config.intervalMinutes,
       config.daysOfWeek,
       config.id,
-      serviceProviderId,
+      appointmentOwner,
       today
     ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
 
     if (slots.length > 0) {
       await prisma.appointment.createMany({ data: slots });
     }
-
   }
 
-  const configIds = profile.scheduleConfigs.map((c) => c.id);
+  const configIds = scheduleConfigs.map((c) => c.id);
 
   const appointments = await prisma.appointment.findMany({
     where: {

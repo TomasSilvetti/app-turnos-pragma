@@ -6,6 +6,7 @@ import MiniCalendar from "./MiniCalendar";
 import AppointmentSlots, { type Appointment } from "./AppointmentSlots";
 import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
+import EmployeeSelector from "./EmployeeSelector";
 
 type Slot = {
   id: string;
@@ -33,15 +34,21 @@ type ClientSession = {
   email: string;
 };
 
+type Employee = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   slug: string;
   businessName: string;
   cbu: string | null;
   alias: string | null;
   clientSession?: ClientSession | null;
+  initialEmployeeId?: string | null;
 };
 
-export default function BookingSection({ slug, businessName, cbu, alias, clientSession }: Props) {
+export default function BookingSection({ slug, businessName, cbu, alias, clientSession, initialEmployeeId }: Props) {
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -52,25 +59,50 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
 
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
+
+  // Cargar la lista de empleados del negocio
   useEffect(() => {
+    fetch(`/api/p/${slug}/employees`)
+      .then((res) => res.json())
+      .then((data: { employees: Employee[] }) => {
+        const list = data.employees ?? [];
+        setEmployees(list);
+        // Si hay un initialEmployeeId válido lo mantenemos, sino elegimos el primero
+        if (!initialEmployeeId && list.length > 0) {
+          setSelectedEmployeeId(list[0].id);
+        }
+      })
+      .catch(() => {});
+  }, [slug, initialEmployeeId]);
+
+  // Cargar slots cuando cambia el mes o el empleado seleccionado
+  useEffect(() => {
+    if (!selectedEmployeeId) return;
     const month = format(viewMonth, "yyyy-MM");
     setIsLoadingSlots(true);
-    fetch(`/api/p/${slug}/availability?month=${month}`)
+    fetch(`/api/p/${slug}/availability?month=${month}&employeeId=${selectedEmployeeId}`)
       .then((res) => res.json())
       .then((data: { slots: Slot[] }) => {
         setSlots(data.slots ?? []);
         setSelectedDate((prev) => {
           const monthPrefix = format(viewMonth, "yyyy-MM");
-          // Keep selected date if it's still in this month and has slots
           if (prev && prev.startsWith(monthPrefix)) return prev;
-          // Otherwise pick the first available date in the month
-          const firstAvailable = data.slots?.[0]?.date ?? null;
-          return firstAvailable;
+          return data.slots?.[0]?.date ?? null;
         });
       })
       .catch(() => setSlots([]))
       .finally(() => setIsLoadingSlots(false));
-  }, [slug, viewMonth]);
+  }, [slug, viewMonth, selectedEmployeeId]);
+
+  const handleEmployeeSelect = useCallback((id: string) => {
+    setSelectedEmployeeId(id);
+    setSelectedDate(null);
+    setSelectedAppointment(null);
+    setBookingError(null);
+    setSlots([]);
+  }, []);
 
   const availableDates = [...new Set(slots.map((s) => s.date))];
 
@@ -123,7 +155,6 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
         ...(data.serviceTypeId && { serviceTypeId: data.serviceTypeId }),
       };
 
-      // Flujo autenticado: no enviar nombre ni teléfono
       if (!clientSession) {
         body.clientName = data.clientName;
         body.clientSurname = data.clientSurname;
@@ -220,6 +251,13 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
           </button>
         </div>
       )}
+
+      {/* Selector de empleado */}
+      <EmployeeSelector
+        employees={employees}
+        selectedId={selectedEmployeeId}
+        onSelect={handleEmployeeSelect}
+      />
 
       <MiniCalendar
         availableDates={availableDates}

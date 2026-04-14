@@ -10,10 +10,13 @@ const DEFAULT_BRAND_COLOR = "#253551";
 
 export default async function LoginPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ employee?: string }>;
 }) {
   const { slug } = await params;
+  const { employee: employeeId } = await searchParams;
 
   // Si ya tiene sesión activa, redirigir a la página de turnos
   const cookieStore = await cookies();
@@ -21,7 +24,7 @@ export default async function LoginPage({
   if (token) {
     const session = await verifyClientToken(token);
     if (session) {
-      redirect(`/turnos/${slug}`);
+      redirect(employeeId ? `/turnos/${slug}?employee=${employeeId}` : `/turnos/${slug}`);
     }
   }
 
@@ -39,6 +42,7 @@ export default async function LoginPage({
       slug={slug}
       businessName={business.name}
       brandColor={business.brandColor ?? DEFAULT_BRAND_COLOR}
+      employeeId={employeeId ?? null}
     />
   );
 }
