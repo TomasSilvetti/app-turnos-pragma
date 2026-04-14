@@ -7,12 +7,13 @@ type Employee = {
 
 type Props = {
   employees: Employee[];
+  totalProviders: number;
   selectedId: string | null;
   onSelect: (id: string) => void;
 };
 
-export default function EmployeeSelector({ employees, selectedId, onSelect }: Props) {
-  if (employees.length <= 1) return null;
+export default function EmployeeSelector({ employees, totalProviders, selectedId, onSelect }: Props) {
+  if (totalProviders <= 1) return null;
 
   return (
     <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">

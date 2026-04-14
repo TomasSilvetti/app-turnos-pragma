@@ -54,13 +54,23 @@ export async function POST(request: NextRequest) {
   }
 
   if (serviceTypeId != null) {
-    const serviceType = await prisma.serviceType.findUnique({
-      where: { id: serviceTypeId },
-      select: { serviceProviderId: true },
+    // Verificar que el tipo de turno pertenezca al mismo negocio del empleado
+    const businessProfile = await prisma.businessProfile.findFirst({
+      where: {
+        OR: [
+          { serviceProviderId: appointment.serviceProviderId },
+          { empleados: { some: { serviceProviderId: appointment.serviceProviderId } } },
+        ],
+      },
+      select: { id: true },
     });
 
-    if (!serviceType || serviceType.serviceProviderId !== appointment.serviceProviderId) {
-      return NextResponse.json({ error: "serviceTypeId inválido o no pertenece al proveedor" }, { status: 400 });
+    const serviceType = await prisma.serviceType.findFirst({
+      where: { id: serviceTypeId, businessProfileId: businessProfile?.id },
+    });
+
+    if (!serviceType) {
+      return NextResponse.json({ error: "serviceTypeId inválido o no pertenece al negocio" }, { status: 400 });
     }
   }
 

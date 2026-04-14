@@ -13,19 +13,39 @@ export async function GET() {
   const serviceProviderId = session.user.id;
 
   // Obtener el businessProfile del usuario autenticado (propietario) junto con sus empleados
-  const businessProfile = await prisma.businessProfile.findUnique({
+  let businessProfile = await prisma.businessProfile.findUnique({
     where: { serviceProviderId },
     select: {
       id: true,
+      serviceProviderId: true,
       empleados: { select: { serviceProviderId: true } },
     },
-  }) as { id: string; empleados: { serviceProviderId: string }[] } | null;
+  }) as { id: string; serviceProviderId: string; empleados: { serviceProviderId: string }[] } | null;
+
+  // Si es admin secundario, buscar la empresa a través de empleado_empresas
+  if (!businessProfile) {
+    const empleadoEmpresa = await prisma.empleadoEmpresa.findFirst({
+      where: { serviceProviderId },
+      select: {
+        businessProfile: {
+          select: {
+            id: true,
+            serviceProviderId: true,
+            empleados: { select: { serviceProviderId: true } },
+          },
+        },
+      },
+    });
+    if (empleadoEmpresa) {
+      businessProfile = empleadoEmpresa.businessProfile;
+    }
+  }
 
   // Obtener todos los serviceProviderIds de la empresa
   const allProviderIds: string[] = businessProfile
     ? Array.from(
         new Set([
-          serviceProviderId,
+          businessProfile.serviceProviderId,
           ...businessProfile.empleados.map((e) => e.serviceProviderId),
         ])
       )

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { resolveBusinessProfile } from "@/lib/business-auth";
 
 const prisma = new PrismaClient();
 
@@ -10,8 +11,14 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const businessProfile = await resolveBusinessProfile(session.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Perfil no encontrado" }, { status: 404 });
+  }
+
   const profile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: session.user.id },
+    where: { id: businessProfile.id },
     select: {
       name: true,
       logoUrl: true,

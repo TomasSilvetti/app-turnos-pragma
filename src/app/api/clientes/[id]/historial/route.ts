@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
 import type { NextAuthRequest } from "next-auth";
+import { resolveBusinessProfile, resolveAllProviderIds } from "@/lib/business-auth";
 
 const prisma = new PrismaClient();
 
@@ -15,23 +16,13 @@ export const GET = auth(async (
 
   const { id: clienteId } = await context.params;
 
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: req.auth.user.id },
-    select: { id: true, serviceProviderId: true },
-  });
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
 
   if (!businessProfile) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  const empleadoRows = await prisma.$queryRaw<{ serviceProviderId: string }[]>`
-    SELECT "serviceProviderId" FROM empleado_empresas WHERE "businessProfileId" = ${businessProfile.id}
-  `;
-
-  const allProviderIds: string[] = [
-    businessProfile.serviceProviderId,
-    ...empleadoRows.map((e) => e.serviceProviderId),
-  ];
+  const allProviderIds = await resolveAllProviderIds(businessProfile.id);
 
   const bookings = await prisma.booking.findMany({
     where: {

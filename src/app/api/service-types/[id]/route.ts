@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { resolveBusinessProfile } from "@/lib/business-auth";
 import type { NextAuthRequest } from "next-auth";
 
 const prisma = new PrismaClient();
@@ -15,8 +16,14 @@ export const PUT = auth(async (
 
   const { id } = await context.params;
 
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
   const existing = await prisma.serviceType.findFirst({
-    where: { id, serviceProviderId: req.auth.user.id },
+    where: { id, businessProfileId: businessProfile.id },
   });
 
   if (!existing) {
@@ -54,8 +61,14 @@ export const DELETE = auth(async (
 
   const { id } = await context.params;
 
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
   const existing = await prisma.serviceType.findFirst({
-    where: { id, serviceProviderId: req.auth.user.id },
+    where: { id, businessProfileId: businessProfile.id },
   });
 
   if (!existing) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { resolveBusinessProfile, resolveAllProviderIds } from "@/lib/business-auth";
 
 const prisma = new PrismaClient();
 
@@ -15,26 +16,13 @@ export async function GET(request: Request) {
   const hasta = searchParams.get("hasta");
   const granularidad = searchParams.get("granularidad") ?? "mes"; // "dia" | "mes"
 
-  // Obtener el businessProfile del admin logueado
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId: session.user.id },
-    select: { id: true, serviceProviderId: true },
-  });
+  const businessProfile = await resolveBusinessProfile(session.user.id);
 
   if (!businessProfile) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  // IDs de empleados del negocio vía raw query (evita dependencia del cliente generado)
-  const empleadoRows = await prisma.$queryRaw<{ serviceProviderId: string }[]>`
-    SELECT "serviceProviderId" FROM empleado_empresas WHERE "businessProfileId" = ${businessProfile.id}
-  `;
-
-  // IDs de todos los proveedores del negocio (admin + empleados)
-  const allProviderIds: string[] = [
-    businessProfile.serviceProviderId,
-    ...empleadoRows.map((e) => e.serviceProviderId),
-  ];
+  const allProviderIds = await resolveAllProviderIds(businessProfile.id);
 
   const dateFilter = desde && hasta ? { gte: desde, lte: hasta } : undefined;
 
@@ -47,9 +35,11 @@ export async function GET(request: Request) {
   const bookings = await prisma.booking.findMany({
     where: {
       appointment: appointmentWhere,
+      NOT: { status: "cancelled" },
     },
     select: {
       clienteId: true,
+      status: true,
       cliente: { select: { sexo: true, edad: true } },
       appointment: {
         select: {
@@ -117,9 +107,10 @@ export async function GET(request: Request) {
   }
   const turnosPorEmpleado = Object.values(empleadoTurnosCount);
 
-  // ingresosPorEmpleado: todos los bookings, agrupados por empleado
+  // ingresosPorEmpleado: solo bookings confirmados (pagados), agrupados por empleado
+  const confirmedBookings = bookings.filter((b) => b.status === "confirmed");
   const empleadoIngresosMap: Record<string, { nombre: string; ingreso: number }> = {};
-  for (const b of bookings) {
+  for (const b of confirmedBookings) {
     const id = b.appointment.serviceProvider.id;
     const nombre = b.appointment.serviceProvider.name;
     const monto = b.appointment.serviceType ? Number(b.appointment.serviceType.price) : 0;

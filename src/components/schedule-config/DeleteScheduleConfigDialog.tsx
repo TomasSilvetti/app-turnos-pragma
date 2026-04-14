@@ -37,12 +37,16 @@ export function DeleteScheduleConfigDialog({
 
   useEffect(() => {
     fetch(`/api/schedule-configs/${configId}/appointments-check`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error("Error al verificar turnos");
+        return r.json();
+      })
       .then((data: CheckResult) => setCheck(data))
+      .catch(() => setCheck({ disponibles: 0, reservados: [] }))
       .finally(() => setLoading(false));
   }, [configId]);
 
-  const hasReservados = (check?.reservados.length ?? 0) > 0;
+  const hasReservados = (check?.reservados?.length ?? 0) > 0;
 
   return (
     <div

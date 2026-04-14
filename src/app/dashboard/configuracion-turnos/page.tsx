@@ -62,6 +62,7 @@ export default function ConfiguracionTurnosPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [noServiceTypesWarning, setNoServiceTypesWarning] = useState(false);
 
   // Estado para el flujo de conflictos al editar
   const [editConflicting, setEditConflicting] = useState<ConflictingBooking[] | null>(null);
@@ -84,6 +85,10 @@ export default function ConfiguracionTurnosPage() {
   }, []);
 
   function handleAdd() {
+    if (serviceTypes.length === 0) {
+      setNoServiceTypesWarning(true);
+      return;
+    }
     setEditingConfig(null);
     setModalError(null);
     setModalOpen(true);
@@ -265,6 +270,19 @@ export default function ConfiguracionTurnosPage() {
           Definí tu disponibilidad semanal para la generación de turnos.
         </p>
       </div>
+
+      {noServiceTypesWarning && (
+        <div className="mb-4 rounded-md border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
+          <p className="font-medium">Necesitás un tipo de turno para continuar</p>
+          <p className="mt-0.5">
+            Antes de crear una configuración de turnos, creá al menos un tipo de turno en la sección{" "}
+            <a href="/dashboard/tipos-de-turno" className="underline underline-offset-2 hover:opacity-80">
+              Tipos de turno
+            </a>
+            .
+          </p>
+        </div>
+      )}
 
       {loading ? (
         <div className="space-y-3">

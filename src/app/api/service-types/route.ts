@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { resolveBusinessProfile } from "@/lib/business-auth";
 import type { NextAuthRequest } from "next-auth";
 
 const prisma = new PrismaClient();
@@ -10,9 +11,16 @@ export const GET = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
   const serviceTypes = await prisma.serviceType.findMany({
-    where: { serviceProviderId: req.auth.user.id },
+    where: { businessProfileId: businessProfile.id },
     select: { id: true, title: true, description: true, price: true },
+    orderBy: { createdAt: "asc" },
   });
 
   return NextResponse.json(serviceTypes, { status: 200 });
@@ -21,6 +29,12 @@ export const GET = auth(async (req: NextAuthRequest) => {
 export const POST = auth(async (req: NextAuthRequest) => {
   if (!req.auth?.user?.id) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado. Cerrá sesión y volvé a iniciarla." }, { status: 404 });
   }
 
   const body = await req.json();
@@ -35,21 +49,12 @@ export const POST = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "El precio debe ser un número mayor a cero" }, { status: 400 });
   }
 
-  const provider = await prisma.serviceProvider.findUnique({
-    where: { id: req.auth.user.id },
-    select: { id: true },
-  });
-
-  if (!provider) {
-    return NextResponse.json({ error: "Proveedor no encontrado. Cerrá sesión y volvé a iniciarla." }, { status: 404 });
-  }
-
   const serviceType = await prisma.serviceType.create({
     data: {
       title,
       description,
       price: parsedPrice,
-      serviceProviderId: req.auth.user.id,
+      businessProfileId: businessProfile.id,
     },
     select: { id: true, title: true, description: true, price: true },
   });

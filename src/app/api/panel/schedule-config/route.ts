@@ -92,23 +92,28 @@ export async function POST(req: Request) {
 
   const serviceProviderId = session.user.id;
 
-  const ownedServiceTypes = await prisma.serviceType.findMany({
-    where: { id: { in: serviceTypeIds }, serviceProviderId },
-    select: { id: true },
-  });
-  if (ownedServiceTypes.length !== serviceTypeIds.length) {
-    return NextResponse.json(
-      { error: "Algunos tipos de servicio no pertenecen al proveedor", field: "serviceTypeIds" },
-      { status: 422 }
-    );
-  }
-
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId },
+  const businessProfile = await prisma.businessProfile.findFirst({
+    where: {
+      OR: [
+        { serviceProviderId },
+        { empleados: { some: { serviceProviderId } } },
+      ],
+    },
     select: { id: true },
   });
   if (!businessProfile)
     return NextResponse.json({ error: "El prestador no tiene perfil de negocio" }, { status: 404 });
+
+  const ownedServiceTypes = await prisma.serviceType.findMany({
+    where: { id: { in: serviceTypeIds }, businessProfileId: businessProfile.id },
+    select: { id: true },
+  });
+  if (ownedServiceTypes.length !== serviceTypeIds.length) {
+    return NextResponse.json(
+      { error: "Algunos tipos de servicio no pertenecen al negocio", field: "serviceTypeIds" },
+      { status: 422 }
+    );
+  }
 
   const existingConfig = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },
@@ -173,23 +178,28 @@ export async function PUT(req: Request) {
 
   const serviceProviderId = session.user.id;
 
-  const ownedServiceTypes = await prisma.serviceType.findMany({
-    where: { id: { in: serviceTypeIds }, serviceProviderId },
-    select: { id: true },
-  });
-  if (ownedServiceTypes.length !== serviceTypeIds.length) {
-    return NextResponse.json(
-      { error: "Algunos tipos de servicio no pertenecen al proveedor", field: "serviceTypeIds" },
-      { status: 422 }
-    );
-  }
-
-  const businessProfile = await prisma.businessProfile.findUnique({
-    where: { serviceProviderId },
+  const businessProfile = await prisma.businessProfile.findFirst({
+    where: {
+      OR: [
+        { serviceProviderId },
+        { empleados: { some: { serviceProviderId } } },
+      ],
+    },
     select: { id: true },
   });
   if (!businessProfile)
     return NextResponse.json({ error: "El prestador no tiene perfil de negocio" }, { status: 404 });
+
+  const ownedServiceTypes = await prisma.serviceType.findMany({
+    where: { id: { in: serviceTypeIds }, businessProfileId: businessProfile.id },
+    select: { id: true },
+  });
+  if (ownedServiceTypes.length !== serviceTypeIds.length) {
+    return NextResponse.json(
+      { error: "Algunos tipos de servicio no pertenecen al negocio", field: "serviceTypeIds" },
+      { status: 422 }
+    );
+  }
 
   const existingConfig = await prisma.scheduleConfig.findFirst({
     where: { businessProfileId: businessProfile.id },

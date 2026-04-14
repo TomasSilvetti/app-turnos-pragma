@@ -89,10 +89,72 @@ function buildReminderUrl(item: BookingItem) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
+function buildCancellationUrl(item: BookingItem) {
+  const formattedDate = format(parseISO(item.appointmentDate), "EEEE d 'de' MMMM", { locale: es });
+  const phone = item.clientPhone.replace(/\D/g, "");
+  const text = `Hola ${item.clientName}, lamentablemente debemos informarte que tu turno del ${formattedDate} a las ${item.appointmentTime} hs ha sido cancelado. Disculpá los inconvenientes.`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+}
+
+function CancelModal({
+  item,
+  onConfirm,
+  onClose,
+  isLoading,
+}: {
+  item: BookingItem;
+  onConfirm: () => void;
+  onClose: () => void;
+  isLoading: boolean;
+}) {
+  const [notified, setNotified] = useState(false);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+      <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <h3 className="font-heading text-lg text-[#ef4444]">Cancelar turno</h3>
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0]">
+            Estás por cancelar el turno de <strong>{item.clientName}</strong>. Una vez cancelado,{" "}
+            <span className="font-semibold">debés notificar al cliente</span> para que esté al tanto.
+          </p>
+        </div>
+        <a
+          href={buildCancellationUrl(item)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setNotified(true)}
+          className="flex items-center justify-center gap-2 font-body text-sm text-white bg-[#25d366] rounded-md px-4 py-2.5 hover:bg-[#1ebe59] transition-colors"
+        >
+          <MessageCircle size={15} />
+          Notificar al cliente por WhatsApp
+        </a>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+          >
+            Volver
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={!notified || isLoading}
+            title={!notified ? "Primero notificá al cliente por WhatsApp" : undefined}
+            className="flex-1 font-body text-sm text-white bg-[#ef4444] rounded-md px-4 py-2 hover:bg-[#dc2626] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Cancelando..." : "Cancelar turno"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BookingList() {
   const [items, setItems] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<BookingItem | null>(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -134,6 +196,7 @@ export default function BookingList() {
       const res = await fetch(`/api/bookings/${bookingId}/cancel`, { method: "PATCH" });
       if (!res.ok) throw new Error();
       setItems((prev) => prev.filter((i) => i.bookingId !== bookingId));
+      setCancelTarget(null);
     } finally {
       setLoadingId(null);
     }
@@ -150,6 +213,14 @@ export default function BookingList() {
 
   return (
     <div className="flex flex-col gap-8">
+      {cancelTarget && (
+        <CancelModal
+          item={cancelTarget}
+          onConfirm={() => handleCancel(cancelTarget.bookingId)}
+          onClose={() => setCancelTarget(null)}
+          isLoading={loadingId === cancelTarget.bookingId}
+        />
+      )}
       {/* Dropdown calendario */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
@@ -211,15 +282,35 @@ export default function BookingList() {
                 key={item.bookingId}
                 item={item}
                 actions={
-                  <button
-                    onClick={() => handleConfirmPayment(item.bookingId)}
-                    disabled={loadingId === item.bookingId}
-                    className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
-                    aria-label="Marcar como pagado"
-                  >
-                    <CheckCircle size={15} />
-                    Pago
-                  </button>
+                  <>
+                    <a
+                      href={buildReminderUrl(item)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 font-body text-sm text-white bg-[#25d366] rounded-md px-3 py-2 hover:bg-[#1ebe59] transition-colors"
+                      aria-label="Recordar pago por WhatsApp"
+                    >
+                      <MessageCircle size={15} />
+                      Recordar
+                    </a>
+                    <button
+                      onClick={() => handleConfirmPayment(item.bookingId)}
+                      disabled={loadingId === item.bookingId}
+                      className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
+                      aria-label="Marcar como pagado"
+                    >
+                      <CheckCircle size={15} />
+                      Pago
+                    </button>
+                    <button
+                      onClick={() => setCancelTarget(item)}
+                      disabled={loadingId === item.bookingId}
+                      className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
+                      aria-label="Cancelar turno"
+                    >
+                      <X size={15} />
+                    </button>
+                  </>
                 }
               />
             ))

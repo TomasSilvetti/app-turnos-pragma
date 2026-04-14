@@ -60,15 +60,17 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
 
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [totalProviders, setTotalProviders] = useState<number>(0);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
 
   // Cargar la lista de empleados del negocio
   useEffect(() => {
     fetch(`/api/p/${slug}/employees`)
       .then((res) => res.json())
-      .then((data: { employees: Employee[] }) => {
+      .then((data: { employees: Employee[]; totalProviders?: number }) => {
         const list = data.employees ?? [];
         setEmployees(list);
+        setTotalProviders(data.totalProviders ?? list.length);
         // Si hay un initialEmployeeId válido lo mantenemos, sino elegimos el primero
         if (!initialEmployeeId && list.length > 0) {
           setSelectedEmployeeId(list[0].id);
@@ -255,6 +257,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
       {/* Selector de empleado */}
       <EmployeeSelector
         employees={employees}
+        totalProviders={totalProviders}
         selectedId={selectedEmployeeId}
         onSelect={handleEmployeeSelect}
       />

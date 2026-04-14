@@ -29,24 +29,11 @@ export async function PATCH(
     return NextResponse.json({ error: "No tenés permiso para cancelar este turno" }, { status: 403 });
   }
 
-  if (booking.status !== "confirmed") {
-    return NextResponse.json(
-      { error: "Solo se pueden cancelar turnos con estado confirmado" },
-      { status: 400 }
-    );
+  if (booking.status === "cancelled") {
+    return NextResponse.json({ error: "El turno ya fue cancelado" }, { status: 400 });
   }
 
-  const updated = await prisma.booking.update({
-    where: { id },
-    data: { status: "cancelled" },
-    select: {
-      id: true,
-      clientName: true,
-      clientPhone: true,
-      status: true,
-      updatedAt: true,
-    },
-  });
+  await prisma.booking.delete({ where: { id } });
 
-  return NextResponse.json(updated, { status: 200 });
+  return NextResponse.json({ id }, { status: 200 });
 }
