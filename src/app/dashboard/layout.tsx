@@ -6,15 +6,23 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
 
-const navItems = [
-  { label: "Perfil", href: "/dashboard/perfil", icon: "person" },
+type NavItem = {
+  label: string;
+  href: string;
+  icon: string;
+  roles?: string[]; // undefined = todos los roles
+};
+
+const navItems: NavItem[] = [
+  { label: "Perfil", href: "/dashboard/perfil", icon: "person", roles: ["propietario", "administrador"] },
   { label: "Tipos de turno", href: "/dashboard/tipos-de-turno", icon: "label" },
   { label: "Configuración de turnos", href: "/dashboard/configuracion-turnos", icon: "calendar_month" },
   { label: "Turnos reservados", href: "/dashboard/turnos-reservados", icon: "bookmark" },
-  { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat" },
-  { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments" },
-  { label: "Clientes", href: "/dashboard/clientes", icon: "group" },
-  { label: "Sucursales", href: "/dashboard/sucursales", icon: "store" },
+  { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat", roles: ["propietario", "administrador"] },
+  { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments", roles: ["propietario", "administrador"] },
+  { label: "Clientes", href: "/dashboard/clientes", icon: "group", roles: ["propietario", "administrador"] },
+  { label: "Sucursales", href: "/dashboard/sucursales", icon: "store", roles: ["propietario", "administrador"] },
+  { label: "Empleados", href: "/dashboard/empleados", icon: "badge", roles: ["propietario", "administrador"] },
 ];
 
 const DEFAULT_BRAND_COLOR = "#253551";
@@ -41,6 +49,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("theme", next ? "dark" : "light");
   }
+
+  const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
+  const visibleNavItems = navItems.filter(
+    (item) => !item.roles || item.roles.includes(userRol)
+  );
 
   const userName = session?.user?.name ?? "";
   const userEmail = session?.user?.email ?? "";
@@ -108,7 +121,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <nav className="flex flex-col gap-1 p-3 flex-1" aria-label="Navegación principal">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isReschedule = item.href === "/dashboard/reprogramaciones";
             const showBadge = isReschedule && rescheduleCount > 0;
             const active = pathname === item.href;

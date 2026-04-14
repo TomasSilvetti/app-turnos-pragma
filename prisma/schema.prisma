@@ -13,17 +13,27 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ServiceProviderRol {
+  propietario
+  administrador
+  empleado
+}
+
 model ServiceProvider {
-  id              String           @id @default(cuid())
+  id              String              @id @default(cuid())
   name            String
-  email           String           @unique
+  email           String              @unique
   hashedPassword  String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  isActive        Boolean             @default(true)
+  rol             ServiceProviderRol  @default(propietario)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
   businessProfile BusinessProfile?
   appointments    Appointment[]
   serviceTypes    ServiceType[]
   expenses        Expense[]
+  empresas        EmpleadoEmpresa[]
+  sucursales      EmpleadoSucursal[]
 
   @@map("service_providers")
 }
@@ -59,6 +69,7 @@ model BusinessProfile {
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   scheduleConfigs   ScheduleConfig[]
   sucursales        Sucursal[]
+  empleados         EmpleadoEmpresa[]
 
   @@map("business_profiles")
 }
@@ -70,7 +81,8 @@ model Sucursal {
   businessProfileId String
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
-  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  empleados         EmpleadoSucursal[]
 
   @@map("sucursales")
 }
@@ -163,4 +175,26 @@ model Cliente {
   bookings       Booking[]
 
   @@map("clientes")
+}
+
+model EmpleadoEmpresa {
+  id                  String          @id @default(cuid())
+  serviceProviderId   String
+  businessProfileId   String
+  createdAt           DateTime        @default(now())
+  serviceProvider     ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+
+  @@map("empleado_empresas")
+}
+
+model EmpleadoSucursal {
+  id                String          @id @default(cuid())
+  serviceProviderId String
+  sucursalId        String
+  createdAt         DateTime        @default(now())
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+  sucursal          Sucursal        @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
+
+  @@map("empleado_sucursales")
 }

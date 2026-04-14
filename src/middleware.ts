@@ -7,6 +7,16 @@ const { auth } = NextAuth(authConfig);
 
 const DASHBOARD_PREFIX = "/dashboard";
 
+// Rutas del dashboard que requieren rol administrador o propietario
+const ADMIN_ONLY_ROUTES = [
+  "/dashboard/perfil",
+  "/dashboard/finanzas",
+  "/dashboard/clientes",
+  "/dashboard/sucursales",
+  "/dashboard/empleados",
+  "/dashboard/reprogramaciones",
+];
+
 function getClientSecret(): Uint8Array {
   const secret = process.env.CLIENT_JWT_SECRET;
   if (!secret) throw new Error("CLIENT_JWT_SECRET is not defined");
@@ -41,6 +51,19 @@ export default auth(async (req) => {
   // Redirect authenticated users away from login
   if (isLoginPage && isLoggedIn) {
     return NextResponse.redirect(new URL(DASHBOARD_PREFIX, req.nextUrl));
+  }
+
+  // Proteger rutas de admin contra empleados
+  if (isLoggedIn) {
+    const rol = (req.auth?.user as { rol?: string } | undefined)?.rol ?? "propietario";
+    if (rol === "empleado") {
+      const isRestricted = ADMIN_ONLY_ROUTES.some(
+        (route) => pathname === route || pathname.startsWith(route + "/")
+      );
+      if (isRestricted) {
+        return NextResponse.redirect(new URL("/dashboard/acceso-denegado", req.nextUrl));
+      }
+    }
   }
 
   // Proteger /turnos/[slug] (exacto): redirigir a login si el cliente no está autenticado
