@@ -13,6 +13,7 @@ const navItems = [
   { label: "Turnos reservados", href: "/dashboard/turnos-reservados", icon: "bookmark" },
   { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat" },
   { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments" },
+  { label: "Clientes", href: "/dashboard/clientes", icon: "group" },
 ];
 
 const DEFAULT_BRAND_COLOR = "#253551";

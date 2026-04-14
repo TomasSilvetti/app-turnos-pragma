@@ -11,9 +11,7 @@ export async function GET() {
   }
 
   const serviceProviderId = session.user.id;
-  const now = new Date();
-
-  // Turnos confirmados con fecha+hora pasada
+  // Turnos confirmados
   const confirmedBookings = await prisma.booking.findMany({
     where: {
       status: "confirmed",
@@ -32,12 +30,6 @@ export async function GET() {
   });
 
   const ingresos = confirmedBookings
-    .filter((b) => {
-      const [year, month, day] = b.appointment.date.split("-").map(Number);
-      const [hour, minute] = b.appointment.time.split(":").map(Number);
-      const appointmentDate = new Date(year, month - 1, day, hour, minute);
-      return appointmentDate < now;
-    })
     .map((b) => ({
       hora: b.appointment.time,
       fecha: b.appointment.date,

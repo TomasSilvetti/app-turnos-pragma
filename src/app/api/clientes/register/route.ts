@@ -85,13 +85,12 @@ export async function POST(request: NextRequest) {
     select: { id: true, nombre: true, apellido: true, email: true },
   });
 
-  const response = NextResponse.json(cliente, { status: 201 });
-  await setClientSession(response, {
+  await setClientSession({
     clienteId: cliente.id,
     nombre: cliente.nombre,
     apellido: cliente.apellido,
     email: cliente.email,
   });
 
-  return response;
+  return NextResponse.json(cliente, { status: 201 });
 }
