@@ -30,6 +30,7 @@ export const GET = auth(async (
       appointment: { serviceProviderId: { in: allProviderIds } },
     },
     select: {
+      paymentMethod: true,
       appointment: {
         select: {
           date: true,
@@ -50,6 +51,7 @@ export const GET = auth(async (
       tipoTurno: b.appointment.serviceType?.title ?? "Sin tipo",
       monto: b.appointment.serviceType ? Number(b.appointment.serviceType.price) : 0,
       empleado: b.appointment.serviceProvider.name,
+      paymentMethod: b.paymentMethod,
     }))
     .sort((a, b) => b.fecha.localeCompare(a.fecha));
 

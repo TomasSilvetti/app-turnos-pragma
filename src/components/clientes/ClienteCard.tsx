@@ -16,6 +16,7 @@ type Visita = {
   tipoTurno: string;
   monto: number;
   empleado?: string;
+  paymentMethod?: string | null;
 };
 
 type HistorialData = {
@@ -140,11 +141,12 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
                         <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0]">
                           {visita.tipoTurno}
                         </span>
-                        {visita.empleado && (
-                          <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8]">
-                            {visita.empleado}
-                          </span>
-                        )}
+                        <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8]">
+                          {visita.empleado}
+                          {visita.paymentMethod && (
+                            <> · {visita.paymentMethod === "cash" ? "Efectivo" : "Transferencia"}</>
+                          )}
+                        </span>
                       </div>
                     </div>
                     <span className="text-sm font-medium text-[var(--brand-color)]">

@@ -16,6 +16,7 @@ export type BookingItem = {
   appointmentTime: string;
   serviceTypeTitle: string;
   serviceTypePrice: number | null;
+  paymentMethod: string | null;
 };
 
 function SkeletonRow() {
@@ -76,6 +77,7 @@ function BookingRow({
         <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">
           {item.serviceTypeTitle}
           {formattedPrice !== null && ` · ${formattedPrice}`}
+          {item.paymentMethod && ` · ${item.paymentMethod === "cash" ? "Efectivo" : "Transferencia"}`}
         </span>
       </div>
       <div className="flex items-center gap-2 shrink-0">{actions}</div>

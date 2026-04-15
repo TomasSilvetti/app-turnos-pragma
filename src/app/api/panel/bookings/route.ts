@@ -32,6 +32,7 @@ export async function GET(req: Request) {
       clientName: true,
       clientPhone: true,
       status: true,
+      paymentMethod: true,
       appointment: {
         select: {
           date: true,
@@ -54,6 +55,7 @@ export async function GET(req: Request) {
     serviceTypePrice: b.appointment.serviceType?.price
       ? Number(b.appointment.serviceType.price)
       : null,
+    paymentMethod: b.paymentMethod,
   }));
 
   return NextResponse.json(result, { status: 200 });
