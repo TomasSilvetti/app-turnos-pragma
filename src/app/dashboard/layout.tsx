@@ -32,26 +32,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
-  const [isDark, setIsDark] = useState(false);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
-  const [myLink, setMyLink] = useState<string | null>(null);
-  const [linkCopied, setLinkCopied] = useState(false);
   const { data: session } = useSession();
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const dark = saved === "dark" || (!saved && prefersDark);
-    setIsDark(dark);
     document.documentElement.classList.toggle("dark", dark);
   }, []);
-
-  function toggleTheme() {
-    const next = !isDark;
-    setIsDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("theme", next ? "dark" : "light");
-  }
 
   const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
   const visibleNavItems = navItems.filter(
@@ -72,16 +61,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((r) => r.json())
       .then((data) => {
         if (data?.brandColor) setBrandColor(data.brandColor);
-      })
-      .catch(() => {});
-
-    fetch("/api/my-link")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data?.slug && data?.employeeId) {
-          const base = window.location.origin;
-          setMyLink(`${base}/turnos/${data.slug}?employee=${data.employeeId}`);
-        }
       })
       .catch(() => {});
 
@@ -171,65 +150,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {myLink && (
-          <button
-            type="button"
-            onClick={() => {
-              navigator.clipboard.writeText(myLink).then(() => {
-                setLinkCopied(true);
-                setTimeout(() => setLinkCopied(false), 2000);
-              });
-            }}
-            className="mx-3 mb-1 flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
-            aria-label="Copiar mi link de reservas"
-          >
-            <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">link</span>
-              Mi link de reservas
-            </span>
-            <span className="material-symbols-outlined text-[var(--brand-color)]" style={{ fontSize: "16px" }} translate="no">
-              {linkCopied ? "check" : "content_copy"}
-            </span>
-          </button>
-        )}
-
-        <button
-          onClick={() => window.dispatchEvent(new CustomEvent("push-prompt-open"))}
-          className="mx-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
-          aria-label="Activar notificaciones push"
-        >
-          <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">notifications</span>
-          Notificaciones
-        </button>
-
-        <button
-          onClick={toggleTheme}
-          className="mx-3 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
-          aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
-          aria-pressed={isDark}
-        >
-          <span className="flex items-center gap-2">
-            <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">
-              {isDark ? "light_mode" : "dark_mode"}
-            </span>
-            {isDark ? "Modo claro" : "Modo oscuro"}
-          </span>
-          <span
-            className={cn(
-              "relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200",
-              isDark ? "bg-[var(--brand-color)]" : "bg-[#D1D5DB]"
-            )}
-            aria-hidden="true"
-          >
-            <span
-              className={cn(
-                "pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transform transition-transform duration-200",
-                isDark ? "translate-x-4" : "translate-x-0"
-              )}
-            />
-          </span>
-        </button>
-
         <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#1e293b] flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[var(--brand-color)] text-white flex items-center justify-center font-small text-[11px] font-bold shrink-0">
@@ -240,13 +160,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <span className="font-small text-[10px] text-[#6b7280] dark:text-[#94a3b8] truncate leading-tight">{userEmail}</span>
             </div>
           </div>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex items-center gap-1.5 text-[11px] text-[#2A2829] dark:text-[#cbd5e1] hover:text-[#ef4444] dark:hover:text-[#ef4444] transition-colors w-fit"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: "14px" }} translate="no">logout</span>
-            Cerrar sesión
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex items-center gap-1.5 text-[11px] text-[#2A2829] dark:text-[#cbd5e1] hover:text-[#ef4444] dark:hover:text-[#ef4444] transition-colors"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "14px" }} translate="no">logout</span>
+              Cerrar sesión
+            </button>
+            <Link
+              href="/dashboard/configuracion"
+              className="flex items-center gap-1 text-[11px] text-[#2A2829] dark:text-[#cbd5e1] hover:text-[var(--brand-color)] dark:hover:text-[#93c5fd] transition-colors"
+              aria-label="Configuración"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">settings</span>
+            </Link>
+          </div>
         </div>
       </aside>
 
