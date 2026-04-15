@@ -51,10 +51,25 @@ async function ensureAppointmentsForMonth(
   monthIndex: number, // 0-indexed
   month: string       // "YYYY-MM"
 ): Promise<boolean> {
+  // Resolve the businessProfile for this provider (owner or employee)
+  const businessProfile = await prisma.businessProfile.findFirst({
+    where: {
+      OR: [
+        { serviceProviderId },
+        { empleados: { some: { serviceProviderId } } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (!businessProfile) return false;
+
   const configs = await prisma.scheduleConfig.findMany({
-    where: { businessProfile: { serviceProviderId }, isActive: true },
+    where: { businessProfileId: businessProfile.id, isActive: true },
     select: { id: true, startTime: true, endTime: true, intervalMinutes: true, daysOfWeek: true },
   });
+
+  console.log(`[available-slots] businessProfileId=${businessProfile.id}, configs found=${configs.length}`);
 
   if (configs.length === 0) return false;
 
@@ -94,6 +109,8 @@ async function ensureAppointmentsForMonth(
       serviceProviderId,
       today
     ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
+
+    console.log(`[available-slots] config=${config.id}, occupiedKeys=${occupiedKeys.size}, generatedSlots=${slots.length}`);
 
     if (slots.length > 0) {
       await prisma.appointment.createMany({ data: slots });
@@ -156,6 +173,7 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "asc" },
     });
 
+    console.log(`[available-slots] serviceProviderId=${serviceProviderId}, month=${month}, freeDates=${appointments.length}`);
     return NextResponse.json({ dates: appointments.map((a) => a.date) });
   }
 

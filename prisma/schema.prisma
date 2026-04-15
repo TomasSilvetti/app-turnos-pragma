@@ -86,6 +86,7 @@ model Sucursal {
   updatedAt         DateTime        @updatedAt
   businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
   empleados         EmpleadoSucursal[]
+  appointments      Appointment[]
 
   @@map("sucursales")
 }
@@ -146,11 +147,13 @@ model Appointment {
   scheduleConfigId  String?
   serviceProviderId String
   serviceTypeId     String?
+  sucursalId        String?
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
   scheduleConfig    ScheduleConfig? @relation(fields: [scheduleConfigId], references: [id])
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   serviceType       ServiceType?    @relation(fields: [serviceTypeId], references: [id])
+  sucursal          Sucursal?       @relation(fields: [sucursalId], references: [id], onDelete: SetNull)
   booking           Booking?
 
   @@map("appointments")
