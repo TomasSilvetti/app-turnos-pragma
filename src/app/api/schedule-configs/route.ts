@@ -48,13 +48,12 @@ export const GET = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });
   }
 
-  const { businessProfileId, isEmployee } = result;
+  const { businessProfileId } = result;
 
   const scheduleConfigs = await prisma.scheduleConfig.findMany({
     where: {
       businessProfileId,
-      // Empleados solo ven sus propias configs; propietarios ven todas
-      ...(isEmployee ? { serviceProviderId: userId } : {}),
+      serviceProviderId: userId,
     },
     select: {
       id: true,
