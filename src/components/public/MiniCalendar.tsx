@@ -20,6 +20,7 @@ type Props = {
   viewMonth: Date;
   onMonthChange: (month: Date) => void;
   onDaySelect: (date: string) => void;
+  originalDate?: string | null; // YYYY-MM-DD — día original del turno
 };
 
 const WEEK_DAYS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
@@ -30,6 +31,7 @@ export default function MiniCalendar({
   viewMonth,
   onMonthChange,
   onDaySelect,
+  originalDate,
 }: Props) {
   const today = new Date();
   const monthStart = startOfMonth(viewMonth);
@@ -51,6 +53,11 @@ export default function MiniCalendar({
 
   function isToday(day: Date) {
     return isSameDay(day, today);
+  }
+
+  function isOriginal(day: Date) {
+    if (!originalDate) return false;
+    return isSameDay(day, parseISO(originalDate));
   }
 
   function handleDayClick(day: Date) {

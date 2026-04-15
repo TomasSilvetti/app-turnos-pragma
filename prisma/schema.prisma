@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,29 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ServiceProviderRol {
-  propietario
-  administrador
-  empleado
-}
-
 model ServiceProvider {
-  id              String              @id @default(cuid())
-  name            String
-  email           String              @unique
-  hashedPassword  String
-  isActive            Boolean             @default(true)
-  attendsAppointments Boolean             @default(true)
-  rol             ServiceProviderRol  @default(propietario)
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  businessProfile BusinessProfile?
-  appointments    Appointment[]
-  expenses        Expense[]
-  empresas        EmpleadoEmpresa[]
-  sucursales      EmpleadoSucursal[]
-  scheduleConfigs   ScheduleConfig[]
-  pushSubscriptions PushSubscription[]
+  id                  String             @id @default(cuid())
+  name                String
+  email               String             @unique
+  hashedPassword      String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  isActive            Boolean            @default(true)
+  rol                 ServiceProviderRol @default(propietario)
+  attendsAppointments Boolean            @default(true)
+  appointments        Appointment[]
+  businessProfile     BusinessProfile?
+  empresas            EmpleadoEmpresa[]
+  sucursales          EmpleadoSucursal[]
+  expenses            Expense[]
+  pushSubscriptions   PushSubscription[]
+  scheduleConfigs     ScheduleConfig[]
 
   @@map("service_providers")
 }
@@ -53,62 +41,62 @@ model Expense {
 }
 
 model BusinessProfile {
-  id                String          @id @default(cuid())
+  id                String            @id @default(cuid())
   name              String
   logoUrl           String?
   address           String?
   phone             String?
   cbu               String?
   alias             String?
-  slug              String          @unique
-  rubro             String
-  serviceProviderId String          @unique
-  theme             String          @default("light")
-  brandColor        String          @default("#1e3a5f")
+  slug              String            @unique
+  serviceProviderId String            @unique
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  brandColor        String            @default("#1e3a5f")
   brandColorDark    String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
-  scheduleConfigs   ScheduleConfig[]
-  sucursales        Sucursal[]
+  theme             String            @default("light")
+  rubro             String
+  serviceProvider   ServiceProvider   @relation(fields: [serviceProviderId], references: [id])
   empleados         EmpleadoEmpresa[]
+  scheduleConfigs   ScheduleConfig[]
   serviceTypes      ServiceType[]
+  sucursales        Sucursal[]
 
   @@map("business_profiles")
 }
 
 model Sucursal {
-  id                String          @id @default(cuid())
+  id                String             @id @default(cuid())
   name              String
   address           String
   businessProfileId String
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
-  empleados         EmpleadoSucursal[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   appointments      Appointment[]
+  empleados         EmpleadoSucursal[]
+  businessProfile   BusinessProfile    @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
 
   @@map("sucursales")
 }
 
 model ScheduleConfig {
   id                String           @id @default(cuid())
-  name              String
-  isActive          Boolean          @default(true)
   startTime         String
   endTime           String
   intervalMinutes   Int
-  daysOfWeek        Int[]
   price             Decimal
   businessProfileId String
-  serviceProviderId String?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
+  daysOfWeek        Int[]
+  isActive          Boolean          @default(true)
+  name              String
+  serviceProviderId String?
+  appointments      Appointment[]
+  disabledSlots     DisabledSlot[]
   businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id])
   serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
-  appointments      Appointment[]
-  serviceTypes      ServiceType[]
-  disabledSlots     DisabledSlot[]
+  serviceTypes      ServiceType[]    @relation("ScheduleConfigToServiceType")
 
   @@map("schedule_configs")
 }
@@ -116,8 +104,8 @@ model ScheduleConfig {
 model DisabledSlot {
   id               String         @id @default(cuid())
   scheduleConfigId String
-  date             String         // YYYY-MM-DD — día específico
-  time             String         // HH:MM
+  date             String
+  time             String
   createdAt        DateTime       @default(now())
   scheduleConfig   ScheduleConfig @relation(fields: [scheduleConfigId], references: [id], onDelete: Cascade)
 
@@ -129,12 +117,12 @@ model ServiceType {
   title             String
   description       String?
   price             Decimal
-  businessProfileId String
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
-  businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id])
+  businessProfileId String
   appointments      Appointment[]
-  scheduleConfigs   ScheduleConfig[]
+  businessProfile   BusinessProfile  @relation(fields: [businessProfileId], references: [id])
+  scheduleConfigs   ScheduleConfig[] @relation("ScheduleConfigToServiceType")
 
   @@map("service_types")
 }
@@ -142,43 +130,36 @@ model ServiceType {
 model Appointment {
   id                String          @id @default(cuid())
   time              String
-  date              String
   isActive          Boolean         @default(true)
   scheduleConfigId  String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  date              String
   serviceProviderId String
   serviceTypeId     String?
   sucursalId        String?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
   scheduleConfig    ScheduleConfig? @relation(fields: [scheduleConfigId], references: [id])
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   serviceType       ServiceType?    @relation(fields: [serviceTypeId], references: [id])
-  sucursal          Sucursal?       @relation(fields: [sucursalId], references: [id], onDelete: SetNull)
+  sucursal          Sucursal?       @relation(fields: [sucursalId], references: [id])
   booking           Booking?
 
   @@map("appointments")
 }
 
-enum BookingStatus {
-  pending
-  confirmed
-  cancelled
-  requires_reschedule
-}
-
 model Booking {
-  id            String        @id @default(cuid())
-  appointmentId String        @unique
-  clientName    String
-  clientPhone   String
-  status        BookingStatus  @default(pending)
-  previousStatus BookingStatus?
-  clienteId               String?
-  whatsappReminderSentAt  DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  cliente       Cliente?      @relation(fields: [clienteId], references: [id])
+  id                     String         @id @default(cuid())
+  appointmentId          String         @unique
+  clientName             String
+  clientPhone            String
+  status                 BookingStatus  @default(pending)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+  previousStatus         BookingStatus?
+  clienteId              String?
+  whatsappReminderSentAt DateTime?
+  appointment            Appointment    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  cliente                Cliente?       @relation(fields: [clienteId], references: [id])
 
   @@map("bookings")
 }
@@ -189,32 +170,32 @@ model Cliente {
   apellido       String
   email          String    @unique
   hashedPassword String
-  telefono       String?
   sexo           String?
   edad           Int?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  telefono       String?
   bookings       Booking[]
 
   @@map("clientes")
 }
 
 model EmpleadoEmpresa {
-  id                  String          @id @default(cuid())
-  serviceProviderId   String
-  businessProfileId   String
-  createdAt           DateTime        @default(now())
-  serviceProvider     ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
-  businessProfile     BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  id                String          @id @default(cuid())
+  businessProfileId String
+  createdAt         DateTime        @default(now())
+  serviceProviderId String
+  businessProfile   BusinessProfile @relation(fields: [businessProfileId], references: [id], onDelete: Cascade)
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
 
   @@map("empleado_empresas")
 }
 
 model EmpleadoSucursal {
   id                String          @id @default(cuid())
-  serviceProviderId String
   sucursalId        String
   createdAt         DateTime        @default(now())
+  serviceProviderId String
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
   sucursal          Sucursal        @relation(fields: [sucursalId], references: [id], onDelete: Cascade)
 
@@ -231,4 +212,17 @@ model PushSubscription {
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
 
   @@map("push_subscriptions")
+}
+
+enum ServiceProviderRol {
+  propietario
+  administrador
+  empleado
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  cancelled
+  requires_reschedule
 }

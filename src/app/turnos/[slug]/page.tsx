@@ -18,6 +18,7 @@ type BusinessPublicData = {
   cbu: string | null;
   alias: string | null;
   brandColor: string;
+  sucursales: { id: string; name: string; address: string }[];
 };
 
 async function getBusinessBySlug(
@@ -33,10 +34,21 @@ async function getBusinessBySlug(
       cbu: true,
       alias: true,
       brandColor: true,
+      sucursales: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          empleados: { select: { id: true }, take: 1 },
+        },
+      },
     },
   });
   if (!profile) return null;
-  return { ...profile, brandColor: profile.brandColor ?? DEFAULT_BRAND_COLOR };
+  const sucursales = profile.sucursales
+    .filter((s) => s.empleados.length > 0)
+    .map((s) => ({ id: s.id, name: s.name, address: s.address }));
+  return { ...profile, brandColor: profile.brandColor ?? DEFAULT_BRAND_COLOR, sucursales };
 }
 
 export default async function PublicBusinessPage({
@@ -129,6 +141,7 @@ export default async function PublicBusinessPage({
           phone={business.phone}
           clientSession={clientSession}
           initialEmployeeId={initialEmployeeId ?? null}
+          initialSucursales={business.sucursales}
         />
       </div>
     </main>

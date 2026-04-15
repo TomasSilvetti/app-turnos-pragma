@@ -54,9 +54,10 @@ type Props = {
   phone: string | null;
   clientSession?: ClientSession | null;
   initialEmployeeId?: string | null;
+  initialSucursales: Sucursal[];
 };
 
-export default function BookingSection({ slug, businessName, cbu, alias, phone, clientSession, initialEmployeeId }: Props) {
+export default function BookingSection({ slug, businessName, cbu, alias, phone, clientSession, initialEmployeeId, initialSucursales }: Props) {
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -67,37 +68,20 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
 
-  // Sucursales
-  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
-  const [selectedSucursalId, setSelectedSucursalId] = useState<string | null>(null);
-  const [sucursalesLoading, setSucursalesLoading] = useState(true);
-  const [sucursalesError, setSucursalesError] = useState(false);
+  // Sucursales (precargadas desde el server)
+  const sucursales = initialSucursales;
+  const [selectedSucursalId, setSelectedSucursalId] = useState<string | null>(
+    initialSucursales.length === 1 ? initialSucursales[0].id : null
+  );
+  const sucursalesLoading = false;
+  const sucursalesError = false;
 
   // Empleados por sucursal
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
   const [empleadosLoading, setEmpleadosLoading] = useState(false);
 
-  // Cargar sucursales al montar
-  useEffect(() => {
-    setSucursalesLoading(true);
-    fetch(`/api/p/${slug}/branches`)
-      .then((res) => {
-        if (!res.ok) throw new Error();
-        return res.json();
-      })
-      .then((data: Sucursal[]) => {
-        setSucursales(data);
-        if (data.length === 1) {
-          setSelectedSucursalId(data[0].id);
-        }
-        setSucursalesError(false);
-      })
-      .catch(() => setSucursalesError(true))
-      .finally(() => setSucursalesLoading(false));
-  }, [slug]);
-
-  // Cargar empleados cuando cambia la sucursal
+  // Cargar empleados cuando cambia la sucursal (client-side, lazy)
   useEffect(() => {
     if (!selectedSucursalId) {
       setEmployees([]);

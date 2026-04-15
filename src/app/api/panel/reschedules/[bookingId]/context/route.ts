@@ -29,14 +29,16 @@ export async function GET(
   const booking = await prisma.booking.findFirst({
     where: {
       id: bookingId,
-      appointment: {
-        serviceProvider: {
-          OR: [
-            { id: serviceProviderId },
-            { empresas: { some: { businessProfileId: businessProfile.id } } },
-          ],
+      OR: [
+        { appointment: { serviceProviderId } },
+        {
+          appointment: {
+            serviceProvider: {
+              empresas: { some: { businessProfileId: businessProfile.id } },
+            },
+          },
         },
-      },
+      ],
     },
     select: {
       appointment: {
