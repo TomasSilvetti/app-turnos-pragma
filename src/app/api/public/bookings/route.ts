@@ -81,7 +81,14 @@ export async function POST(request: NextRequest) {
     ? `${clientSession.nombre} ${clientSession.apellido}`
     : `${clientName.trim()} ${clientSurname.trim()}`;
 
-  const bookingClientPhone = isAuthenticatedFlow ? "" : clientPhone.trim();
+  let bookingClientPhone = isAuthenticatedFlow ? "" : clientPhone.trim();
+  if (isAuthenticatedFlow) {
+    const clienteData = await prisma.cliente.findUnique({
+      where: { id: clientSession.clienteId },
+      select: { telefono: true },
+    });
+    bookingClientPhone = clienteData?.telefono ?? "";
+  }
   const bookingClienteId = isAuthenticatedFlow ? clientSession.clienteId : null;
 
   const booking = await prisma.booking.upsert({
