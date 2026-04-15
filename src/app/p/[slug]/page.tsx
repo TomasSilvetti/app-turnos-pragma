@@ -114,7 +114,7 @@ export default async function PublicBookingPage({
         </div>
 
         {/* Calendario y turnos */}
-        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} />
+        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} phone={business.phone} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} />
       </div>
     </main>
   );

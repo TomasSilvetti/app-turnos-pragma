@@ -26,6 +26,7 @@ type BookingResult = {
   cbu: string | null;
   alias: string | null;
   clientName: string | null;
+  phone: string | null;
 };
 
 type ClientSession = {
@@ -45,11 +46,12 @@ type Props = {
   businessName: string;
   cbu: string | null;
   alias: string | null;
+  phone: string | null;
   clientSession?: ClientSession | null;
   initialEmployeeId?: string | null;
 };
 
-export default function BookingSection({ slug, businessName, cbu, alias, clientSession, initialEmployeeId }: Props) {
+export default function BookingSection({ slug, businessName, cbu, alias, phone, clientSession, initialEmployeeId }: Props) {
   const [viewMonth, setViewMonth] = useState<Date>(startOfMonth(new Date()));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
@@ -196,6 +198,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
         price: finalPrice,
         cbu,
         alias,
+        phone,
         clientName: clientDisplayName,
       });
     } catch (err) {
@@ -220,6 +223,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
         price={bookingResult.price}
         cbu={bookingResult.cbu}
         alias={bookingResult.alias}
+        phone={bookingResult.phone}
         clientName={bookingResult.clientName}
         onBack={handleBack}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Copy, Check } from "lucide-react";
+import { CheckCircle, Copy, Check, MessageCircle } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState } from "react";
@@ -12,6 +12,7 @@ type Props = {
   price: number;
   cbu: string | null;
   alias: string | null;
+  phone: string | null;
   clientName: string | null;
   onBack: () => void;
 };
@@ -23,6 +24,7 @@ export default function BookingConfirmation({
   price,
   cbu,
   alias,
+  phone,
   clientName,
   onBack,
 }: Props) {
@@ -167,6 +169,24 @@ export default function BookingConfirmation({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* WhatsApp */}
+      {phone && (
+        <div className="w-full flex flex-col items-center gap-2">
+          <p className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b]">
+            Enviá el comprobante a este WhatsApp
+          </p>
+          <a
+            href={`https://wa.me/${phone.replace(/\D/g, "")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 rounded-lg bg-[#25d366] hover:bg-[#1ebe5a] transition-colors px-4 py-2.5"
+          >
+            <MessageCircle size={18} className="text-white" />
+            <span className="font-body text-sm font-medium text-white">Abrir WhatsApp</span>
+          </a>
         </div>
       )}
 

@@ -126,6 +126,7 @@ export default async function PublicBusinessPage({
           businessName={business.name}
           cbu={business.cbu}
           alias={business.alias}
+          phone={business.phone}
           clientSession={clientSession}
           initialEmployeeId={initialEmployeeId ?? null}
         />
