@@ -11,7 +11,7 @@ function getClient() {
 }
 
 function normalizeWhatsAppNumber(phone: string): string {
-  const stripped = phone.trim();
+  const stripped = phone.trim().replace(/\s+/g, "");
   if (!stripped.startsWith("+")) {
     throw new Error(`El número de teléfono debe incluir el prefijo internacional (+): ${stripped}`);
   }
