@@ -15,11 +15,19 @@ export async function GET(
   const serviceProviderId = session.user.id;
   const { bookingId } = await params;
 
-  // Obtener el perfil del negocio del admin autenticado
-  const businessProfile = await prisma.businessProfile.findUnique({
+  // Resolver el businessProfile tanto para el admin dueño como para empleados
+  let businessProfile = await prisma.businessProfile.findUnique({
     where: { serviceProviderId },
     select: { id: true, slug: true },
   });
+
+  if (!businessProfile) {
+    const empleadoEmpresa = await prisma.empleadoEmpresa.findFirst({
+      where: { serviceProviderId },
+      select: { businessProfile: { select: { id: true, slug: true } } },
+    });
+    businessProfile = empleadoEmpresa?.businessProfile ?? null;
+  }
 
   if (!businessProfile) {
     return NextResponse.json({ error: "Perfil de negocio no encontrado" }, { status: 404 });

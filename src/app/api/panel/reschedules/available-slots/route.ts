@@ -65,7 +65,7 @@ async function ensureAppointmentsForMonth(
   if (!businessProfile) return false;
 
   const configs = await prisma.scheduleConfig.findMany({
-    where: { businessProfileId: businessProfile.id, isActive: true },
+    where: { businessProfileId: businessProfile.id, isActive: true, serviceProviderId },
     select: { id: true, startTime: true, endTime: true, intervalMinutes: true, daysOfWeek: true },
   });
 
@@ -75,6 +75,22 @@ async function ensureAppointmentsForMonth(
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  // Remove stale free appointments for this provider in this month that belong to
+  // configs not associated with them (can happen when configs were previously mis-assigned).
+  await prisma.appointment.deleteMany({
+    where: {
+      serviceProviderId,
+      date: { startsWith: month },
+      scheduleConfig: {
+        serviceProviderId: { not: serviceProviderId },
+      },
+      OR: [
+        { booking: { is: null } },
+        { booking: { status: "cancelled" } },
+      ],
+    },
+  });
 
   for (const config of configs) {
     // Delete unbooked appointments for this config/month so they stay in sync.
