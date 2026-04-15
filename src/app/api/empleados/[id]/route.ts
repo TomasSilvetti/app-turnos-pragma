@@ -27,20 +27,27 @@ export const PATCH = auth(async (
     return NextResponse.json({ error: "No tenés permiso para esta acción" }, { status: 403 });
   }
 
+  const userId = req.auth?.user?.id ?? "";
   const { id } = await context.params;
 
-  const relacion = await prisma.empleadoEmpresa.findFirst({
-    where: { serviceProviderId: id, businessProfileId },
-  });
+  // El propietario no tiene registro en EmpleadoEmpresa: verificar que sea el dueño del negocio
+  const esPropietario = id === userId;
 
-  if (!relacion) {
-    return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
+  if (!esPropietario) {
+    const relacion = await prisma.empleadoEmpresa.findFirst({
+      where: { serviceProviderId: id, businessProfileId },
+    });
+
+    if (!relacion) {
+      return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
+    }
   }
 
   const body = await req.json();
   const { rol, sucursalIds } = body;
 
-  if (!rol || !["administrador", "empleado"].includes(rol)) {
+  // El propietario no puede cambiar su propio rol
+  if (!esPropietario && (!rol || !["administrador", "empleado"].includes(rol))) {
     return NextResponse.json({ error: "Rol inválido" }, { status: 400 });
   }
 
@@ -62,7 +69,7 @@ export const PATCH = auth(async (
   const sp = await prisma.$transaction(async (tx) => {
     await tx.serviceProvider.update({
       where: { id },
-      data: { rol },
+      data: esPropietario ? {} : { rol },
     });
 
     await tx.empleadoSucursal.deleteMany({ where: { serviceProviderId: id } });

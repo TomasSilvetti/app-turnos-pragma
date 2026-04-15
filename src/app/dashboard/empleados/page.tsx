@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmpleadoList } from "@/components/empleados/EmpleadoList";
@@ -10,6 +11,9 @@ import { DeleteEmpleadoDialog } from "@/components/empleados/DeleteEmpleadoDialo
 import type { Empleado, EmpleadoFormValues, EditEmpleadoValues, SucursalRef } from "@/components/empleados/types";
 
 export default function EmpleadosPage() {
+  const { data: session } = useSession();
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
+
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [sucursales, setSucursales] = useState<SucursalRef[]>([]);
   const [loading, setLoading] = useState(true);
@@ -155,6 +159,7 @@ export default function EmpleadosPage() {
 
       <EmpleadoList
         empleados={empleados}
+        currentUserId={currentUserId}
         onEdit={handleEditRequest}
         onDelete={handleDeleteRequest}
         onAdd={handleAdd}
@@ -176,6 +181,7 @@ export default function EmpleadosPage() {
           sucursales={sucursales}
           isSaving={isEditing}
           error={editError}
+          isPropietario={editingEmpleado.id === currentUserId}
           onSave={handleEdit}
           onCancel={() => { setEditingEmpleado(undefined); setEditError(undefined); }}
         />

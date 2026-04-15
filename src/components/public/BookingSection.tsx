@@ -6,7 +6,6 @@ import MiniCalendar from "./MiniCalendar";
 import AppointmentSlots, { type Appointment } from "./AppointmentSlots";
 import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
-import EmployeeSelector from "./EmployeeSelector";
 
 type Slot = {
   id: string;
@@ -36,6 +35,12 @@ type ClientSession = {
   email: string;
 };
 
+type Sucursal = {
+  id: string;
+  name: string;
+  address: string;
+};
+
 type Employee = {
   id: string;
   name: string;
@@ -62,32 +67,68 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
 
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [totalProviders, setTotalProviders] = useState<number>(0);
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
+  // Sucursales
+  const [sucursales, setSucursales] = useState<Sucursal[]>([]);
+  const [selectedSucursalId, setSelectedSucursalId] = useState<string | null>(null);
+  const [sucursalesLoading, setSucursalesLoading] = useState(true);
+  const [sucursalesError, setSucursalesError] = useState(false);
 
-  // Cargar la lista de empleados del negocio
+  // Empleados por sucursal
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
+  const [empleadosLoading, setEmpleadosLoading] = useState(false);
+
+  // Cargar sucursales al montar
   useEffect(() => {
-    fetch(`/api/p/${slug}/employees`)
-      .then((res) => res.json())
-      .then((data: { employees: Employee[]; totalProviders?: number }) => {
-        const list = data.employees ?? [];
-        setEmployees(list);
-        setTotalProviders(data.totalProviders ?? list.length);
-        // Si hay un initialEmployeeId válido lo mantenemos, sino elegimos el primero
-        if (!initialEmployeeId && list.length > 0) {
-          setSelectedEmployeeId(list[0].id);
+    setSucursalesLoading(true);
+    fetch(`/api/p/${slug}/branches`)
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data: Sucursal[]) => {
+        setSucursales(data);
+        if (data.length === 1) {
+          setSelectedSucursalId(data[0].id);
+        }
+        setSucursalesError(false);
+      })
+      .catch(() => setSucursalesError(true))
+      .finally(() => setSucursalesLoading(false));
+  }, [slug]);
+
+  // Cargar empleados cuando cambia la sucursal
+  useEffect(() => {
+    if (!selectedSucursalId) {
+      setEmployees([]);
+      setSelectedEmployeeId(null);
+      return;
+    }
+    setEmpleadosLoading(true);
+    setEmployees([]);
+    setSelectedEmployeeId(null);
+    fetch(`/api/p/${slug}/branches/${selectedSucursalId}/employees`)
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data: Employee[]) => {
+        setEmployees(data);
+        if (data.length === 1) {
+          setSelectedEmployeeId(data[0].id);
         }
       })
-      .catch(() => {});
-  }, [slug, initialEmployeeId]);
+      .catch(() => setEmployees([]))
+      .finally(() => setEmpleadosLoading(false));
+  }, [slug, selectedSucursalId]);
 
-  // Cargar slots cuando cambia el mes o el empleado seleccionado
+  // Cargar slots cuando cambia el mes o el empleado
   useEffect(() => {
     if (!selectedEmployeeId) return;
     const month = format(viewMonth, "yyyy-MM");
     setIsLoadingSlots(true);
-    fetch(`/api/p/${slug}/availability?month=${month}&employeeId=${selectedEmployeeId}`)
+    const url = `/api/p/${slug}/availability?month=${month}&employeeId=${selectedEmployeeId}${selectedSucursalId ? `&sucursalId=${selectedSucursalId}` : ""}`;
+    fetch(url)
       .then((res) => res.json())
       .then((data: { slots: Slot[] }) => {
         setSlots(data.slots ?? []);
@@ -99,7 +140,15 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       })
       .catch(() => setSlots([]))
       .finally(() => setIsLoadingSlots(false));
-  }, [slug, viewMonth, selectedEmployeeId]);
+  }, [slug, viewMonth, selectedEmployeeId, selectedSucursalId]);
+
+  const handleSucursalSelect = useCallback((id: string) => {
+    setSelectedSucursalId(id);
+    setSelectedDate(null);
+    setSelectedAppointment(null);
+    setBookingError(null);
+    setSlots([]);
+  }, []);
 
   const handleEmployeeSelect = useCallback((id: string) => {
     setSelectedEmployeeId(id);
@@ -260,31 +309,139 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
         </div>
       )}
 
-      {/* Selector de empleado */}
-      <EmployeeSelector
-        employees={employees}
-        totalProviders={totalProviders}
-        selectedId={selectedEmployeeId}
-        onSelect={handleEmployeeSelect}
-      />
-
-      <MiniCalendar
-        availableDates={availableDates}
-        selectedDate={selectedDate}
-        viewMonth={viewMonth}
-        onMonthChange={handleMonthChange}
-        onDaySelect={handleDaySelect}
-      />
-
-      {isLoadingSlots ? (
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
-          <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
+      {/* Selector de sucursal */}
+      {sucursalesLoading ? (
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 animate-pulse">
+          <div className="h-4 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-3" />
+          <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
+        </div>
+      ) : sucursalesError ? (
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+          <p className="font-body text-sm text-[#ef4444]">
+            No se pudieron cargar las sucursales. Por favor recargá la página.
+          </p>
+        </div>
+      ) : sucursales.length === 0 ? (
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
+            No hay sucursales disponibles en este momento.
+          </p>
         </div>
       ) : (
-        <AppointmentSlots
-          appointments={appointmentsForDate}
-          onSelect={handleAppointmentSelect}
-        />
+        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+          <p className="font-body text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
+            Seleccioná una sucursal
+          </p>
+          <div className="flex flex-col gap-2">
+            {sucursales.map((s) => {
+              const isSelected = selectedSucursalId === s.id;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSucursalSelect(s.id)}
+                  className={[
+                    "flex flex-col rounded-md px-3 py-2.5 text-sm transition-colors text-left",
+                    isSelected
+                      ? "bg-[var(--brand-color)] text-white"
+                      : "bg-[#F4F5F7] dark:bg-[#0f172a] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#1e293b]",
+                  ].join(" ")}
+                  aria-pressed={isSelected}
+                >
+                  <span className="font-body font-medium">{s.name}</span>
+                  {s.address && (
+                    <span
+                      className={[
+                        "font-body text-xs mt-0.5",
+                        isSelected ? "text-white/70" : "text-[#2A2829]/50 dark:text-[#94a3b8]",
+                      ].join(" ")}
+                    >
+                      {s.address}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Selector de empleado (solo cuando hay sucursal seleccionada) */}
+      {selectedSucursalId && (
+        empleadosLoading ? (
+          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 animate-pulse">
+            <div className="h-4 w-44 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-3" />
+            <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
+          </div>
+        ) : employees.length === 0 ? (
+          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+            <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
+              No hay empleados disponibles en esta sucursal.
+            </p>
+          </div>
+        ) : (
+          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+            <p className="font-body text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
+              Seleccioná un profesional
+            </p>
+            <div className="flex flex-col gap-2">
+              {employees.map((emp) => {
+                const isSelected = selectedEmployeeId === emp.id;
+                return (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    onClick={() => handleEmployeeSelect(emp.id)}
+                    className={[
+                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-left",
+                      isSelected
+                        ? "bg-[var(--brand-color)] text-white"
+                        : "bg-[#F4F5F7] dark:bg-[#0f172a] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#1e293b]",
+                    ].join(" ")}
+                    aria-pressed={isSelected}
+                  >
+                    <span
+                      className={[
+                        "h-7 w-7 rounded-full flex items-center justify-center font-body text-xs font-semibold uppercase shrink-0",
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : "bg-[var(--brand-color)]/10 text-[var(--brand-color)]",
+                      ].join(" ")}
+                      aria-hidden="true"
+                    >
+                      {emp.name.charAt(0)}
+                    </span>
+                    <span className="font-body font-medium">{emp.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )
+      )}
+
+      {/* Calendario y slots (solo cuando hay empleado seleccionado) */}
+      {selectedEmployeeId && (
+        <>
+          <MiniCalendar
+            availableDates={availableDates}
+            selectedDate={selectedDate}
+            viewMonth={viewMonth}
+            onMonthChange={handleMonthChange}
+            onDaySelect={handleDaySelect}
+          />
+
+          {isLoadingSlots ? (
+            <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+              <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
+            </div>
+          ) : (
+            <AppointmentSlots
+              appointments={appointmentsForDate}
+              onSelect={handleAppointmentSelect}
+            />
+          )}
+        </>
       )}
 
       {selectedAppointment && (

@@ -16,36 +16,54 @@ async function getBusinessProfileId(serviceProviderId: string): Promise<string |
 
 // GET /api/empleados — lista empleados activos de la empresa
 export const GET = auth(async (req: NextAuthRequest) => {
-  if (!req.auth?.user?.id) {
+  const userId = req.auth?.user?.id;
+  if (!userId) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const businessProfileId = await getBusinessProfileId(req.auth.user.id);
+  const businessProfileId = await getBusinessProfileId(userId);
   if (!businessProfileId) {
     return NextResponse.json({ error: "No tenés permiso para esta acción" }, { status: 403 });
   }
 
-  const relaciones = await prisma.empleadoEmpresa.findMany({
-    where: { businessProfileId },
-    select: {
-      serviceProvider: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          rol: true,
-          isActive: true,
-          sucursales: {
-            select: {
-              sucursal: { select: { id: true, name: true } },
+  const [propietario, relaciones] = await Promise.all([
+    prisma.serviceProvider.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        rol: true,
+        isActive: true,
+        sucursales: {
+          select: {
+            sucursal: { select: { id: true, name: true } },
+          },
+        },
+      },
+    }),
+    prisma.empleadoEmpresa.findMany({
+      where: { businessProfileId },
+      select: {
+        serviceProvider: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            rol: true,
+            isActive: true,
+            sucursales: {
+              select: {
+                sucursal: { select: { id: true, name: true } },
+              },
             },
           },
         },
       },
-    },
-  });
+    }),
+  ]);
 
-  const empleados = relaciones
+  const empleadosBase = relaciones
     .filter((r) => r.serviceProvider.isActive)
     .map((r) => ({
       id: r.serviceProvider.id,
@@ -55,7 +73,19 @@ export const GET = auth(async (req: NextAuthRequest) => {
       sucursales: r.serviceProvider.sucursales.map((s) => s.sucursal),
     }));
 
-  return NextResponse.json(empleados, { status: 200 });
+  // Incluir al propietario si está activo y no está ya en la lista
+  const yaIncluido = empleadosBase.some((e) => e.id === userId);
+  if (propietario && propietario.isActive && !yaIncluido) {
+    empleadosBase.unshift({
+      id: propietario.id,
+      nombre: propietario.name,
+      email: propietario.email,
+      rol: propietario.rol,
+      sucursales: propietario.sucursales.map((s) => s.sucursal),
+    });
+  }
+
+  return NextResponse.json(empleadosBase, { status: 200 });
 });
 
 // POST /api/empleados — crear nuevo empleado

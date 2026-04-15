@@ -5,7 +5,6 @@ import { useForm, Controller } from "react-hook-form";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/CustomSelect";
-import { cn } from "@/lib/utils";
 import type { Empleado, EditEmpleadoValues, SucursalRef } from "./types";
 
 type EditEmpleadoModalProps = {
@@ -13,6 +12,7 @@ type EditEmpleadoModalProps = {
   sucursales: SucursalRef[];
   isSaving?: boolean;
   error?: string;
+  isPropietario?: boolean;
   onSave: (data: EditEmpleadoValues) => void;
   onCancel: () => void;
 };
@@ -22,13 +22,15 @@ export function EditEmpleadoModal({
   sucursales,
   isSaving,
   error,
+  isPropietario,
   onSave,
   onCancel,
 }: EditEmpleadoModalProps) {
   const initialSucursalIds = empleado.sucursales.map((s) => s.id);
 
+  const rolDefault = isPropietario ? "propietario" : (empleado.rol as "administrador" | "empleado");
+
   const {
-    register,
     handleSubmit,
     control,
     watch,
@@ -37,23 +39,23 @@ export function EditEmpleadoModal({
   } = useForm<EditEmpleadoValues>({
     mode: "onChange",
     defaultValues: {
-      rol: empleado.rol,
+      rol: rolDefault,
       sucursalIds: initialSucursalIds,
     },
   });
 
   useEffect(() => {
     reset({
-      rol: empleado.rol,
+      rol: isPropietario ? "propietario" : (empleado.rol as "administrador" | "empleado"),
       sucursalIds: empleado.sucursales.map((s) => s.id),
     });
-  }, [empleado, reset]);
+  }, [empleado, isPropietario, reset]);
 
   const currentValues = watch();
-  const hasChanges =
-    currentValues.rol !== empleado.rol ||
-    JSON.stringify([...currentValues.sucursalIds].sort()) !==
-      JSON.stringify([...initialSucursalIds].sort());
+  const hasChanges = isPropietario
+    ? JSON.stringify([...currentValues.sucursalIds].sort()) !== JSON.stringify([...initialSucursalIds].sort())
+    : currentValues.rol !== empleado.rol ||
+      JSON.stringify([...currentValues.sucursalIds].sort()) !== JSON.stringify([...initialSucursalIds].sort());
 
   return (
     <div
@@ -83,27 +85,36 @@ export function EditEmpleadoModal({
 
         <form onSubmit={handleSubmit(onSave)} noValidate className="flex flex-col gap-4">
           {/* Rol */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
-              Rol
-            </label>
-            <Controller
-              name="rol"
-              control={control}
-              rules={{ required: true }}
-              render={({ field }) => (
-                <CustomSelect
-                  value={field.value}
-                  onChange={field.onChange}
-                  onBlur={field.onBlur}
-                  options={[
-                    { value: "empleado", label: "Empleado" },
-                    { value: "administrador", label: "Administrador" },
-                  ]}
-                />
-              )}
-            />
-          </div>
+          {isPropietario ? (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">Rol</span>
+              <span className="inline-flex w-fit items-center rounded-full bg-[var(--brand-color)]/10 px-3 py-1 text-xs font-medium text-[var(--brand-color)] dark:bg-[#1e3a5f] dark:text-[#93c5fd]">
+                Propietario
+              </span>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
+                Rol
+              </label>
+              <Controller
+                name="rol"
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <CustomSelect
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    options={[
+                      { value: "empleado", label: "Empleado" },
+                      { value: "administrador", label: "Administrador" },
+                    ]}
+                  />
+                )}
+              />
+            </div>
+          )}
 
           {/* Sucursales */}
           {sucursales.length > 0 && (

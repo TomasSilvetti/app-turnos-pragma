@@ -7,7 +7,7 @@ export type Empleado = {
   id: string;
   nombre: string;
   email: string;
-  rol: "administrador" | "empleado";
+  rol: "administrador" | "empleado" | "propietario";
   sucursales: SucursalRef[];
 };
 

@@ -17,8 +17,9 @@ function generateSlotsForConfig(
   daysOfWeek: number[],
   scheduleConfigId: string,
   serviceProviderId: string,
-  skipBefore: Date
-): { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean }[] {
+  skipBefore: Date,
+  sucursalId: string | null = null
+): { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean; sucursalId: string | null }[] {
   const startTotal = parseTimeToMinutes(startTime);
   const endTotal = parseTimeToMinutes(endTime);
   const daysSet = new Set(daysOfWeek);
@@ -34,7 +35,7 @@ function generateSlotsForConfig(
     for (let t = startTotal; t < endTotal; t += intervalMinutes) {
       const h = Math.floor(t / 60).toString().padStart(2, "0");
       const m = (t % 60).toString().padStart(2, "0");
-      slots.push({ date: dateStr, time: `${h}:${m}`, scheduleConfigId, serviceProviderId, isActive: true });
+      slots.push({ date: dateStr, time: `${h}:${m}`, scheduleConfigId, serviceProviderId, isActive: true, sucursalId });
     }
   }
   return slots;
@@ -47,6 +48,7 @@ export async function GET(
   const { slug } = await params;
   const month = request.nextUrl.searchParams.get("month");
   const employeeId = request.nextUrl.searchParams.get("employeeId");
+  const sucursalId = request.nextUrl.searchParams.get("sucursalId") ?? null;
 
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     return NextResponse.json(
@@ -162,7 +164,8 @@ export async function GET(
       config.daysOfWeek,
       config.id,
       appointmentOwner,
-      today
+      today,
+      sucursalId
     ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
 
     // Slots activos (reservables) y deshabilitados (visibles pero no reservables)

@@ -131,9 +131,26 @@ export async function GET(request: NextRequest) {
   if (!session?.user?.id)
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const serviceProviderId = session.user.id;
+  const sessionProviderId = session.user.id;
   const month = request.nextUrl.searchParams.get("month");
   const date = request.nextUrl.searchParams.get("date");
+  const employeeIdParam = request.nextUrl.searchParams.get("employeeId");
+
+  // Si se pasa employeeId, validar que pertenezca al negocio del admin autenticado
+  let serviceProviderId = sessionProviderId;
+  if (employeeIdParam) {
+    const businessProfile = await prisma.businessProfile.findUnique({
+      where: { serviceProviderId: sessionProviderId },
+      select: { id: true },
+    });
+    if (businessProfile) {
+      const membership = await prisma.empleadoEmpresa.findFirst({
+        where: { serviceProviderId: employeeIdParam, businessProfileId: businessProfile.id },
+        select: { serviceProviderId: true },
+      });
+      if (membership) serviceProviderId = membership.serviceProviderId;
+    }
+  }
 
   if (month) {
     if (!/^\d{4}-\d{2}$/.test(month))
