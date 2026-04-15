@@ -14,14 +14,20 @@ export function PushNotificationPrompt() {
       !("PushManager" in window)
     ) return;
 
-    if (Notification.permission !== "default") return;
-
-    const dismissed = sessionStorage.getItem("push-prompt-dismissed");
-    if (dismissed) return;
-
-    setVisible(true);
+    // Mostrar automáticamente solo si el permiso está en default y no fue descartado
+    if (Notification.permission === "default") {
+      const dismissed = sessionStorage.getItem("push-prompt-dismissed");
+      if (!dismissed) setVisible(true);
+    }
 
     navigator.serviceWorker.register("/sw.js").catch(() => {});
+
+    // Escuchar el evento manual desde el sidebar
+    function handleOpen() {
+      if (Notification.permission !== "denied") setVisible(true);
+    }
+    window.addEventListener("push-prompt-open", handleOpen);
+    return () => window.removeEventListener("push-prompt-open", handleOpen);
   }, []);
 
   async function handleActivar() {

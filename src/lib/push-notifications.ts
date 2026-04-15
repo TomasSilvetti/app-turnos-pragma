@@ -1,13 +1,6 @@
-import webpush from "web-push";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
-
-webpush.setVapidDetails(
-  `mailto:${process.env.VAPID_EMAIL}`,
-  process.env.VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
 
 interface NotificationPayload {
   title: string;
@@ -18,6 +11,14 @@ export async function sendPushToServiceProvider(
   serviceProviderId: string,
   payload: NotificationPayload
 ): Promise<void> {
+  const vapidPublicKey = process.env.VAPID_PUBLIC_KEY ?? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
+  const vapidEmail = process.env.VAPID_EMAIL;
+
+  if (!vapidPublicKey || !vapidPrivateKey || !vapidEmail) return;
+
+  const webpush = (await import("web-push")).default;
+  webpush.setVapidDetails(`mailto:${vapidEmail}`, vapidPublicKey, vapidPrivateKey);
   const subscriptions = await prisma.pushSubscription.findMany({
     where: { serviceProviderId },
   });

@@ -194,6 +194,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
 
         <button
+          onClick={() => window.dispatchEvent(new CustomEvent("push-prompt-open"))}
+          className="mx-3 flex items-center gap-2 rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
+          aria-label="Activar notificaciones push"
+        >
+          <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">notifications</span>
+          Notificaciones
+        </button>
+
+        <button
           onClick={toggleTheme}
           className="mx-3 mb-2 flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b] transition-colors duration-200 cursor-pointer"
           aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}

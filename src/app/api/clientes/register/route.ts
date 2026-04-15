@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     nombre?: string;
     apellido?: string;
     email?: string;
+    telefono?: string;
     sexo?: string;
     edad?: number;
     password?: string;
@@ -21,12 +22,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Body inválido" }, { status: 400 });
   }
 
-  const { nombre, apellido, email, sexo, edad, password } = body;
+  const { nombre, apellido, email, telefono, sexo, edad, password } = body;
 
   if (
     !nombre?.trim() ||
     !apellido?.trim() ||
     !email?.trim() ||
+    !telefono?.trim() ||
     !sexo ||
     edad == null ||
     !password
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
       nombre: nombre.trim(),
       apellido: apellido.trim(),
       email: email.trim().toLowerCase(),
+      telefono: telefono.trim(),
       sexo,
       edad: edadNum,
       hashedPassword,

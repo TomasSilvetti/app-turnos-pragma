@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getClientSession } from "@/lib/cliente-auth";
 import { sendPushToServiceProvider } from "@/lib/push-notifications";
+import { sendWhatsApp } from "@/lib/twilio";
 
 const prisma = new PrismaClient();
 
@@ -125,6 +126,26 @@ export async function POST(request: NextRequest) {
       title: "Nuevo turno",
       body: `${booking.clientName} el ${appointmentFull.date} a las ${appointmentFull.time}`,
     }).catch(() => {});
+
+    // Enviar WhatsApp de confirmación al cliente (fire-and-forget)
+    if (booking.clientPhone) {
+      const businessProfile = await prisma.businessProfile.findFirst({
+        where: {
+          OR: [
+            { serviceProviderId: appointmentFull.serviceProviderId },
+            { empleados: { some: { serviceProviderId: appointmentFull.serviceProviderId } } },
+          ],
+        },
+        select: { name: true },
+      });
+
+      const businessName = businessProfile?.name ?? "el negocio";
+      const whatsappBody = `¡Tu turno está confirmado! 📅 ${appointmentFull.date} a las ${appointmentFull.time} en ${businessName}. ¡Te esperamos!`;
+
+      sendWhatsApp({ to: booking.clientPhone, body: whatsappBody }).catch((err) => {
+        console.error("[WhatsApp] Error al enviar confirmación de turno:", err);
+      });
+    }
   }
 
   return NextResponse.json(booking, { status: 201 });

@@ -82,13 +82,6 @@ function BookingRow({
   );
 }
 
-function buildReminderUrl(item: BookingItem) {
-  const formattedDate = format(parseISO(item.appointmentDate), "EEEE d 'de' MMMM", { locale: es });
-  const phone = item.clientPhone.replace(/\D/g, "");
-  const text = `Hola ${item.clientName}, te recordamos tu turno el ${formattedDate} a las ${item.appointmentTime} hs. ¡Te esperamos!`;
-  return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
-}
-
 function buildCancellationUrl(item: BookingItem) {
   const formattedDate = format(parseISO(item.appointmentDate), "EEEE d 'de' MMMM", { locale: es });
   const phone = item.clientPhone.replace(/\D/g, "");
@@ -283,16 +276,6 @@ export default function BookingList() {
                 item={item}
                 actions={
                   <>
-                    <a
-                      href={buildReminderUrl(item)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 font-body text-sm text-white bg-[#25d366] rounded-md px-3 py-2 hover:bg-[#1ebe59] transition-colors"
-                      aria-label="Recordar pago por WhatsApp"
-                    >
-                      <MessageCircle size={15} />
-                      Recordar
-                    </a>
                     <button
                       onClick={() => handleConfirmPayment(item.bookingId)}
                       disabled={loadingId === item.bookingId}
@@ -343,16 +326,6 @@ export default function BookingList() {
                 item={item}
                 actions={
                   <>
-                    <a
-                      href={buildReminderUrl(item)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 font-body text-sm text-white bg-[#25d366] rounded-md px-3 py-2 hover:bg-[#1ebe59] transition-colors"
-                      aria-label="Recordar turno por WhatsApp"
-                    >
-                      <MessageCircle size={15} />
-                      Recordar
-                    </a>
                     <button
                       onClick={() => handleCancel(item.bookingId)}
                       disabled={loadingId === item.bookingId}

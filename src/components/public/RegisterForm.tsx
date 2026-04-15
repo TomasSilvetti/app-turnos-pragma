@@ -14,6 +14,7 @@ type FormData = {
   nombre: string;
   apellido: string;
   email: string;
+  telefono: string;
   sexo: string;
   edad: string;
   password: string;
@@ -27,6 +28,11 @@ function validate(data: FormData): Record<string, string> {
     errors.email = "El email es obligatorio";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
     errors.email = "El formato del email no es válido";
+  }
+  if (!data.telefono.trim()) {
+    errors.telefono = "El teléfono es obligatorio";
+  } else if (!/^\+?[\d\s\-()]{7,20}$/.test(data.telefono.trim())) {
+    errors.telefono = "El formato del teléfono no es válido";
   }
   if (!data.sexo) errors.sexo = "El sexo es obligatorio";
   if (!data.edad) {
@@ -58,6 +64,7 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
     nombre: "",
     apellido: "",
     email: "",
+    telefono: "",
     sexo: "",
     edad: "",
     password: "",
@@ -89,7 +96,7 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Mark all as touched on submit
-    setTouched({ nombre: true, apellido: true, email: true, sexo: true, edad: true, password: true });
+    setTouched({ nombre: true, apellido: true, email: true, telefono: true, sexo: true, edad: true, password: true });
     if (!isValid) return;
 
     setIsLoading(true);
@@ -104,6 +111,7 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
           nombre: formData.nombre.trim(),
           apellido: formData.apellido.trim(),
           email: formData.email.trim(),
+          telefono: formData.telefono.trim(),
           sexo: formData.sexo,
           edad: Number(formData.edad),
           password: formData.password,
@@ -201,6 +209,26 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
               Iniciá sesión
             </button>
           </p>
+        )}
+      </div>
+
+      {/* Teléfono */}
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="reg-telefono" className={labelClass}>
+          Teléfono (WhatsApp) <span aria-hidden="true" className="text-[#ef4444]">*</span>
+        </label>
+        <input
+          id="reg-telefono"
+          type="tel"
+          value={formData.telefono}
+          onChange={(e) => handleChange("telefono", e.target.value)}
+          onBlur={() => handleBlur("telefono")}
+          autoComplete="tel"
+          placeholder="Ej: +54 9 11 1234-5678"
+          className={inputClass(!!showError("telefono"))}
+        />
+        {showError("telefono") && (
+          <p className="font-body text-xs text-[#ef4444]">{showError("telefono")}</p>
         )}
       </div>
 
