@@ -39,6 +39,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (!telefono.startsWith("+")) {
+    return NextResponse.json(
+      { error: "El teléfono debe incluir el prefijo internacional (+)" },
+      { status: 400 }
+    );
+  }
+
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json(
       { error: "El formato del email no es válido" },

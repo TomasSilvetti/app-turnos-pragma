@@ -31,8 +31,8 @@ function validate(data: FormData): Record<string, string> {
   }
   if (!data.telefono.trim()) {
     errors.telefono = "El teléfono es obligatorio";
-  } else if (!/^\+?[\d\s\-()]{7,20}$/.test(data.telefono.trim())) {
-    errors.telefono = "El formato del teléfono no es válido";
+  } else if (!/^\+[\d\s\-()]{7,20}$/.test(data.telefono.trim())) {
+    errors.telefono = "Incluí el prefijo internacional. Ej: +54 9 11 1234-5678";
   }
   if (!data.sexo) errors.sexo = "El sexo es obligatorio";
   if (!data.edad) {
@@ -224,7 +224,7 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
           onChange={(e) => handleChange("telefono", e.target.value)}
           onBlur={() => handleBlur("telefono")}
           autoComplete="tel"
-          placeholder="Ej: +54 9 11 1234-5678"
+          placeholder="+54 9 11 1234-5678"
           className={inputClass(!!showError("telefono"))}
         />
         {showError("telefono") && (
