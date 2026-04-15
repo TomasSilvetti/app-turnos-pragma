@@ -23,7 +23,7 @@ function generateSlotsForConfig(
   const startTotal = parseTimeToMinutes(startTime);
   const endTotal = parseTimeToMinutes(endTime);
   const daysSet = new Set(daysOfWeek);
-  const slots: { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean }[] = [];
+  const slots: { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean; sucursalId: string | null }[] = [];
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
   for (let day = 1; day <= daysInMonth; day++) {
@@ -147,7 +147,7 @@ export async function GET(
       },
       select: { date: true, time: true },
     });
-    const disabledKeys = new Set(disabledSlots.map((ds) => `${ds.date}|${ds.time}`));
+    const disabledKeys = new Set(disabledSlots.map((ds: { date: string; time: string }) => `${ds.date}|${ds.time}`));
 
     const occupied = await prisma.appointment.findMany({
       where: { scheduleConfigId: config.id, date: { startsWith: month } },
