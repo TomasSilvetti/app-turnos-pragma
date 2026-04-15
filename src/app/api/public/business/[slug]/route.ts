@@ -20,6 +20,14 @@ export async function GET(
       alias: true,
       theme: true,
       brandColor: true,
+      sucursales: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          empleados: { select: { id: true }, take: 1 },
+        },
+      },
     },
   });
 
@@ -30,5 +38,9 @@ export async function GET(
     );
   }
 
-  return NextResponse.json(profile);
+  const sucursales = profile.sucursales
+    .filter((s) => s.empleados.length > 0)
+    .map((s) => ({ id: s.id, name: s.name, address: s.address }));
+
+  return NextResponse.json({ ...profile, sucursales });
 }

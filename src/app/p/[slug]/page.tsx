@@ -14,6 +14,7 @@ type BusinessPublicData = {
   alias: string | null;
   theme: string;
   brandColor: string | null;
+  sucursales: { id: string; name: string; address: string }[];
 };
 
 async function getBusinessBySlug(
@@ -114,7 +115,7 @@ export default async function PublicBookingPage({
         </div>
 
         {/* Calendario y turnos */}
-        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} phone={business.phone} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} />
+        <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} phone={business.phone} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} initialSucursales={business.sucursales} />
       </div>
     </main>
   );
