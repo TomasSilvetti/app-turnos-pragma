@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Cuerpo de la solicitud inválido" }, { status: 400 });
   }
 
-  const { clientName, clientSurname, clientPhone, appointmentId, serviceTypeId } = body;
+  const { clientName, clientSurname, clientPhone, appointmentId, serviceTypeId, paymentMethod } = body;
 
   if (!appointmentId) {
     return NextResponse.json({ error: "El campo appointmentId es requerido" }, { status: 400 });
@@ -53,6 +53,50 @@ export async function POST(request: NextRequest) {
 
   if (appointment.booking?.status === "confirmed" || appointment.booking?.status === "pending") {
     return NextResponse.json({ error: "El turno ya fue reservado" }, { status: 409 });
+  }
+
+  // Validar y resolver paymentMethod
+  const businessForPayment = await prisma.businessProfile.findFirst({
+    where: {
+      OR: [
+        { serviceProviderId: appointment.serviceProviderId },
+        { empleados: { some: { serviceProviderId: appointment.serviceProviderId } } },
+      ],
+    },
+    select: { cashEnabled: true, transferEnabled: true },
+  });
+
+  let resolvedPaymentMethod: string | null = null;
+  if (businessForPayment) {
+    const activeMethods: string[] = [];
+    if (businessForPayment.cashEnabled) activeMethods.push("cash");
+    if (businessForPayment.transferEnabled) activeMethods.push("transfer");
+
+    if (activeMethods.length === 1) {
+      // Solo un método activo: se asigna automáticamente
+      resolvedPaymentMethod = activeMethods[0];
+    } else if (activeMethods.length > 1) {
+      // Más de un método activo: el cliente debe elegir
+      if (!paymentMethod) {
+        return NextResponse.json(
+          { error: "Debe seleccionar un método de pago" },
+          { status: 400 }
+        );
+      }
+      if (!["cash", "transfer"].includes(paymentMethod)) {
+        return NextResponse.json(
+          { error: "Método de pago inválido" },
+          { status: 400 }
+        );
+      }
+      if (!activeMethods.includes(paymentMethod)) {
+        return NextResponse.json(
+          { error: "El método de pago seleccionado no está disponible" },
+          { status: 400 }
+        );
+      }
+      resolvedPaymentMethod = paymentMethod;
+    }
   }
 
   if (serviceTypeId != null) {
@@ -98,6 +142,7 @@ export async function POST(request: NextRequest) {
       clientPhone: bookingClientPhone,
       clienteId: bookingClienteId,
       status: "pending",
+      paymentMethod: resolvedPaymentMethod,
     },
     create: {
       appointmentId,
@@ -105,6 +150,7 @@ export async function POST(request: NextRequest) {
       clientPhone: bookingClientPhone,
       clienteId: bookingClienteId,
       status: "pending",
+      paymentMethod: resolvedPaymentMethod,
     },
     select: {
       id: true,
@@ -112,6 +158,7 @@ export async function POST(request: NextRequest) {
       clientPhone: true,
       clienteId: true,
       status: true,
+      paymentMethod: true,
     },
   });
 

@@ -14,6 +14,7 @@ type Props = {
   alias: string | null;
   phone: string | null;
   clientName: string | null;
+  paymentMethod: string | null;
   onBack: () => void;
 };
 
@@ -26,6 +27,7 @@ export default function BookingConfirmation({
   alias,
   phone,
   clientName,
+  paymentMethod,
   onBack,
 }: Props) {
   const [copiedCbu, setCopiedCbu] = useState(false);
@@ -43,7 +45,7 @@ export default function BookingConfirmation({
     });
   }
 
-  const hasPaymentInfo = !!(cbu || alias);
+  const hasPaymentInfo = paymentMethod === "transfer" && !!(cbu || alias);
   const formattedDate = format(parseISO(date), "EEEE d 'de' MMMM", {
     locale: es,
   });
@@ -113,6 +115,17 @@ export default function BookingConfirmation({
             </span>
           </div>
         </div>
+
+        {paymentMethod && (
+          <div className="flex flex-col gap-0.5">
+            <span className="font-small text-[10px] text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide">
+              Método de pago
+            </span>
+            <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium">
+              {paymentMethod === "cash" ? "Efectivo" : "Transferencia bancaria"}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Datos de transferencia */}

@@ -56,6 +56,8 @@ model BusinessProfile {
   brandColorDark    String?
   theme             String            @default("light")
   rubro             String
+  cashEnabled       Boolean           @default(true)
+  transferEnabled   Boolean           @default(true)
   serviceProvider   ServiceProvider   @relation(fields: [serviceProviderId], references: [id])
   empleados         EmpleadoEmpresa[]
   scheduleConfigs   ScheduleConfig[]
@@ -158,6 +160,7 @@ model Booking {
   previousStatus         BookingStatus?
   clienteId              String?
   whatsappReminderSentAt DateTime?
+  paymentMethod          String?
   appointment            Appointment    @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   cliente                Cliente?       @relation(fields: [clienteId], references: [id])
 

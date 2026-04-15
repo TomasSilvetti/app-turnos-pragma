@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BusinessProfileCreateForm } from "@/components/profile/BusinessProfileCreateForm";
+import { PaymentMethodsSection } from "@/components/profile/PaymentMethodsSection";
 
 type ProfileData = {
   name: string;
@@ -28,6 +30,10 @@ export type BusinessProfileEditFormValues = {
 type FieldErrors = Partial<Record<keyof BusinessProfileEditFormValues, string>>;
 
 export function BusinessProfileEditForm() {
+  const { data: session } = useSession();
+  const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
+  const isPropietario = userRol === "propietario";
+
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileNotFound, setProfileNotFound] = useState(false);
@@ -39,6 +45,7 @@ export function BusinessProfileEditForm() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [transferEnabled, setTransferEnabled] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -392,7 +399,13 @@ export function BusinessProfileEditForm() {
         )}
       </div>
 
-      {/* CBU y Alias */}
+      {/* Métodos de pago — solo propietario */}
+      {isPropietario && (
+        <PaymentMethodsSection onTransferChange={setTransferEnabled} />
+      )}
+
+      {/* CBU y Alias — visible solo si transferencia está activa o no es propietario */}
+      {(!isPropietario || transferEnabled) && (
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <label htmlFor="cbu" className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
@@ -440,6 +453,7 @@ export function BusinessProfileEditForm() {
           )}
         </div>
       </div>
+      )}
 
       {/* Feedback global */}
       {saveSuccess && (

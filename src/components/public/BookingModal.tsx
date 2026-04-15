@@ -16,6 +16,7 @@ type ClientSession = {
 type Props = {
   appointment: Appointment;
   serviceTypes: ServiceType[];
+  paymentMethods: string[];
   isLoading: boolean;
   error: string | null;
   onConfirm: (data: {
@@ -24,6 +25,7 @@ type Props = {
     clientPhone: string;
     appointmentId: string;
     serviceTypeId: string | null;
+    paymentMethod: string | null;
   }) => void;
   onClose: () => void;
   clientSession?: ClientSession | null;
@@ -32,6 +34,7 @@ type Props = {
 export default function BookingModal({
   appointment,
   serviceTypes,
+  paymentMethods,
   isLoading,
   error,
   onConfirm,
@@ -42,6 +45,11 @@ export default function BookingModal({
   const [surname, setSurname] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null);
+
+  // Método de pago: si hay más de uno, el cliente elige; si hay uno, se asigna automático
+  const showPaymentSelector = paymentMethods.length > 1;
+  const autoPaymentMethod = paymentMethods.length === 1 ? paymentMethods[0] : null;
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string | null>(null);
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const firstInputRef = useRef<HTMLInputElement>(null);
@@ -67,12 +75,15 @@ export default function BookingModal({
 
   const isAuthenticated = !!clientSession;
 
+  const paymentValid = !showPaymentSelector || selectedPaymentMethod !== null;
+
   const isValid = isAuthenticated
-    ? !hasServiceTypes || selectedServiceTypeId !== null
+    ? (!hasServiceTypes || selectedServiceTypeId !== null) && paymentValid
     : name.trim() !== "" &&
       surname.trim() !== "" &&
       phone.trim() !== "" &&
-      (!hasServiceTypes || selectedServiceTypeId !== null);
+      (!hasServiceTypes || selectedServiceTypeId !== null) &&
+      paymentValid;
 
   function handleOverlayClick(e: React.MouseEvent) {
     if (e.target === overlayRef.current) onClose();
@@ -87,6 +98,7 @@ export default function BookingModal({
       clientPhone: isAuthenticated ? "" : phone.trim(),
       appointmentId: appointment.id,
       serviceTypeId: selectedServiceTypeId,
+      paymentMethod: autoPaymentMethod ?? selectedPaymentMethod,
     });
   }
 
@@ -149,6 +161,53 @@ export default function BookingModal({
                     <span className={`font-body text-sm font-medium ${isSelected ? "text-[var(--brand-color)]" : "text-[#2A2829] dark:text-[#e2e8f0]"}`}>
                       ${type.price.toLocaleString("es-AR")}
                     </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Selector de método de pago */}
+        {showPaymentSelector && (
+          <div className="flex flex-col gap-2">
+            <p className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8] font-medium uppercase tracking-wide">
+              ¿Cómo vas a abonar? <span aria-hidden="true" className="text-[#ef4444]">*</span>
+            </p>
+            <div className="flex flex-col gap-2">
+              {paymentMethods.map((method) => {
+                const isSelected = selectedPaymentMethod === method;
+                const label = method === "cash" ? "Efectivo" : "Transferencia bancaria";
+                const desc = method === "cash"
+                  ? "Abonás en el momento del turno."
+                  : "Pagás antes del turno.";
+                return (
+                  <button
+                    key={method}
+                    type="button"
+                    onClick={() => setSelectedPaymentMethod(method)}
+                    aria-pressed={isSelected}
+                    className={`flex items-start gap-3 rounded-md border px-3 py-2.5 text-left transition-colors ${
+                      isSelected
+                        ? "border-[var(--brand-color)] bg-[var(--brand-color)]/5"
+                        : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                    }`}
+                  >
+                    <div className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
+                      isSelected ? "border-[var(--brand-color)]" : "border-[#E0E0DB] dark:border-[#64748b]"
+                    }`}>
+                      {isSelected && (
+                        <span className="h-2 w-2 rounded-full bg-[var(--brand-color)]" />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <span className={`font-body text-sm font-medium ${isSelected ? "text-[var(--brand-color)]" : "text-[#2A2829] dark:text-[#e2e8f0]"}`}>
+                        {label}
+                      </span>
+                      <span className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b]">
+                        {desc}
+                      </span>
+                    </div>
                   </button>
                 );
               })}

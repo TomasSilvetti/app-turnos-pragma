@@ -26,6 +26,7 @@ type BookingResult = {
   alias: string | null;
   clientName: string | null;
   phone: string | null;
+  paymentMethod: string | null;
 };
 
 type ClientSession = {
@@ -67,6 +68,14 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch(`/api/public/business/${slug}/payment-methods`)
+      .then((r) => r.json())
+      .then((data: { methods: string[] }) => setPaymentMethods(data.methods ?? []))
+      .catch(() => {});
+  }, [slug]);
 
   // Sucursales (precargadas desde el server)
   const sucursales = initialSucursales;
@@ -184,6 +193,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     clientPhone: string;
     appointmentId: string;
     serviceTypeId: string | null;
+    paymentMethod: string | null;
   }) {
     setIsBooking(true);
     setBookingError(null);
@@ -192,6 +202,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       const body: Record<string, string | null> = {
         appointmentId: data.appointmentId,
         ...(data.serviceTypeId && { serviceTypeId: data.serviceTypeId }),
+        ...(data.paymentMethod && { paymentMethod: data.paymentMethod }),
       };
 
       if (!clientSession) {
@@ -233,6 +244,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
         alias,
         phone,
         clientName: clientDisplayName,
+        paymentMethod: data.paymentMethod,
       });
     } catch (err) {
       setBookingError(
@@ -258,6 +270,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
         alias={bookingResult.alias}
         phone={bookingResult.phone}
         clientName={bookingResult.clientName}
+        paymentMethod={bookingResult.paymentMethod}
         onBack={handleBack}
       />
     );
@@ -432,6 +445,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
         <BookingModal
           appointment={selectedAppointment}
           serviceTypes={selectedAppointment.serviceTypes ?? []}
+          paymentMethods={paymentMethods}
           isLoading={isBooking}
           error={bookingError}
           onConfirm={handleConfirm}
