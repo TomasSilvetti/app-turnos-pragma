@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle } from "lucide-react";
+import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle, CalendarClock, Info } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
 
 export type BookingItem = {
@@ -143,11 +143,86 @@ function CancelModal({
   );
 }
 
+function SendToRescheduleModal({
+  item,
+  onConfirm,
+  onClose,
+  isLoading,
+  success,
+}: {
+  item: BookingItem;
+  onConfirm: () => void;
+  onClose: () => void;
+  isLoading: boolean;
+  success: boolean;
+}) {
+  if (success) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+        <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="rounded-full bg-[var(--brand-color)]/10 p-3">
+              <CalendarClock size={28} className="text-[var(--brand-color)]" />
+            </div>
+            <h3 className="font-heading text-lg text-[#2A2829] dark:text-[#e2e8f0]">Turno enviado a reprogramación</h3>
+            <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8]">
+              El turno de <strong>{item.clientName}</strong> fue movido al módulo de{" "}
+              <span className="font-semibold text-[var(--brand-color)]">Reprogramaciones</span>, donde podrás asignarle un nuevo horario.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-full font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-4 py-2.5 hover:bg-[#1c2a40] transition-colors"
+          >
+            Entendido
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
+      <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+        <div className="flex flex-col gap-2">
+          <h3 className="font-heading text-lg text-[#2A2829] dark:text-[#e2e8f0]">Reprogramar turno</h3>
+          <p className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0]">
+            Estás por enviar el turno de <strong>{item.clientName}</strong> al módulo de reprogramaciones. Allí podrás asignarle un nuevo horario disponible.
+          </p>
+          <div className="flex items-start gap-2 rounded-md bg-[var(--brand-color)]/5 border border-[var(--brand-color)]/20 px-3 py-2.5 mt-1">
+            <Info size={15} className="text-[var(--brand-color)] shrink-0 mt-0.5" />
+            <p className="font-body text-xs text-[#2A2829] dark:text-[#94a3b8]">
+              El turno quedará reservado hasta que asignes el nuevo horario desde el módulo de Reprogramaciones.
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+          >
+            Volver
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-4 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? "Enviando..." : "Confirmar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BookingList() {
   const [items, setItems] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BookingItem | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<BookingItem | null>(null);
+  const [rescheduleSuccess, setRescheduleSuccess] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMonth, setViewMonth] = useState(new Date());
@@ -183,6 +258,18 @@ export default function BookingList() {
     }
   }
 
+  async function handleSendToReschedule(bookingId: string) {
+    setLoadingId(bookingId);
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/reschedule`, { method: "PATCH" });
+      if (!res.ok) throw new Error();
+      setRescheduleSuccess(true);
+      setItems((prev) => prev.filter((i) => i.bookingId !== bookingId));
+    } finally {
+      setLoadingId(null);
+    }
+  }
+
   async function handleCancel(bookingId: string) {
     setLoadingId(bookingId);
     try {
@@ -212,6 +299,15 @@ export default function BookingList() {
           onConfirm={() => handleCancel(cancelTarget.bookingId)}
           onClose={() => setCancelTarget(null)}
           isLoading={loadingId === cancelTarget.bookingId}
+        />
+      )}
+      {rescheduleTarget && (
+        <SendToRescheduleModal
+          item={rescheduleTarget}
+          onConfirm={() => handleSendToReschedule(rescheduleTarget.bookingId)}
+          onClose={() => { setRescheduleTarget(null); setRescheduleSuccess(false); }}
+          isLoading={loadingId === rescheduleTarget.bookingId}
+          success={rescheduleSuccess}
         />
       )}
       {/* Dropdown calendario */}
@@ -286,6 +382,15 @@ export default function BookingList() {
                       Pago
                     </button>
                     <button
+                      onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                      disabled={loadingId === item.bookingId}
+                      className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                      aria-label="Reprogramar turno"
+                    >
+                      <CalendarClock size={15} />
+                      Reprogramar
+                    </button>
+                    <button
                       onClick={() => setCancelTarget(item)}
                       disabled={loadingId === item.bookingId}
                       className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
@@ -326,6 +431,15 @@ export default function BookingList() {
                 item={item}
                 actions={
                   <>
+                    <button
+                      onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                      disabled={loadingId === item.bookingId}
+                      className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                      aria-label="Reprogramar turno"
+                    >
+                      <CalendarClock size={15} />
+                      Reprogramar
+                    </button>
                     <button
                       onClick={() => handleCancel(item.bookingId)}
                       disabled={loadingId === item.bookingId}
