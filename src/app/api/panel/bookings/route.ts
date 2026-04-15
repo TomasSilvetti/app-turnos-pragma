@@ -4,11 +4,23 @@ import { auth } from "@/../auth";
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  const serviceProviderId = session.user.id;
+  const userRol = (session.user as { rol?: string }).rol ?? "propietario";
+  const isAdmin = userRol === "propietario" || userRol === "administrador";
+
+  const { searchParams } = new URL(req.url);
+  const employeeId = searchParams.get("employeeId");
+
+  let serviceProviderId = session.user.id;
+
+  if (employeeId && isAdmin) {
+    serviceProviderId = employeeId;
+  } else if (employeeId && !isAdmin) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
 
   const bookings = await prisma.booking.findMany({
     where: {

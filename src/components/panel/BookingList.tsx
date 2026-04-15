@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle, CalendarClock, Info } from "lucide-react";
+import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle, CalendarClock, Info, Users } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
 
 export type BookingItem = {
@@ -216,7 +217,13 @@ function SendToRescheduleModal({
   );
 }
 
+type Empleado = { id: string; nombre: string; rol: string };
+
 export default function BookingList() {
+  const { data: session } = useSession();
+  const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
+  const isAdmin = userRol === "propietario" || userRol === "administrador";
+
   const [items, setItems] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingId, setLoadingId] = useState<string | null>(null);
@@ -227,10 +234,25 @@ export default function BookingList() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewMonth, setViewMonth] = useState(new Date());
 
+  const [empleados, setEmpleados] = useState<Empleado[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Empleado | null>(null);
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    fetch("/api/empleados")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((data: Empleado[]) => setEmpleados(data))
+      .catch(() => setEmpleados([]));
+  }, [isAdmin]);
+
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/panel/bookings");
+      const url = selectedEmployee
+        ? `/api/panel/bookings?employeeId=${selectedEmployee.id}`
+        : "/api/panel/bookings";
+      const res = await fetch(url);
       if (!res.ok) throw new Error();
       const data = await res.json();
       setItems(data);
@@ -239,7 +261,7 @@ export default function BookingList() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [selectedEmployee]);
 
   useEffect(() => {
     fetchItems();
@@ -310,6 +332,58 @@ export default function BookingList() {
           success={rescheduleSuccess}
         />
       )}
+      {/* Dropdown empleados — solo admins */}
+      {isAdmin && empleados.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setEmployeeDropdownOpen((prev) => !prev)}
+              className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-xl px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors w-full sm:w-auto"
+            >
+              <Users size={15} className="text-[var(--brand-color)] shrink-0" />
+              <span className="truncate">
+                {selectedEmployee ? selectedEmployee.nombre : "Ver turnos de empleado"}
+              </span>
+              {employeeDropdownOpen ? <ChevronUp size={14} className="shrink-0" /> : <ChevronDown size={14} className="shrink-0" />}
+            </button>
+
+            {employeeDropdownOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] rounded-xl shadow-lg min-w-[220px] overflow-hidden">
+                {selectedEmployee && (
+                  <button
+                    onClick={() => { setSelectedEmployee(null); setEmployeeDropdownOpen(false); }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 font-body text-sm text-[#ef4444] hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors border-b border-[#E0E0DB] dark:border-[#2d3548]"
+                  >
+                    <XCircle size={14} />
+                    Ver mis turnos
+                  </button>
+                )}
+                {empleados.map((emp) => (
+                  <button
+                    key={emp.id}
+                    onClick={() => { setSelectedEmployee(emp); setEmployeeDropdownOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 font-body text-sm text-left transition-colors ${
+                      selectedEmployee?.id === emp.id
+                        ? "bg-[var(--brand-color)]/10 text-[var(--brand-color)]"
+                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#eef1f6] dark:hover:bg-[#2d3548]"
+                    }`}
+                  >
+                    <span className="flex-1 truncate">{emp.nombre}</span>
+                    <span className="font-small text-xs opacity-50 shrink-0 capitalize">{emp.rol}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {selectedEmployee && (
+            <p className="font-small text-xs text-[var(--brand-color)] dark:text-[#93c5fd]">
+              Modo lectura — turnos de {selectedEmployee.nombre}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Dropdown calendario */}
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
@@ -347,6 +421,7 @@ export default function BookingList() {
           </div>
         )}
       </div>
+
       {/* Pendientes de pago */}
       <section className="flex flex-col gap-3">
         <h2 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd] uppercase tracking-wide">
@@ -371,34 +446,36 @@ export default function BookingList() {
                 key={item.bookingId}
                 item={item}
                 actions={
-                  <>
-                    <button
-                      onClick={() => handleConfirmPayment(item.bookingId)}
-                      disabled={loadingId === item.bookingId}
-                      className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
-                      aria-label="Marcar como pagado"
-                    >
-                      <CheckCircle size={15} />
-                      Pago
-                    </button>
-                    <button
-                      onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
-                      disabled={loadingId === item.bookingId}
-                      className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
-                      aria-label="Reprogramar turno"
-                    >
-                      <CalendarClock size={15} />
-                      Reprogramar
-                    </button>
-                    <button
-                      onClick={() => setCancelTarget(item)}
-                      disabled={loadingId === item.bookingId}
-                      className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
-                      aria-label="Cancelar turno"
-                    >
-                      <X size={15} />
-                    </button>
-                  </>
+                  selectedEmployee ? null : (
+                    <>
+                      <button
+                        onClick={() => handleConfirmPayment(item.bookingId)}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
+                        aria-label="Marcar como pagado"
+                      >
+                        <CheckCircle size={15} />
+                        Pago
+                      </button>
+                      <button
+                        onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                        aria-label="Reprogramar turno"
+                      >
+                        <CalendarClock size={15} />
+                        Reprogramar
+                      </button>
+                      <button
+                        onClick={() => setCancelTarget(item)}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
+                        aria-label="Cancelar turno"
+                      >
+                        <X size={15} />
+                      </button>
+                    </>
+                  )
                 }
               />
             ))
@@ -430,25 +507,27 @@ export default function BookingList() {
                 key={item.bookingId}
                 item={item}
                 actions={
-                  <>
-                    <button
-                      onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
-                      disabled={loadingId === item.bookingId}
-                      className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
-                      aria-label="Reprogramar turno"
-                    >
-                      <CalendarClock size={15} />
-                      Reprogramar
-                    </button>
-                    <button
-                      onClick={() => handleCancel(item.bookingId)}
-                      disabled={loadingId === item.bookingId}
-                      className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
-                      aria-label="Cancelar turno"
-                    >
-                      <X size={15} />
-                    </button>
-                  </>
+                  selectedEmployee ? null : (
+                    <>
+                      <button
+                        onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                        aria-label="Reprogramar turno"
+                      >
+                        <CalendarClock size={15} />
+                        Reprogramar
+                      </button>
+                      <button
+                        onClick={() => handleCancel(item.bookingId)}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
+                        aria-label="Cancelar turno"
+                      >
+                        <X size={15} />
+                      </button>
+                    </>
+                  )
                 }
               />
             ))
