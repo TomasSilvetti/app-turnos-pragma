@@ -137,13 +137,23 @@ export async function GET(
       },
     });
 
+    // Obtener slots deshabilitados para este config y mes (por fecha+hora exacta)
+    const disabledSlots = await prisma.disabledSlot.findMany({
+      where: {
+        scheduleConfigId: config.id,
+        date: { startsWith: month },
+      },
+      select: { date: true, time: true },
+    });
+    const disabledKeys = new Set(disabledSlots.map((ds) => `${ds.date}|${ds.time}`));
+
     const occupied = await prisma.appointment.findMany({
       where: { scheduleConfigId: config.id, date: { startsWith: month } },
       select: { date: true, time: true },
     });
     const occupiedKeys = new Set(occupied.map((a) => `${a.date}|${a.time}`));
 
-    const slots = generateSlotsForConfig(
+    const allSlots = generateSlotsForConfig(
       year,
       monthIndex,
       config.startTime,
@@ -155,8 +165,17 @@ export async function GET(
       today
     ).filter((s) => !occupiedKeys.has(`${s.date}|${s.time}`));
 
-    if (slots.length > 0) {
-      await prisma.appointment.createMany({ data: slots });
+    // Slots activos (reservables) y deshabilitados (visibles pero no reservables)
+    const activeSlots = allSlots.filter((s) => !disabledKeys.has(`${s.date}|${s.time}`));
+    const disabledSlotData = allSlots
+      .filter((s) => disabledKeys.has(`${s.date}|${s.time}`))
+      .map((s) => ({ ...s, isActive: false }));
+
+    if (activeSlots.length > 0) {
+      await prisma.appointment.createMany({ data: activeSlots });
+    }
+    if (disabledSlotData.length > 0) {
+      await prisma.appointment.createMany({ data: disabledSlotData });
     }
   }
 
@@ -166,12 +185,12 @@ export async function GET(
     where: {
       scheduleConfigId: { in: configIds },
       date: { startsWith: month },
-      isActive: true,
     },
     select: {
       id: true,
       date: true,
       time: true,
+      isActive: true,
       booking: { select: { status: true } },
       scheduleConfig: {
         select: {
@@ -190,6 +209,7 @@ export async function GET(
       time: a.time,
       price: a.scheduleConfig?.price ?? null,
       booked: a.booking?.status === "confirmed" || a.booking?.status === "pending",
+      disabled: !a.isActive,
       serviceTypes: a.scheduleConfig?.serviceTypes ?? [],
     })),
   });

@@ -7,6 +7,7 @@ export type Appointment = {
   time: string;
   price: number;
   booked?: boolean;
+  disabled?: boolean;
   serviceTypes?: { id: string; title: string; price: number }[];
 };
 
@@ -36,52 +37,61 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
       </h2>
 
       <div className="grid grid-cols-2 gap-2">
-        {appointments.map((appointment) => (
-          <button
-            key={appointment.id}
-            onClick={() => !appointment.booked && onSelect(appointment)}
-            disabled={appointment.booked}
-            aria-label={
-              appointment.booked
-                ? `Turno a las ${appointment.time} — Reservado`
-                : `Seleccionar turno a las ${appointment.time}`
-            }
-            className={
-              appointment.booked
-                ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
-                : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
-            }
-          >
-            <div className="flex items-center gap-2">
-              <Clock
-                size={14}
-                className={
-                  appointment.booked
-                    ? "text-gray-300 dark:text-[#475569]"
-                    : "text-[var(--brand-color)] group-hover:text-white transition-colors"
-                }
-              />
-              <span
-                className={
-                  appointment.booked
-                    ? "font-heading text-sm text-gray-400 dark:text-[#475569]"
-                    : "font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] group-hover:text-white transition-colors"
-                }
-              >
-                {appointment.time}
-              </span>
-            </div>
-            {appointment.booked ? (
-              <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
-                Ocupado
-              </span>
-            ) : (
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-300 transition-colors">
-                Disponible
-              </span>
-            )}
-          </button>
-        ))}
+        {appointments.map((appointment) => {
+          const unavailable = appointment.booked || appointment.disabled;
+          return (
+            <button
+              key={appointment.id}
+              onClick={() => !unavailable && onSelect(appointment)}
+              disabled={unavailable}
+              aria-label={
+                appointment.booked
+                  ? `Turno a las ${appointment.time} — Reservado`
+                  : appointment.disabled
+                  ? `Turno a las ${appointment.time} — No disponible`
+                  : `Seleccionar turno a las ${appointment.time}`
+              }
+              className={
+                unavailable
+                  ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
+                  : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
+              }
+            >
+              <div className="flex items-center gap-2">
+                <Clock
+                  size={14}
+                  className={
+                    unavailable
+                      ? "text-gray-300 dark:text-[#475569]"
+                      : "text-[var(--brand-color)] group-hover:text-white transition-colors"
+                  }
+                />
+                <span
+                  className={
+                    unavailable
+                      ? "font-heading text-sm text-gray-400 dark:text-[#475569]"
+                      : "font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] group-hover:text-white transition-colors"
+                  }
+                >
+                  {appointment.time}
+                </span>
+              </div>
+              {appointment.booked ? (
+                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
+                  Ocupado
+                </span>
+              ) : appointment.disabled ? (
+                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
+                  No disponible
+                </span>
+              ) : (
+                <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-300 transition-colors">
+                  Disponible
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

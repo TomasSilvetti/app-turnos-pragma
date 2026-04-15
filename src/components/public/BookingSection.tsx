@@ -14,6 +14,7 @@ type Slot = {
   time: string;
   price: number;
   booked?: boolean;
+  disabled?: boolean;
   serviceTypes?: { id: string; title: string; price: number }[];
 };
 
@@ -115,6 +116,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, clientS
       time: s.time,
       price: s.price,
       booked: s.booked || bookedIds.has(s.id),
+      disabled: s.disabled,
       serviceTypes: s.serviceTypes,
     }));
 

@@ -107,8 +107,20 @@ model ScheduleConfig {
   serviceProvider   ServiceProvider? @relation(fields: [serviceProviderId], references: [id])
   appointments      Appointment[]
   serviceTypes      ServiceType[]
+  disabledSlots     DisabledSlot[]
 
   @@map("schedule_configs")
+}
+
+model DisabledSlot {
+  id               String         @id @default(cuid())
+  scheduleConfigId String
+  date             String         // YYYY-MM-DD — día específico
+  time             String         // HH:MM
+  createdAt        DateTime       @default(now())
+  scheduleConfig   ScheduleConfig @relation(fields: [scheduleConfigId], references: [id], onDelete: Cascade)
+
+  @@map("disabled_slots")
 }
 
 model ServiceType {
