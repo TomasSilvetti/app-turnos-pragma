@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { format } from "date-fns";
-import { X, AlertCircle, Loader2 } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
+import { X, AlertCircle, Loader2, MessageCircle } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
 import type { RescheduleItem } from "./RescheduleList";
 
@@ -34,6 +35,11 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+
+  // Modal de notificación post-confirmación
+  const [showNotification, setShowNotification] = useState(false);
+  const [confirmedSlot, setConfirmedSlot] = useState<Slot | null>(null);
+  const [confirmedDate, setConfirmedDate] = useState<string | null>(null);
 
   const [loadingDates, setLoadingDates] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -186,7 +192,25 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
       const res = await fetch(`/api/panel/reschedules/available-slots?date=${date}${employeeParam}`);
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setSlots(data.appointments ?? []);
+      const fetchedSlots: Slot[] = data.appointments ?? [];
+
+      // Si el día seleccionado es el del turno original, inyectar el slot original
+      // (el backend no lo devuelve porque ya está ocupado)
+      if (date === item.appointmentDate) {
+        const originalTime = item.appointmentTime;
+        const alreadyPresent = fetchedSlots.some((s) => s.time === originalTime);
+        if (!alreadyPresent) {
+          const originalSlot: Slot = { id: `__original__`, time: originalTime };
+          // Insertar en orden cronológico
+          const inserted = [...fetchedSlots, originalSlot].sort((a, b) =>
+            a.time.localeCompare(b.time)
+          );
+          setSlots(inserted);
+          return;
+        }
+      }
+
+      setSlots(fetchedSlots);
     } catch {
       setSlots([]);
     } finally {
@@ -232,7 +256,9 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
       });
 
       if (!res.ok) throw new Error();
-      onRescheduled(item.bookingId);
+      setConfirmedSlot(selectedSlot);
+      setConfirmedDate(selectedDate);
+      setShowNotification(true);
     } catch {
       setError("No se pudo reprogramar el turno. Intentá de nuevo.");
     } finally {
@@ -242,7 +268,29 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
 
   const canAdvance = !context?.noEmpleadosDisponibles;
 
+  function buildWhatsAppUrl() {
+    if (!confirmedSlot || !confirmedDate) return "#";
+    const phone = item.clientPhone.replace(/\D/g, "");
+    const oldDateFormatted = format(parseISO(item.appointmentDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
+    const newDateFormatted = format(parseISO(confirmedDate), "EEEE d 'de' MMMM 'de' yyyy", { locale: es });
+    const message = [
+      `Hola ${item.clientName}, te informamos que tu turno ha sido reprogramado.`,
+      "",
+      `*Turno anterior:*`,
+      `Fecha: ${oldDateFormatted}`,
+      `Hora: ${item.appointmentTime}`,
+      "",
+      `*Nuevo turno:*`,
+      `Fecha: ${newDateFormatted}`,
+      `Hora: ${confirmedSlot.time}`,
+      "",
+      "¡Te esperamos!",
+    ].join("\n");
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
   return (
+    <>
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
@@ -489,6 +537,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                 viewMonth={viewMonth}
                 onMonthChange={handleMonthChange}
                 onDaySelect={handleDaySelect}
+                originalDate={item.appointmentDate}
               />
             )}
 
@@ -512,18 +561,29 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                   <div className="grid grid-cols-2 gap-3">
                     {slots.map((slot) => {
                       const isSelected = selectedSlot?.id === slot.id;
+                      const isOriginalSlot =
+                        slot.id === "__original__" ||
+                        (selectedDate === item.appointmentDate &&
+                          slot.time === item.appointmentTime);
                       return (
                         <button
                           key={slot.id}
-                          onClick={() => { setSelectedSlot(slot); setError(null); }}
+                          onClick={() => {
+                            if (isOriginalSlot) return;
+                            setSelectedSlot(slot);
+                            setError(null);
+                          }}
+                          disabled={isOriginalSlot}
                           className={[
                             "flex items-center justify-center rounded-lg border-2 p-4 transition-all duration-150 font-heading text-base",
                             isSelected
                               ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white shadow-md scale-[1.02]"
+                              : isOriginalSlot
+                              ? "border-amber-400 bg-amber-400 text-white cursor-default"
                               : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#253045] text-[#2A2829] dark:text-[#e2e8f0] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[#2d3548]",
                           ].join(" ")}
                           aria-pressed={isSelected}
-                          aria-label={`Turno a las ${slot.time}`}
+                          aria-label={`Turno a las ${slot.time}${isOriginalSlot ? " (turno original)" : ""}`}
                         >
                           {slot.time}
                         </button>
@@ -568,5 +628,58 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
         </div>
       </div>
     </div>
+
+    {/* Modal de notificación al cliente */}
+    {showNotification && confirmedSlot && confirmedDate && (
+      <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/50">
+        <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl flex flex-col gap-5 p-6">
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-green-600 dark:text-green-400" aria-hidden="true">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3 className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">
+              Turno reprogramado
+            </h3>
+            <p className="font-body text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
+              ¿Querés notificar al cliente sobre el cambio?
+            </p>
+          </div>
+
+          <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-3 flex flex-col gap-1.5 text-xs font-body">
+            <div className="flex gap-2 text-[#2A2829]/50 dark:text-[#64748b]">
+              <span className="font-medium uppercase tracking-wide">Antes</span>
+              <span>{format(parseISO(item.appointmentDate), "d MMM yyyy", { locale: es })} · {item.appointmentTime}</span>
+            </div>
+            <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] my-0.5" />
+            <div className="flex gap-2 text-[#2A2829] dark:text-[#e2e8f0]">
+              <span className="font-medium uppercase tracking-wide">Ahora</span>
+              <span>{format(parseISO(confirmedDate), "d MMM yyyy", { locale: es })} · {confirmedSlot.time}</span>
+            </div>
+          </div>
+
+          <a
+            href={buildWhatsAppUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => { setShowNotification(false); onRescheduled(item.bookingId); }}
+            className="flex items-center justify-center gap-2 w-full font-body text-sm text-white bg-[#25D366] hover:bg-[#1ebe5d] rounded-md py-2.5 transition-colors"
+          >
+            <MessageCircle size={16} aria-hidden="true" />
+            Notificar por WhatsApp
+          </a>
+
+          <button
+            type="button"
+            onClick={() => { setShowNotification(false); onRescheduled(item.bookingId); }}
+            className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+          >
+            Omitir
+          </button>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

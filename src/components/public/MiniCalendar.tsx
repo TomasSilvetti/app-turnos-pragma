@@ -67,6 +67,16 @@ export default function MiniCalendar({
 
   return (
     <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+      {/* Leyenda día original */}
+      {originalDate && (
+        <div className="flex items-center gap-2 mb-4 px-1">
+          <span className="h-3 w-3 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+          <span className="font-body text-xs text-amber-700 dark:text-amber-400">
+            Día original del turno
+          </span>
+        </div>
+      )}
+
       {/* Header del mes */}
       <div className="flex items-center justify-between mb-5">
         <button
@@ -115,6 +125,7 @@ export default function MiniCalendar({
           const available = isAvailable(day);
           const selected = isSelected(day);
           const todayDay = isToday(day);
+          const originalDay = isOriginal(day);
 
           return (
             <button
@@ -127,6 +138,8 @@ export default function MiniCalendar({
                 "relative flex flex-col items-center justify-center h-9 w-full text-sm transition-all duration-150",
                 selected
                   ? "bg-[var(--brand-color)] text-white shadow-md rounded-lg"
+                  : originalDay
+                  ? "bg-amber-400 text-white font-semibold rounded-lg"
                   : todayDay && !available
                   ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] dark:text-[#93c5fd] font-bold rounded-lg"
                   : available
