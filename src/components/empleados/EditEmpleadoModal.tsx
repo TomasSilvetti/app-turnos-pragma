@@ -28,7 +28,7 @@ export function EditEmpleadoModal({
 }: EditEmpleadoModalProps) {
   const initialSucursalIds = empleado.sucursales.map((s) => s.id);
 
-  const rolDefault = isPropietario ? "propietario" : (empleado.rol as "administrador" | "empleado");
+  const rolDefault: "administrador" | "empleado" = isPropietario ? "administrador" : (empleado.rol as "administrador" | "empleado");
 
   const {
     handleSubmit,
@@ -46,7 +46,7 @@ export function EditEmpleadoModal({
 
   useEffect(() => {
     reset({
-      rol: isPropietario ? "propietario" : (empleado.rol as "administrador" | "empleado"),
+      rol: isPropietario ? "administrador" : (empleado.rol as "administrador" | "empleado"),
       sucursalIds: empleado.sucursales.map((s) => s.id),
     });
   }, [empleado, isPropietario, reset]);
