@@ -105,7 +105,7 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
                       {formatFechaEgreso(eg.createdAt)}
                     </span>
                     <span className="font-small text-[11px] text-[#9ca3af] dark:text-slate-500 truncate">
-                      cargado por {eg.adminNombre.toLowerCase()}
+                      cargado por {eg.adminNombre?.toLowerCase() ?? "desconocido"}
                     </span>
                   </div>
                   <span className="font-small text-sm text-[#ef4444] font-medium ml-2 shrink-0">
