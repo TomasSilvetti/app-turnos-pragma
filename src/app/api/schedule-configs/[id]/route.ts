@@ -83,6 +83,34 @@ export const PUT = auth(async (
     return NextResponse.json({ error: "startTime debe ser menor a endTime" }, { status: 400 });
   }
 
+  // Validar solapamiento con otras configs activas del mismo negocio (excepto la actual)
+  const newDayInts = new Set(stringsToInts(daysOfWeek));
+  function parseMinutes(t: string): number {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+  const newStart = parseMinutes(startTime);
+  const newEnd = parseMinutes(endTime);
+
+  const otherActiveConfigs = await prisma.scheduleConfig.findMany({
+    where: { businessProfileId, isActive: true, id: { not: id } },
+    select: { id: true, startTime: true, endTime: true, daysOfWeek: true },
+  });
+
+  const overlapping = otherActiveConfigs.find((cfg) => {
+    const sharedDay = (cfg.daysOfWeek as number[]).some((d) => newDayInts.has(d));
+    if (!sharedDay) return false;
+    const cfgStart = parseMinutes(cfg.startTime);
+    const cfgEnd = parseMinutes(cfg.endTime);
+    return newStart < cfgEnd && cfgStart < newEnd;
+  });
+
+  if (overlapping)
+    return NextResponse.json(
+      { error: "El horario se superpone con una configuración activa existente en los mismos días" },
+      { status: 409 }
+    );
+
   const parsedPrice = Number(price);
   if (isNaN(parsedPrice) || parsedPrice < 0) {
     return NextResponse.json({ error: "El precio debe ser un número mayor o igual a cero" }, { status: 400 });

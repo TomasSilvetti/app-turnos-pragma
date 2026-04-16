@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import type { Ingreso, Egreso } from "@/app/dashboard/finanzas/page";
 
 type Props = {
   ingresos: Ingreso[];
   egresos: Egreso[];
   loading: boolean;
+  onEgresoDeleted: (id: string, monto: number) => void;
 };
 
 type Transaction =
@@ -36,7 +38,22 @@ function formatARS(value: number): string {
   return "$" + value.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
-export function TransactionList({ ingresos, egresos, loading }: Props) {
+export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }: Props) {
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(id: string, monto: number) {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/finanzas/expenses?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        onEgresoDeleted(id, monto);
+      }
+    } finally {
+      setDeletingId(null);
+      setConfirmingId(null);
+    }
+  }
   const transactions: Transaction[] = [
     ...ingresos.map((ing) => ({
       type: "ingreso" as const,
@@ -92,6 +109,8 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
               );
             } else {
               const eg = tx.data;
+              const isConfirming = confirmingId === eg.id;
+              const isDeleting = deletingId === eg.id;
               return (
                 <li
                   key={`eg-${eg.id}`}
@@ -108,9 +127,43 @@ export function TransactionList({ ingresos, egresos, loading }: Props) {
                       cargado por {eg.adminNombre?.toLowerCase() ?? "desconocido"}
                     </span>
                   </div>
-                  <span className="font-small text-sm text-[#ef4444] font-medium ml-2 shrink-0">
-                    −{formatARS(eg.monto)}
-                  </span>
+                  <div className="flex items-center gap-2 ml-2 shrink-0">
+                    <span className="font-small text-sm text-[#ef4444] font-medium">
+                      −{formatARS(eg.monto)}
+                    </span>
+                    {isConfirming ? (
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleDelete(eg.id, eg.monto)}
+                          disabled={isDeleting}
+                          className="text-[11px] px-2 py-0.5 rounded bg-[#ef4444] text-white hover:bg-[#dc2626] disabled:opacity-50 transition-colors"
+                        >
+                          {isDeleting ? "..." : "Sí"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmingId(null)}
+                          disabled={isDeleting}
+                          className="text-[11px] px-2 py-0.5 rounded bg-[#E0E0DB] dark:bg-[#2d3548] text-[#6b7280] dark:text-[#94a3b8] hover:bg-[#d1d5db] dark:hover:bg-[#374151] disabled:opacity-50 transition-colors"
+                        >
+                          No
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmingId(eg.id)}
+                        className="text-[#9ca3af] hover:text-[#ef4444] transition-colors"
+                        title="Eliminar egreso"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                          <path d="M10 11v6" />
+                          <path d="M14 11v6" />
+                          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
                 </li>
               );
             }

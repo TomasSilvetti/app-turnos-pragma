@@ -36,14 +36,39 @@ function mapFromApi(c: ApiScheduleConfig): ScheduleConfig {
   };
 }
 
-function getConflictingDays(configs: ScheduleConfig[], targetId: string, targetDays: string[]): string[] {
-  const activeDays = new Set<string>();
+function parseMinutes(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function getConflictingDays(
+  configs: ScheduleConfig[],
+  targetId: string,
+  targetDays: string[],
+  targetStartTime?: string,
+  targetEndTime?: string,
+): string[] {
+  const conflictingDays = new Set<string>();
+  const targetDaysSet = new Set(targetDays);
+  const newStart = targetStartTime ? parseMinutes(targetStartTime) : null;
+  const newEnd = targetEndTime ? parseMinutes(targetEndTime) : null;
+
   for (const c of configs) {
-    if (c.id !== targetId && c.isActive) {
-      for (const d of c.daysOfWeek) activeDays.add(d);
+    if (c.id === targetId || !c.isActive) continue;
+    const sharedDays = c.daysOfWeek.filter((d) => targetDaysSet.has(d));
+    if (sharedDays.length === 0) continue;
+
+    // Si tenemos horarios, verificar solapamiento
+    if (newStart !== null && newEnd !== null) {
+      const cfgStart = parseMinutes(c.startTime);
+      const cfgEnd = parseMinutes(c.endTime);
+      if (!(newStart < cfgEnd && cfgStart < newEnd)) continue; // no se solapan
     }
+
+    for (const d of sharedDays) conflictingDays.add(d);
   }
-  return targetDays.filter((d) => activeDays.has(d)).map((d) => DIAS_LABEL[d] ?? d);
+
+  return [...conflictingDays].map((d) => DIAS_LABEL[d] ?? d);
 }
 
 type PendingSubmitData = {
@@ -198,7 +223,7 @@ export default function ConfiguracionTurnosPage() {
       const ok = await performSave(editingConfig.id, data, false);
       return ok ? undefined : false;
     } else {
-      const conflicting = getConflictingDays(configs, "", data.daysOfWeek);
+      const conflicting = getConflictingDays(configs, "", data.daysOfWeek, data.startTime, data.endTime);
       if (conflicting.length > 0) {
         setModalError(`Estos días ya están en una configuración activa: ${conflicting.join(", ")}.`);
         return false;

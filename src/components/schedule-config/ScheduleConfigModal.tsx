@@ -56,6 +56,8 @@ export function ScheduleConfigModal({
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
   const [intervalMinutes, setIntervalMinutes] = useState<number>(30);
+  const [customInterval, setCustomInterval] = useState<string>("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [daysOfWeek, setDaysOfWeek] = useState<string[]>([]);
   const [serviceTypeIds, setServiceTypeIds] = useState<string[]>([]);
 
@@ -66,6 +68,9 @@ export function ScheduleConfigModal({
       setStartTime(initialData.startTime);
       setEndTime(initialData.endTime);
       setIntervalMinutes(initialData.intervalMinutes);
+      const isPreset = INTERVALOS.includes(initialData.intervalMinutes as typeof INTERVALOS[number]);
+      setShowCustomInput(!isPreset);
+      setCustomInterval(isPreset ? "" : String(initialData.intervalMinutes));
       setDaysOfWeek(initialData.daysOfWeek);
       setServiceTypeIds(initialData.serviceTypeIds ?? []);
     } else if (open && !initialData) {
@@ -73,6 +78,8 @@ export function ScheduleConfigModal({
       setStartTime("");
       setEndTime("");
       setIntervalMinutes(30);
+      setShowCustomInput(false);
+      setCustomInterval("");
       setDaysOfWeek([]);
       setServiceTypeIds([]);
     }
@@ -83,11 +90,16 @@ export function ScheduleConfigModal({
   const endTimeInvalid =
     startTime !== "" && endTime !== "" && endTime <= startTime;
 
+  const customIntervalInvalid =
+    showCustomInput &&
+    (customInterval.trim() === "" || parseInt(customInterval, 10) < 1);
+
   const saveDisabled =
     nombre.trim() === "" ||
     startTime === "" ||
     endTime === "" ||
     endTimeInvalid ||
+    customIntervalInvalid ||
     daysOfWeek.length === 0 ||
     serviceTypeIds.length === 0;
 
@@ -206,11 +218,15 @@ export function ScheduleConfigModal({
                 <button
                   key={min}
                   type="button"
-                  onClick={() => setIntervalMinutes(min)}
-                  aria-pressed={intervalMinutes === min}
+                  onClick={() => {
+                    setIntervalMinutes(min);
+                    setShowCustomInput(false);
+                    setCustomInterval("");
+                  }}
+                  aria-pressed={!showCustomInput && intervalMinutes === min}
                   className={cn(
                     "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
-                    intervalMinutes === min
+                    !showCustomInput && intervalMinutes === min
                       ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
                       : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
                   )}
@@ -218,7 +234,45 @@ export function ScheduleConfigModal({
                   {min} min
                 </button>
               ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCustomInput(true);
+                  setCustomInterval("");
+                }}
+                aria-pressed={showCustomInput}
+                className={cn(
+                  "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
+                  showCustomInput
+                    ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
+                    : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
+                )}
+              >
+                Personalizado
+              </button>
             </div>
+            {showCustomInput && (
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  type="number"
+                  min={1}
+                  max={480}
+                  value={customInterval}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setCustomInterval(val);
+                    const parsed = parseInt(val, 10);
+                    if (!isNaN(parsed) && parsed >= 1) {
+                      setIntervalMinutes(parsed);
+                    }
+                  }}
+                  placeholder="Ej: 20"
+                  aria-label="Intervalo personalizado en minutos"
+                  className="w-24 rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                />
+                <span className="text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">min</span>
+              </div>
+            )}
           </div>
 
           {/* Días */}

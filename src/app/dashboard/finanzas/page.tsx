@@ -87,6 +87,20 @@ export default function FinanzasPage() {
           ingresos={summary?.ingresos ?? []}
           egresos={summary?.egresos ?? []}
           loading={loading}
+          onEgresoDeleted={(id, monto) => {
+            startTransition(() => {
+              setSummary((prev) => {
+                if (!prev) return prev;
+                const nuevoTotal = prev.totalEgresos - monto;
+                return {
+                  ...prev,
+                  totalEgresos: nuevoTotal,
+                  balanceNeto: prev.totalIngresos - nuevoTotal,
+                  egresos: prev.egresos.filter((e) => e.id !== id),
+                };
+              });
+            });
+          }}
         />
       </div>
     </div>

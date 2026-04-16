@@ -115,12 +115,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const existingConfig = await prisma.scheduleConfig.findFirst({
-    where: { businessProfileId: businessProfile.id },
-    select: { id: true },
+  const activeConfigs = await prisma.scheduleConfig.findMany({
+    where: { businessProfileId: businessProfile.id, isActive: true },
+    select: { id: true, startTime: true, endTime: true, daysOfWeek: true },
   });
-  if (existingConfig)
-    return NextResponse.json({ error: "Ya existe una configuración de horarios" }, { status: 409 });
+
+  const newStart = parseTimeToMinutes(startTime);
+  const newEnd = parseTimeToMinutes(endTime);
+  const newDays = new Set(daysOfWeek as number[]);
+
+  const overlapping = activeConfigs.find((cfg) => {
+    const sharedDay = (cfg.daysOfWeek as number[]).some((d) => newDays.has(d));
+    if (!sharedDay) return false;
+    const cfgStart = parseTimeToMinutes(cfg.startTime);
+    const cfgEnd = parseTimeToMinutes(cfg.endTime);
+    return newStart < cfgEnd && cfgStart < newEnd;
+  });
+
+  if (overlapping)
+    return NextResponse.json(
+      { error: "El horario se superpone con una configuración activa existente en los mismos días", field: "startTime" },
+      { status: 409 }
+    );
 
   const config = await prisma.scheduleConfig.create({
     data: {

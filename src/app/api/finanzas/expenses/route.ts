@@ -65,3 +65,33 @@ export async function POST(req: NextRequest) {
     { status: 201 }
   );
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+  }
+
+  const expense = await prisma.expense.findUnique({
+    where: { id },
+    select: { serviceProviderId: true },
+  });
+
+  if (!expense) {
+    return NextResponse.json({ error: "Egreso no encontrado" }, { status: 404 });
+  }
+
+  if (expense.serviceProviderId !== session.user.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  }
+
+  await prisma.expense.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
+}
