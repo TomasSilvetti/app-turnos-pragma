@@ -48,10 +48,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const tutorialCompleted = (session?.user as { tutorialCompleted?: boolean } | undefined)?.tutorialCompleted;
 
   useEffect(() => {
+    if (tutorialCompleted === true) {
+      localStorage.removeItem("tutorialJustCompleted");
+      return;
+    }
     const params = new URLSearchParams(window.location.search);
     const fromTutorial = params.get("fromTutorial");
     const tutorialDone = params.get("tutorialDone");
-    if (session && tutorialCompleted === false && pathname !== "/dashboard/tutorial" && fromTutorial === null && tutorialDone === null) {
+    const justCompleted = localStorage.getItem("tutorialJustCompleted") === "1";
+    if (session && tutorialCompleted === false && !justCompleted && pathname !== "/dashboard/tutorial" && fromTutorial === null && tutorialDone === null) {
       router.replace("/dashboard/tutorial");
     }
   }, [session, tutorialCompleted, pathname, router]);

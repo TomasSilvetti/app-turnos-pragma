@@ -1,11 +1,46 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { ClienteMetricas, MetricasData } from "@/components/clientes/ClienteMetricas";
 import { ClienteListado } from "@/components/clientes/ClienteListado";
 import { ClienteResumen } from "@/components/clientes/ClienteCard";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { DatePickerInput } from "@/components/ui/DatePickerInput";
+
+// Datos mock usados únicamente durante el paso de tutorial de clientes
+function buildMockMetricas(): MetricasData {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, "0");
+  return {
+    turnosPorMes: [
+      { mes: `${y}-${m}-05`, cantidad: 2 },
+      { mes: `${y}-${m}-10`, cantidad: 4 },
+      { mes: `${y}-${m}-15`, cantidad: 3 },
+      { mes: `${y}-${m}-20`, cantidad: 5 },
+      { mes: `${y}-${m}-25`, cantidad: 1 },
+    ],
+    edadPromedio: 34,
+    distribucionSexos: [
+      { sexo: "Masculino", cantidad: 6 },
+      { sexo: "Femenino", cantidad: 9 },
+    ],
+    distribucionTiposTurno: [
+      { tipo: "Corte de cabello", cantidad: 8 },
+      { tipo: "Barba", cantidad: 4 },
+      { tipo: "Color", cantidad: 3 },
+    ],
+    turnosPorEmpleado: [
+      { nombre: "Martín G.", cantidad: 8 },
+      { nombre: "Sofía R.", cantidad: 7 },
+    ],
+    ingresosPorEmpleado: [
+      { nombre: "Martín G.", ingreso: 24000 },
+      { nombre: "Sofía R.", ingreso: 19500 },
+    ],
+  };
+}
 
 type Periodo = "semana" | "mes" | "año" | "personalizado";
 
@@ -46,9 +81,14 @@ function getDateRange(periodo: Periodo): { desde: string; hasta: string } | null
 }
 
 export default function ClientesPage() {
-  const [metricas, setMetricas] = useState<MetricasData | null>(null);
+  const searchParams = useSearchParams();
+  const isTutorial = searchParams.get("fromTutorial") !== null;
+
+  const [metricas, setMetricas] = useState<MetricasData | null>(
+    isTutorial ? buildMockMetricas() : null
+  );
   const [clientes, setClientes] = useState<ClienteResumen[]>([]);
-  const [loadingMetricas, setLoadingMetricas] = useState(true);
+  const [loadingMetricas, setLoadingMetricas] = useState(!isTutorial);
   const [loadingClientes, setLoadingClientes] = useState(true);
 
   const [periodo, setPeriodo] = useState<Periodo>("mes");
@@ -56,6 +96,7 @@ export default function ClientesPage() {
   const [hasta, setHasta] = useState("");
 
   const fetchMetricas = useCallback(() => {
+    if (isTutorial) return;
     setLoadingMetricas(true);
 
     let range: { desde: string; hasta: string } | null = null;
@@ -75,15 +116,19 @@ export default function ClientesPage() {
       .then((data) => setMetricas(data))
       .catch(() => {})
       .finally(() => setLoadingMetricas(false));
-  }, [periodo, desde, hasta]);
+  }, [periodo, desde, hasta, isTutorial]);
 
   useEffect(() => {
-    if (periodo !== "personalizado") {
+    if (!isTutorial && periodo !== "personalizado") {
       fetchMetricas();
     }
-  }, [periodo, fetchMetricas]);
+  }, [periodo, fetchMetricas, isTutorial]);
 
   useEffect(() => {
+    if (isTutorial) {
+      setLoadingClientes(false);
+      return;
+    }
     fetch("/api/clientes")
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setClientes(Array.isArray(data) ? data : []))

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { stepsPropietario, stepsEmpleado } from "@/lib/tutorial-steps";
@@ -10,6 +10,7 @@ import { stepsPropietario, stepsEmpleado } from "@/lib/tutorial-steps";
 export default function TutorialPage() {
   const { data: session, update } = useSession();
   const searchParams = useSearchParams();
+  const router = useNextRouter();
 
   const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
   const steps = userRol === "empleado" ? stepsEmpleado : stepsPropietario;
@@ -40,8 +41,9 @@ export default function TutorialPage() {
     setCompleting(true);
     try {
       await fetch("/api/tutorial/complete", { method: "PATCH" });
+      localStorage.setItem("tutorialJustCompleted", "1");
       await update();
-      window.location.href = "/dashboard/configuracion?tutorialDone=1";
+      router.push("/dashboard/configuracion?tutorialDone=1");
     } catch {
       setCompleting(false);
     }
