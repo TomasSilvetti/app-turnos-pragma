@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter as useNextRouter } from "next/navigation";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { stepsPropietario, stepsEmpleado } from "@/lib/tutorial-steps";
 
-export default function TutorialPage() {
+function TutorialContent() {
   const { data: session, update } = useSession();
   const searchParams = useSearchParams();
   const router = useNextRouter();
@@ -171,5 +171,13 @@ export default function TutorialPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function TutorialPage() {
+  return (
+    <Suspense>
+      <TutorialContent />
+    </Suspense>
   );
 }
