@@ -57,9 +57,9 @@ export default function ClientRescheduleModal({ booking, slug, onClose }: Props)
         );
         if (!res.ok) throw new Error();
         const data = await res.json();
-        const dates: string[] = [
-          ...new Set((data.slots ?? []).map((s: { date: string }) => s.date)),
-        ];
+        const dates: string[] = Array.from(
+          new Set((data.slots ?? []).map((s: { date: string }) => s.date))
+        );
         setAvailableDates(dates);
       } catch {
         setAvailableDates([]);
