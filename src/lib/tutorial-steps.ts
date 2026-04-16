@@ -62,13 +62,24 @@ export const stepsPropietario: TutorialStep[] = [
   {
     title: "Reprogramaciones",
     description:
-      "Cuando un cliente pide cambiar su turno, la solicitud aparece acá. Podés aceptarla o rechazarla directamente.",
+      "Cuando un cliente pide cambiar su turno o cuando seleccionas un turno para reprogramar, la solicitud aparece en este modulo",
     icon: "event_repeat",
     moduleHref: "/dashboard/reprogramaciones",
     moduleLabel: "Ir a reprogramaciones",
     tooltipTitle: "Así gestionás los cambios de turno",
     tooltipDescription:
       "Cuando un cliente solicita reprogramar, la solicitud aparece en esta lista. Podés aceptarla o rechazarla con un clic.",
+  },
+  {
+    title: "Turnos del día",
+    description:
+      "Desde acá podés ver los turnos pendientes de confirmacion y los turnos confirmados.",
+    icon: "bookmark",
+    moduleHref: "/dashboard/turnos-reservados",
+    moduleLabel: "Ir a turnos reservados",
+    tooltipTitle: "Así gestionás los turnos del día",
+    tooltipDescription:
+      "Acá aparecen todos los turnos reservados. podes confirmar el pago (y se mueven a la lista de confirmados), tambien podes cancelarlos o reprogramarlos.",
   },
   {
     title: "Empleados",
@@ -171,7 +182,7 @@ export const stepsEmpleado: TutorialStep[] = [
     moduleLabel: "Ir a reprogramaciones",
     tooltipTitle: "Así gestionás los cambios de turno",
     tooltipDescription:
-      "Cuando un cliente solicita reprogramar, la solicitud aparece en esta lista. Podés aceptarla o rechazarla con un clic.",
+      "Cuando un cliente o tu mismo solicita reprogramar, la solicitud aparece en esta lista. ",
   },
   {
     title: "¡Todo listo para empezar!",

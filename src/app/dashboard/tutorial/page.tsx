@@ -97,25 +97,36 @@ export default function TutorialPage() {
 
       {/* Índice de pasos */}
       <div className="flex flex-wrap gap-1.5" role="list" aria-label="Pasos del tutorial">
-        {steps.map((s, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentStep(i)}
-            role="listitem"
-            aria-label={`Ir al paso ${i + 1}: ${s.title}`}
-            aria-current={i === currentStep ? "step" : undefined}
-            className={cn(
-              "w-7 h-7 rounded-full text-xs font-medium transition-colors",
-              i === currentStep
-                ? "bg-[var(--brand-color)] text-white"
-                : i < currentStep
-                ? "bg-[#E0E0DB] dark:bg-[#2d3548] text-[#6b7280] dark:text-[#94a3b8]"
-                : "bg-[#F4F5F7] dark:bg-[#1e293b] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548]"
-            )}
-          >
-            {i + 1}
-          </button>
-        ))}
+        {steps.map((s, i) => {
+          const isBlocked = i > currentStep && mustVisit;
+          const isPastBlocked = i > currentStep && steps.slice(currentStep, i).some((_, offset) => {
+            const idx = currentStep + offset;
+            return !!steps[idx].moduleHref && !visitedSteps.includes(idx);
+          });
+          const disabled = isBlocked || isPastBlocked;
+          return (
+            <button
+              key={i}
+              onClick={() => !disabled && setCurrentStep(i)}
+              role="listitem"
+              aria-label={`Ir al paso ${i + 1}: ${s.title}`}
+              aria-current={i === currentStep ? "step" : undefined}
+              disabled={disabled}
+              className={cn(
+                "w-7 h-7 rounded-full text-xs font-medium transition-colors",
+                i === currentStep
+                  ? "bg-[var(--brand-color)] text-white"
+                  : i < currentStep
+                  ? "bg-[#E0E0DB] dark:bg-[#2d3548] text-[#6b7280] dark:text-[#94a3b8]"
+                  : disabled
+                  ? "bg-[#F4F5F7] dark:bg-[#1e293b] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] opacity-40 cursor-not-allowed"
+                  : "bg-[#F4F5F7] dark:bg-[#1e293b] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548]"
+              )}
+            >
+              {i + 1}
+            </button>
+          );
+        })}
       </div>
 
       {/* Navegación */}
