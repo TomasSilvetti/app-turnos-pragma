@@ -141,6 +141,7 @@ model Appointment {
   serviceProviderId String
   serviceTypeId     String?
   sucursalId        String?
+  isTutorial        Boolean         @default(false)
   scheduleConfig    ScheduleConfig? @relation(fields: [scheduleConfigId], references: [id])
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id])
   serviceType       ServiceType?    @relation(fields: [serviceTypeId], references: [id])
