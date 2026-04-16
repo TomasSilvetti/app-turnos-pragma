@@ -24,6 +24,9 @@
 .DS_Store
 *.pem
 
+# pragma admin config (contains hashed password)
+.pragma-config.json
+
 # debug
 npm-debug.log*
 yarn-debug.log*

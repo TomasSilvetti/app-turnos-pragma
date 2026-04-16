@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { format, startOfMonth } from "date-fns";
 import MiniCalendar from "./MiniCalendar";
 import AppointmentSlots, { type Appointment } from "./AppointmentSlots";
@@ -91,13 +91,17 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       .catch(() => {});
   }, [slug]);
 
-  useEffect(() => {
+  const fetchClientBookings = useCallback(() => {
     if (!clientSession) return;
     fetch(`/api/client/bookings?slug=${encodeURIComponent(slug)}`)
       .then((r) => r.ok ? r.json() : [])
       .then((data: ClientBooking[]) => setClientBookings(data))
       .catch(() => {});
   }, [slug, clientSession]);
+
+  useEffect(() => {
+    fetchClientBookings();
+  }, [fetchClientBookings]);
 
   // Sucursales (precargadas desde el server)
   const sucursales = initialSucursales;
@@ -138,7 +142,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   }, [slug, selectedSucursalId]);
 
   // Cargar slots cuando cambia el mes o el empleado
-  useEffect(() => {
+  const fetchSlots = useCallback(() => {
     if (!selectedEmployeeId) return;
     const month = format(viewMonth, "yyyy-MM");
     setIsLoadingSlots(true);
@@ -156,6 +160,23 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       .catch(() => setSlots([]))
       .finally(() => setIsLoadingSlots(false));
   }, [slug, viewMonth, selectedEmployeeId, selectedSucursalId]);
+
+  useEffect(() => {
+    fetchSlots();
+  }, [fetchSlots]);
+
+  // Ref para acceder siempre al fetchSlots más reciente sin recrear el EventSource
+  const fetchSlotsRef = useRef(fetchSlots);
+  useEffect(() => { fetchSlotsRef.current = fetchSlots; }, [fetchSlots]);
+
+  // Escuchar cambios de disponibilidad en tiempo real via SSE
+  // Solo depende de slug: la conexión permanece estable sin importar cambios de estado
+  useEffect(() => {
+    const es = new EventSource(`/api/p/${slug}/stream`);
+    es.onmessage = () => fetchSlotsRef.current();
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [slug]);
 
   const handleSucursalSelect = useCallback((id: string) => {
     setSelectedSucursalId(id);
@@ -273,6 +294,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
 
       setBookedIds((prev) => new Set([...prev, data.appointmentId]));
       setSelectedAppointment(null);
+      fetchClientBookings();
       setBookingResult({
         businessName,
         date: selectedDate!,
