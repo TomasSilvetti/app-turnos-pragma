@@ -36,7 +36,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
+  const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
   const { data: session } = useSession();
+
+  useEffect(() => {
+    fetch("/api/me/status")
+      .then((r) => r.json())
+      .then((data) => setIsBlocked(data.isActive === false))
+      .catch(() => setIsBlocked(false));
+  }, [pathname]);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -97,6 +105,38 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then((data) => setRescheduleCount(data.count ?? 0))
       .catch(() => {});
   }, [pathname]);
+
+  if (isBlocked === true) {
+    return (
+      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
+        <div className="max-w-md w-full text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
+            <span className="material-symbols-outlined text-red-400" style={{ fontSize: "32px" }} translate="no">block</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-white mb-3">Cuenta desactivada</h1>
+          <p className="text-slate-400 mb-6 leading-relaxed">
+            Tu cuenta ha sido desactivada temporalmente. Para reactivarla y continuar usando la plataforma, por favor contactate con el equipo de Pragma.
+          </p>
+          <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-left space-y-2 mb-8">
+            <p className="text-xs text-slate-500 uppercase tracking-wider font-medium mb-3">Contacto</p>
+            <a
+              href="mailto:silvetti.tomas7@gmail.com"
+              className="flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">mail</span>
+              silvetti.tomas7@gmail.com
+            </a>
+          </div>
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
