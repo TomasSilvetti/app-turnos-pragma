@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { ClienteMetricas, MetricasData } from "@/components/clientes/ClienteMetricas";
@@ -56,7 +57,6 @@ function getDateRange(periodo: Periodo): { desde: string; hasta: string } | null
   };
 
   if (periodo === "semana") {
-    // Lunes a domingo de la semana actual
     const day = today.getDay();
     const diff = day === 0 ? -6 : 1 - day;
     const desde = new Date(today);
@@ -66,13 +66,11 @@ function getDateRange(periodo: Periodo): { desde: string; hasta: string } | null
     return { desde: fmt(desde), hasta: fmt(hasta) };
   }
   if (periodo === "mes") {
-    // Primer día al último día del mes actual
     const desde = new Date(y, m, 1);
-    const hasta = new Date(y, m + 1, 0); // último día del mes
+    const hasta = new Date(y, m + 1, 0);
     return { desde: fmt(desde), hasta: fmt(hasta) };
   }
   if (periodo === "año") {
-    // 1 de enero al 31 de diciembre del año actual
     const desde = new Date(y, 0, 1);
     const hasta = new Date(y, 11, 31);
     return { desde: fmt(desde), hasta: fmt(hasta) };
@@ -80,7 +78,7 @@ function getDateRange(periodo: Periodo): { desde: string; hasta: string } | null
   return null;
 }
 
-export default function ClientesPage() {
+function ClientesContent() {
   const searchParams = useSearchParams();
   const isTutorial = searchParams.get("fromTutorial") !== null;
 
@@ -208,5 +206,13 @@ export default function ClientesPage() {
         <ClienteListado clientes={clientes} loading={loadingClientes} />
       </div>
     </div>
+  );
+}
+
+export default function ClientesPage() {
+  return (
+    <Suspense>
+      <ClientesContent />
+    </Suspense>
   );
 }
