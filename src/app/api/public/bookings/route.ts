@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { getClientSession } from "@/lib/cliente-auth";
 import { sendPushToServiceProvider } from "@/lib/push-notifications";
 import { sendWhatsApp } from "@/lib/twilio";
+import { emitNewBooking } from "@/lib/booking-emitter";
 
 const prisma = new PrismaClient();
 
@@ -201,6 +202,8 @@ export async function POST(request: NextRequest) {
       });
     }
   }
+
+  emitNewBooking();
 
   return NextResponse.json(booking, { status: 201 });
 }

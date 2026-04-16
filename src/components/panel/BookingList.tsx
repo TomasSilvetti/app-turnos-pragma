@@ -339,6 +339,13 @@ export default function BookingList() {
     fetchItems();
   }, [fetchItems]);
 
+  useEffect(() => {
+    const es = new EventSource("/api/panel/bookings/stream");
+    es.onmessage = () => fetchItems();
+    es.onerror = () => es.close();
+    return () => es.close();
+  }, [fetchItems]);
+
   async function handleConfirmPayment(bookingId: string) {
     setLoadingId(bookingId);
     try {
