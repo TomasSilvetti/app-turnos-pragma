@@ -6,6 +6,8 @@ import MiniCalendar from "./MiniCalendar";
 import AppointmentSlots, { type Appointment } from "./AppointmentSlots";
 import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
+import ClientBookingOptionsModal from "./ClientBookingOptionsModal";
+import ClientRescheduleModal from "./ClientRescheduleModal";
 
 type Slot = {
   id: string;
@@ -34,6 +36,15 @@ type ClientSession = {
   nombre: string;
   apellido: string;
   email: string;
+};
+
+type ClientBooking = {
+  bookingId: string;
+  date: string;
+  time: string;
+  serviceType: string;
+  minAdvanceHours: number;
+  employeeId: string;
 };
 
 type Sucursal = {
@@ -69,6 +80,9 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
   const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
+  const [clientBookings, setClientBookings] = useState<ClientBooking[]>([]);
+  const [clientBookingOptionsTarget, setClientBookingOptionsTarget] = useState<ClientBooking | null>(null);
+  const [clientRescheduleTarget, setClientRescheduleTarget] = useState<ClientBooking | null>(null);
 
   useEffect(() => {
     fetch(`/api/public/business/${slug}/payment-methods`)
@@ -76,6 +90,14 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       .then((data: { methods: string[] }) => setPaymentMethods(data.methods ?? []))
       .catch(() => {});
   }, [slug]);
+
+  useEffect(() => {
+    if (!clientSession) return;
+    fetch(`/api/client/bookings?slug=${encodeURIComponent(slug)}`)
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: ClientBooking[]) => setClientBookings(data))
+      .catch(() => {});
+  }, [slug, clientSession]);
 
   // Sucursales (precargadas desde el server)
   const sucursales = initialSucursales;
@@ -164,6 +186,11 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       serviceTypes: s.serviceTypes,
     }));
 
+  const clientBookingDates = clientBookings.map((b) => b.date);
+  const clientBookingTimesForDate = selectedDate
+    ? clientBookings.filter((b) => b.date === selectedDate).map((b) => b.time)
+    : [];
+
   const handleMonthChange = useCallback((month: Date) => {
     setViewMonth(month);
     setSelectedDate(null);
@@ -177,10 +204,21 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     setBookingError(null);
   }, []);
 
-  const handleAppointmentSelect = useCallback((appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setBookingError(null);
-  }, []);
+  const handleAppointmentSelect = useCallback(
+    (appointment: Appointment) => {
+      // Si el slot pertenece al cliente autenticado, abrir modal de opciones
+      const clientBooking = clientBookings.find(
+        (b) => b.date === selectedDate && b.time === appointment.time
+      );
+      if (clientBooking) {
+        setClientBookingOptionsTarget(clientBooking);
+        return;
+      }
+      setSelectedAppointment(appointment);
+      setBookingError(null);
+    },
+    [clientBookings, selectedDate]
+  );
 
   const handleModalClose = useCallback(() => {
     setSelectedAppointment(null);
@@ -426,6 +464,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             viewMonth={viewMonth}
             onMonthChange={handleMonthChange}
             onDaySelect={handleDaySelect}
+            clientBookingDates={clientBookingDates}
           />
 
           {isLoadingSlots ? (
@@ -436,6 +475,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             <AppointmentSlots
               appointments={appointmentsForDate}
               onSelect={handleAppointmentSelect}
+              clientBookingTimes={clientBookingTimesForDate}
             />
           )}
         </>
@@ -451,6 +491,29 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           onConfirm={handleConfirm}
           onClose={handleModalClose}
           clientSession={clientSession}
+        />
+      )}
+
+      {clientBookingOptionsTarget && (
+        <ClientBookingOptionsModal
+          booking={clientBookingOptionsTarget}
+          slug={slug}
+          onClose={() => setClientBookingOptionsTarget(null)}
+          onCancelSuccess={(bookingId) => {
+            setClientBookings((prev) => prev.filter((b) => b.bookingId !== bookingId));
+          }}
+          onReschedule={(booking) => {
+            setClientBookingOptionsTarget(null);
+            setClientRescheduleTarget(booking);
+          }}
+        />
+      )}
+
+      {clientRescheduleTarget && (
+        <ClientRescheduleModal
+          booking={clientRescheduleTarget}
+          slug={slug}
+          onClose={() => setClientRescheduleTarget(null)}
         />
       )}
     </>

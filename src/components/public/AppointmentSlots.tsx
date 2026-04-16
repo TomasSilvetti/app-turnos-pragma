@@ -14,9 +14,11 @@ export type Appointment = {
 type Props = {
   appointments: Appointment[];
   onSelect: (appointment: Appointment) => void;
+  clientBookingTimes?: string[]; // HH:MM — horarios con turno propio del cliente
 };
 
-export default function AppointmentSlots({ appointments, onSelect }: Props) {
+export default function AppointmentSlots({ appointments, onSelect, clientBookingTimes }: Props) {
+  const clientBookingSet = new Set(clientBookingTimes ?? []);
   if (appointments.length === 0) {
     return (
       <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
@@ -39,20 +41,25 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
       <div className="grid grid-cols-2 gap-2">
         {appointments.map((appointment) => {
           const unavailable = appointment.booked || appointment.disabled;
+          const isClientBooking = clientBookingSet.has(appointment.time);
           return (
             <button
               key={appointment.id}
-              onClick={() => !unavailable && onSelect(appointment)}
-              disabled={unavailable}
+              onClick={() => (isClientBooking || !unavailable) && onSelect(appointment)}
+              disabled={unavailable && !isClientBooking}
               aria-label={
-                appointment.booked
+                isClientBooking
+                  ? `Tu turno a las ${appointment.time}`
+                  : appointment.booked
                   ? `Turno a las ${appointment.time} — Reservado`
                   : appointment.disabled
                   ? `Turno a las ${appointment.time} — No disponible`
                   : `Seleccionar turno a las ${appointment.time}`
               }
               className={
-                unavailable
+                isClientBooking
+                  ? "group flex items-center justify-between rounded-lg border border-[var(--brand-color)]/40 bg-[var(--brand-color)]/10 px-4 py-3 text-left cursor-pointer hover:bg-[var(--brand-color)]/20 transition-all duration-200"
+                  : unavailable
                   ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
                   : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
               }
@@ -61,14 +68,18 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
                 <Clock
                   size={14}
                   className={
-                    unavailable
+                    isClientBooking
+                      ? "text-[var(--brand-color)]"
+                      : unavailable
                       ? "text-gray-300 dark:text-[#475569]"
                       : "text-[var(--brand-color)] group-hover:text-white transition-colors"
                   }
                 />
                 <span
                   className={
-                    unavailable
+                    isClientBooking
+                      ? "font-heading text-sm text-[var(--brand-color)] dark:text-[#93c5fd] font-semibold"
+                      : unavailable
                       ? "font-heading text-sm text-gray-400 dark:text-[#475569]"
                       : "font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] group-hover:text-white transition-colors"
                   }
@@ -76,7 +87,11 @@ export default function AppointmentSlots({ appointments, onSelect }: Props) {
                   {appointment.time}
                 </span>
               </div>
-              {appointment.booked ? (
+              {isClientBooking ? (
+                <span className="text-[10px] font-medium text-[var(--brand-color)] dark:text-[#93c5fd] bg-[var(--brand-color)]/10 px-2 py-0.5 rounded-full">
+                  Tu turno
+                </span>
+              ) : appointment.booked ? (
                 <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
                   Ocupado
                 </span>

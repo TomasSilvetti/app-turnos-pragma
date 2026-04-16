@@ -21,6 +21,7 @@ type Props = {
   onMonthChange: (month: Date) => void;
   onDaySelect: (date: string) => void;
   originalDate?: string | null; // YYYY-MM-DD — día original del turno
+  clientBookingDates?: string[]; // YYYY-MM-DD — días con turno propio del cliente
 };
 
 const WEEK_DAYS = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
@@ -32,6 +33,7 @@ export default function MiniCalendar({
   onMonthChange,
   onDaySelect,
   originalDate,
+  clientBookingDates,
 }: Props) {
   const today = new Date();
   const monthStart = startOfMonth(viewMonth);
@@ -41,6 +43,7 @@ export default function MiniCalendar({
   const firstDayOfWeek = (getDay(monthStart) + 6) % 7;
 
   const availableSet = new Set(availableDates);
+  const clientBookingSet = new Set(clientBookingDates ?? []);
 
   function isAvailable(day: Date) {
     return availableSet.has(format(day, "yyyy-MM-dd"));
@@ -60,6 +63,10 @@ export default function MiniCalendar({
     return isSameDay(day, parseISO(originalDate));
   }
 
+  function isClientBooking(day: Date) {
+    return clientBookingSet.has(format(day, "yyyy-MM-dd"));
+  }
+
   function handleDayClick(day: Date) {
     if (!isAvailable(day)) return;
     onDaySelect(format(day, "yyyy-MM-dd"));
@@ -67,13 +74,25 @@ export default function MiniCalendar({
 
   return (
     <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
-      {/* Leyenda día original */}
-      {originalDate && (
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <span className="h-3 w-3 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
-          <span className="font-body text-xs text-amber-700 dark:text-amber-400">
-            Día original del turno
-          </span>
+      {/* Leyendas */}
+      {(originalDate || (clientBookingDates && clientBookingDates.length > 0)) && (
+        <div className="flex flex-col gap-1.5 mb-4 px-1">
+          {originalDate && (
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-amber-400 shrink-0" aria-hidden="true" />
+              <span className="font-body text-xs text-amber-700 dark:text-amber-400">
+                Día original del turno
+              </span>
+            </div>
+          )}
+          {clientBookingDates && clientBookingDates.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="h-3 w-3 rounded-full bg-[var(--brand-color)]/40 ring-1 ring-[var(--brand-color)] shrink-0" aria-hidden="true" />
+              <span className="font-body text-xs text-[var(--brand-color)] dark:text-[#93c5fd]">
+                Tu turno reservado
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -126,6 +145,7 @@ export default function MiniCalendar({
           const selected = isSelected(day);
           const todayDay = isToday(day);
           const originalDay = isOriginal(day);
+          const clientBookingDay = isClientBooking(day);
 
           return (
             <button
@@ -140,6 +160,8 @@ export default function MiniCalendar({
                   ? "bg-[var(--brand-color)] text-white shadow-md rounded-lg"
                   : originalDay
                   ? "bg-amber-400 text-white font-semibold rounded-lg"
+                  : clientBookingDay
+                  ? "bg-[var(--brand-color)]/20 text-[var(--brand-color)] dark:text-[#93c5fd] font-semibold ring-1 ring-[var(--brand-color)]/50 rounded-lg hover:bg-[var(--brand-color)] hover:text-white hover:ring-0 cursor-pointer"
                   : todayDay && !available
                   ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] dark:text-[#93c5fd] font-bold rounded-lg"
                   : available
