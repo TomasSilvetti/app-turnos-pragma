@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarCheck, MessageCircle, X, CheckCircle, ChevronDown, ChevronUp, XCircle, CalendarClock, Info, Users } from "lucide-react";
@@ -17,7 +18,74 @@ export type BookingItem = {
   serviceTypeTitle: string;
   serviceTypePrice: number | null;
   paymentMethod: string | null;
+  isMock?: boolean;
 };
+
+const today = new Date();
+const todayStr = today.toISOString().split("T")[0];
+
+const MOCK_BOOKINGS: BookingItem[] = [
+  {
+    bookingId: "mock-pending",
+    clientName: "María González",
+    clientPhone: "5491112345678",
+    status: "pending",
+    appointmentDate: todayStr,
+    appointmentTime: "10:00",
+    serviceTypeTitle: "Ejemplo de servicio",
+    serviceTypePrice: 5000,
+    paymentMethod: "cash",
+    isMock: true,
+  },
+  {
+    bookingId: "mock-confirmed-1",
+    clientName: "Carlos Pérez",
+    clientPhone: "5491187654321",
+    status: "confirmed",
+    appointmentDate: todayStr,
+    appointmentTime: "11:30",
+    serviceTypeTitle: "Ejemplo de servicio",
+    serviceTypePrice: 5000,
+    paymentMethod: "transfer",
+    isMock: true,
+  },
+  {
+    bookingId: "mock-confirmed-2",
+    clientName: "Laura Martínez",
+    clientPhone: "5491165432109",
+    status: "confirmed",
+    appointmentDate: todayStr,
+    appointmentTime: "12:00",
+    serviceTypeTitle: "Ejemplo de servicio",
+    serviceTypePrice: 8000,
+    paymentMethod: "cash",
+    isMock: true,
+  },
+  {
+    bookingId: "mock-confirmed-3",
+    clientName: "Andrés Romero",
+    clientPhone: "5491198765432",
+    status: "confirmed",
+    appointmentDate: todayStr,
+    appointmentTime: "14:00",
+    serviceTypeTitle: "Ejemplo de servicio",
+    serviceTypePrice: 6500,
+    paymentMethod: "transfer",
+    isMock: true,
+  },
+  {
+    bookingId: "mock-confirmed-4",
+    clientName: "Sofía Herrera",
+    clientPhone: "5491123456789",
+    status: "confirmed",
+    appointmentDate: todayStr,
+    appointmentTime: "15:30",
+    serviceTypeTitle: "Ejemplo de servicio",
+    serviceTypePrice: 5000,
+    paymentMethod: "cash",
+    isMock: true,
+  },
+];
 
 function SkeletonRow() {
   return (
@@ -223,6 +291,8 @@ type Empleado = { id: string; nombre: string; rol: string };
 
 export default function BookingList() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const isTutorialMode = searchParams.get("fromTutorial") !== null;
   const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
   const isAdmin = userRol === "propietario" || userRol === "administrador";
 
@@ -257,7 +327,7 @@ export default function BookingList() {
       const res = await fetch(url);
       if (!res.ok) throw new Error();
       const data = await res.json();
-      setItems(data);
+      setItems(isTutorialMode ? [...MOCK_BOOKINGS, ...data] : data);
     } catch {
       setItems([]);
     } finally {
@@ -451,7 +521,7 @@ export default function BookingList() {
                   selectedEmployee ? null : (
                     <>
                       <button
-                        onClick={() => handleConfirmPayment(item.bookingId)}
+                        onClick={() => !item.isMock && handleConfirmPayment(item.bookingId)}
                         disabled={loadingId === item.bookingId}
                         className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
                         aria-label="Marcar como pagado"
@@ -460,7 +530,7 @@ export default function BookingList() {
                         Pago
                       </button>
                       <button
-                        onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                        onClick={() => !item.isMock && (setRescheduleTarget(item), setRescheduleSuccess(false))}
                         disabled={loadingId === item.bookingId}
                         className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
                         aria-label="Reprogramar turno"
@@ -469,7 +539,7 @@ export default function BookingList() {
                         Reprogramar
                       </button>
                       <button
-                        onClick={() => setCancelTarget(item)}
+                        onClick={() => !item.isMock && setCancelTarget(item)}
                         disabled={loadingId === item.bookingId}
                         className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
                         aria-label="Cancelar turno"
@@ -512,7 +582,7 @@ export default function BookingList() {
                   selectedEmployee ? null : (
                     <>
                       <button
-                        onClick={() => { setRescheduleTarget(item); setRescheduleSuccess(false); }}
+                        onClick={() => !item.isMock && (setRescheduleTarget(item), setRescheduleSuccess(false))}
                         disabled={loadingId === item.bookingId}
                         className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
                         aria-label="Reprogramar turno"
@@ -521,7 +591,7 @@ export default function BookingList() {
                         Reprogramar
                       </button>
                       <button
-                        onClick={() => handleCancel(item.bookingId)}
+                        onClick={() => !item.isMock && handleCancel(item.bookingId)}
                         disabled={loadingId === item.bookingId}
                         className="flex items-center justify-center text-[#ef4444] border border-[#ef4444] rounded-md p-2 hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors disabled:opacity-50"
                         aria-label="Cancelar turno"

@@ -47,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           rol: provider.rol,
           hasProfile: !!provider.businessProfile || provider.empresas.length > 0,
           businessProfileId,
+          tutorialCompleted: provider.tutorialCompleted,
         };
       },
     }),
@@ -58,6 +59,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.rol = (user as { rol?: string }).rol ?? "propietario";
         token.hasProfile = (user as { hasProfile?: boolean }).hasProfile ?? false;
         token.businessProfileId = (user as { businessProfileId?: string | null }).businessProfileId ?? null;
+        token.tutorialCompleted = (user as { tutorialCompleted?: boolean }).tutorialCompleted ?? false;
       }
       if (trigger === "update" && token.id) {
         const provider = await prisma.serviceProvider.findUnique({
@@ -73,6 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             provider.businessProfile?.id ??
             provider.empresas[0]?.businessProfileId ??
             null;
+          token.tutorialCompleted = provider.tutorialCompleted;
         }
       }
       return token;
@@ -84,6 +87,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       (session.user as { businessProfileId?: string | null }).businessProfileId = token.businessProfileId as string | null;
       (session.user as { pendingStep?: string | null }).pendingStep =
         token.hasProfile ? null : "business";
+      (session.user as { tutorialCompleted?: boolean }).tutorialCompleted = token.tutorialCompleted as boolean;
       return session;
     },
   },

@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
 import { PushNotificationPrompt } from "@/components/profile/PushNotificationPrompt";
+import { Suspense } from "react";
+import { TutorialBanner } from "@/components/tutorial/TutorialBanner";
 
 type NavItem = {
   label: string;
@@ -30,6 +32,7 @@ const DEFAULT_BRAND_COLOR = "#253551";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
@@ -41,6 +44,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const dark = saved === "dark" || (!saved && prefersDark);
     document.documentElement.classList.toggle("dark", dark);
   }, []);
+
+  const tutorialCompleted = (session?.user as { tutorialCompleted?: boolean } | undefined)?.tutorialCompleted;
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const fromTutorial = params.get("fromTutorial");
+    const tutorialDone = params.get("tutorialDone");
+    if (session && tutorialCompleted === false && pathname !== "/dashboard/tutorial" && fromTutorial === null && tutorialDone === null) {
+      router.replace("/dashboard/tutorial");
+    }
+  }, [session, tutorialCompleted, pathname, router]);
 
   const userRol = (session?.user as { rol?: string } | undefined)?.rol ?? "propietario";
   const visibleNavItems = navItems.filter(
@@ -180,6 +194,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       <PushNotificationPrompt />
+      <Suspense>
+        <TutorialBanner />
+      </Suspense>
 
       <main className="px-6 py-8 min-h-screen overflow-y-auto">
         {!sidebarOpen && (

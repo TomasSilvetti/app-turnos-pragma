@@ -24,6 +24,7 @@ model ServiceProvider {
   expenses            Expense[]
   pushSubscriptions   PushSubscription[]
   scheduleConfigs     ScheduleConfig[]
+  tutorialCompleted   Boolean            @default(false)
 
   @@map("service_providers")
 }

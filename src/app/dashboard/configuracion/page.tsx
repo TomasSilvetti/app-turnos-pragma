@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PushNotificationToggle } from "@/components/profile/PushNotificationToggle";
 import { AttendanceToggle } from "@/components/profile/AttendanceToggle";
@@ -91,6 +92,25 @@ export default function ConfiguracionPage() {
 
           {/* Notificaciones push */}
           <PushNotificationToggle />
+
+          <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+
+          {/* Tutorial */}
+          <div className="flex flex-col gap-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-[#6b7280] dark:text-[#94a3b8]">
+              Tutorial
+            </span>
+            <Link
+              href="/dashboard/tutorial"
+              className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors duration-200"
+            >
+              <span className="flex items-center gap-2">
+                <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">school</span>
+                Ver tutorial de bienvenida
+              </span>
+              <span className="material-symbols-outlined text-[#6b7280] dark:text-[#94a3b8]" style={{ fontSize: "16px" }} translate="no">arrow_forward</span>
+            </Link>
+          </div>
 
           <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
 
