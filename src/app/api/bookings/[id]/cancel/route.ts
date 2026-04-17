@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { sendWhatsApp } from "@/lib/twilio";
 
 
 export async function PATCH(
@@ -18,7 +19,9 @@ export async function PATCH(
 
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { appointment: { select: { serviceProviderId: true } } },
+    include: {
+      appointment: { select: { serviceProviderId: true, date: true, time: true } },
+    },
   });
 
   if (!booking) {
@@ -42,6 +45,13 @@ export async function PATCH(
   ]);
 
   emitNewBooking();
+
+  if (booking.clientPhone) {
+    const message = `Hola ${booking.clientName}, lamentablemente debemos informarte que tu turno del ${booking.appointment.date} a las ${booking.appointment.time} hs ha sido cancelado. Disculpá los inconvenientes.`;
+    sendWhatsApp({ to: booking.clientPhone, body: message }).catch((err) =>
+      console.error("Error al enviar WhatsApp de cancelación:", err)
+    );
+  }
 
   return NextResponse.json({ id }, { status: 200 });
 }

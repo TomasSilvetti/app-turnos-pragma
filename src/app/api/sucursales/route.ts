@@ -50,13 +50,21 @@ export const POST = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "Los campos nombre y dirección son obligatorios" }, { status: 400 });
   }
 
-  const sucursal = await prisma.sucursal.create({
-    data: {
-      name: name.trim(),
-      address: address.trim(),
-      businessProfileId: businessProfile.id,
-    },
-    select: { id: true, name: true, address: true, businessProfileId: true, createdAt: true },
+  const [sucursal] = await prisma.$transaction(async (tx) => {
+    const created = await tx.sucursal.create({
+      data: {
+        name: name.trim(),
+        address: address.trim(),
+        businessProfileId: businessProfile.id,
+      },
+      select: { id: true, name: true, address: true, businessProfileId: true, createdAt: true },
+    });
+
+    await tx.empleadoSucursal.create({
+      data: { serviceProviderId: req.auth!.user!.id, sucursalId: created.id },
+    });
+
+    return [created];
   });
 
   return NextResponse.json(sucursal, { status: 201 });
