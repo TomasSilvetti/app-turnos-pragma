@@ -33,6 +33,7 @@ function mapApiConfig(c: {
 export default function HorariosPage() {
   const [configs, setConfigs] = useState<ConfigWithServiceTypes[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [modoTurno, setModoTurno] = useState<"FIJO" | "POR_TIPO">("FIJO");
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<(ScheduleConfig & { serviceTypeIds?: string[] }) | undefined>();
@@ -41,9 +42,10 @@ export default function HorariosPage() {
 
   useEffect(() => {
     async function load() {
-      const [configsRes, serviceTypesRes] = await Promise.all([
+      const [configsRes, serviceTypesRes, modoTurnoRes] = await Promise.all([
         fetch("/api/schedule-configs"),
         fetch("/api/service-types"),
+        fetch("/api/service-providers/me/modo-turno"),
       ]);
 
       if (configsRes.ok) {
@@ -54,6 +56,11 @@ export default function HorariosPage() {
       if (serviceTypesRes.ok) {
         const data: { id: string; title: string }[] = await serviceTypesRes.json();
         setServiceTypes(data.map((t) => ({ id: t.id, titulo: t.title })));
+      }
+
+      if (modoTurnoRes.ok) {
+        const data = await modoTurnoRes.json();
+        if (data?.modoTurno) setModoTurno(data.modoTurno);
       }
 
       setLoading(false);
@@ -177,6 +184,7 @@ export default function HorariosPage() {
         onSubmit={handleSubmit}
         initialData={editingConfig}
         serviceTypes={serviceTypes}
+        modoTurno={modoTurno}
         error={modalError}
       />
     </div>
