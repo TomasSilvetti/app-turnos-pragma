@@ -19,6 +19,7 @@ export async function GET() {
       id: true,
       clientName: true,
       clientPhone: true,
+      cliente: { select: { telefono: true } },
       appointment: {
         select: {
           date: true,
@@ -32,7 +33,7 @@ export async function GET() {
   const result = bookings.map((b) => ({
     bookingId: b.id,
     clientName: b.clientName,
-    clientPhone: b.clientPhone,
+    clientPhone: b.cliente?.telefono ?? b.clientPhone,
     appointmentType: b.appointment.serviceType?.title ?? "",
     appointmentDate: b.appointment.date,
     appointmentTime: b.appointment.time,
