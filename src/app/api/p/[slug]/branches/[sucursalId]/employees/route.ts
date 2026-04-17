@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
 
 export async function GET(
   _request: Request,
@@ -17,6 +16,8 @@ export async function GET(
   if (!profile) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
+
+  console.log("[employees] slug:", slug, "sucursalId:", sucursalId, "profile.id:", profile.id);
 
   const sucursal = await prisma.sucursal.findFirst({
     where: { id: sucursalId, businessProfileId: profile.id },

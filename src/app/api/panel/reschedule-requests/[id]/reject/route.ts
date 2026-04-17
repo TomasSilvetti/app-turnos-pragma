@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
-const prisma = new PrismaClient();
 
 async function resolveProviderIds(serviceProviderId: string): Promise<string[]> {
   let businessProfileId: string | null = null;

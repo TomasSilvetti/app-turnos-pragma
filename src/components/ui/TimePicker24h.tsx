@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+type Gap = { from: string; to: string };
+
 interface TimePicker24hProps {
   id?: string;
   value: string; // "HH:MM"
@@ -11,6 +13,7 @@ interface TimePicker24hProps {
   dropdownAlign?: "left" | "right";
   minTime?: string; // "HH:MM" — hora mínima seleccionable (inclusive)
   maxTime?: string; // "HH:MM" — hora máxima seleccionable (inclusive)
+  gaps?: Gap[]; // franjas horarias no disponibles
 }
 
 const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
@@ -21,7 +24,13 @@ function timeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
-export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "left", minTime, maxTime }: TimePicker24hProps) {
+function isInGap(time: string, gaps?: Gap[]): boolean {
+  if (!gaps || gaps.length === 0) return false;
+  const t = timeToMinutes(time);
+  return gaps.some((gap) => t >= timeToMinutes(gap.from) && t < timeToMinutes(gap.to));
+}
+
+export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "left", minTime, maxTime, gaps }: TimePicker24hProps) {
   const minTotalMin = minTime ? timeToMinutes(minTime) : 0;
   const maxTotalMin = maxTime ? timeToMinutes(maxTime) : 23 * 60 + 59;
 
@@ -41,6 +50,18 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
     const candidateMin = selHourNum * 60 + parseInt(m);
     return candidateMin >= minTotalMin && candidateMin <= maxTotalMin;
   });
+
+  // Una hora está completamente en gap si todos sus minutos válidos caen en algún gap
+  function isHourFullyInGap(h: string): boolean {
+    if (!gaps || gaps.length === 0) return false;
+    const hNum = parseInt(h);
+    const minutesForHour = ALL_MINUTES.filter((m) => {
+      const t = hNum * 60 + parseInt(m);
+      return t >= minTotalMin && t <= maxTotalMin;
+    });
+    if (minutesForHour.length === 0) return false;
+    return minutesForHour.every((m) => isInGap(`${h}:${m}`, gaps));
+  }
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hourRef = useRef<HTMLDivElement>(null);
@@ -147,23 +168,30 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                 role="listbox"
                 aria-label="Horas"
               >
-                {HOURS.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    role="option"
-                    aria-selected={h === selectedHour}
-                    onClick={() => selectHour(h)}
-                    className={cn(
-                      "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
-                      h === selectedHour
-                        ? "bg-[var(--brand-color)] text-white font-semibold"
-                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
-                    )}
-                  >
-                    {h}
-                  </button>
-                ))}
+                {HOURS.map((h) => {
+                  const fullyInGap = isHourFullyInGap(h);
+                  return (
+                    <button
+                      key={h}
+                      type="button"
+                      role="option"
+                      aria-selected={h === selectedHour}
+                      aria-disabled={fullyInGap}
+                      disabled={fullyInGap}
+                      onClick={() => !fullyInGap && selectHour(h)}
+                      className={cn(
+                        "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
+                        fullyInGap
+                          ? "text-[#2A2829]/20 dark:text-[#e2e8f0]/15 cursor-not-allowed line-through"
+                          : h === selectedHour
+                            ? "bg-[var(--brand-color)] text-white font-semibold"
+                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                      )}
+                    >
+                      {h}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -179,26 +207,35 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                 role="listbox"
                 aria-label="Minutos"
               >
-                {MINUTES.map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    role="option"
-                    aria-selected={m === selectedMinute}
-                    onClick={() => {
-                      selectMinute(m);
-                      setOpen(false);
-                    }}
-                    className={cn(
-                      "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
-                      m === selectedMinute
-                        ? "bg-[var(--brand-color)] text-white font-semibold"
-                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
-                    )}
-                  >
-                    {m}
-                  </button>
-                ))}
+                {MINUTES.map((m) => {
+                  const timeStr = `${selectedHour || "00"}:${m}`;
+                  const inGap = isInGap(timeStr, gaps);
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      role="option"
+                      aria-selected={m === selectedMinute}
+                      aria-disabled={inGap}
+                      disabled={inGap}
+                      onClick={() => {
+                        if (inGap) return;
+                        selectMinute(m);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "flex h-9 w-full items-center justify-center font-mono text-sm transition-colors",
+                        inGap
+                          ? "text-[#2A2829]/20 dark:text-[#e2e8f0]/15 cursor-not-allowed line-through"
+                          : m === selectedMinute
+                            ? "bg-[var(--brand-color)] text-white font-semibold"
+                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                      )}
+                    >
+                      {m}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

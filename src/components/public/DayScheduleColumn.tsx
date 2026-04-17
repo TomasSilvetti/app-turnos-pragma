@@ -16,9 +16,12 @@ export type ClientOwnAppointment = {
   onClick: () => void;
 };
 
+type Gap = { from: string; to: string };
+
 type Props = {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
+  gaps?: Gap[];
   appointments: ScheduledAppointment[];
   previewAppointment?: PreviewAppointment | null;
   clientAppointment?: ClientOwnAppointment | null;
@@ -39,6 +42,7 @@ function minutesToLabel(totalMinutes: number): string {
 export default function DayScheduleColumn({
   startTime,
   endTime,
+  gaps,
   appointments,
   previewAppointment,
   clientAppointment,
@@ -72,7 +76,7 @@ export default function DayScheduleColumn({
       </h2>
 
       {/* Columna temporal */}
-      <div className="relative w-full" style={{ height: `${totalMin * 1.2}px` }}>
+      <div className="relative w-full" style={{ height: `${totalMin * 0.5}px` }}>
         {/* Filas horarias */}
         {hourRows.map((min) => {
           const offsetPct = ((min - startMin) / totalMin) * 100;
@@ -94,6 +98,32 @@ export default function DayScheduleColumn({
                     : "border-dashed border-gray-200 dark:border-[#2d3548]"
                 }`}
               />
+            </div>
+          );
+        })}
+
+        {/* Bloques de franjas no disponibles (huecos entre configs) */}
+        {gaps?.map((gap) => {
+          const gapStartMin = timeToMinutes(gap.from);
+          const gapEndMin = timeToMinutes(gap.to);
+          const topPct = ((gapStartMin - startMin) / totalMin) * 100;
+          const heightPct = ((gapEndMin - gapStartMin) / totalMin) * 100;
+          return (
+            <div
+              key={`gap-${gap.from}`}
+              className="absolute left-12 right-0 rounded-md flex items-center justify-center overflow-hidden"
+              style={{
+                top: `${topPct}%`,
+                height: `${heightPct}%`,
+                backgroundColor: "color-mix(in srgb, #94a3b8 12%, transparent)",
+                borderLeft: "3px solid #94a3b8",
+              }}
+              role="img"
+              aria-label={`No disponible de ${gap.from} a ${gap.to}`}
+            >
+              <span className="font-small text-[10px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                No disponible
+              </span>
             </div>
           );
         })}

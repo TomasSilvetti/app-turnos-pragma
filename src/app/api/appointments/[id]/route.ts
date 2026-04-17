@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import type { NextAuthRequest } from "next-auth";
 
-const prisma = new PrismaClient();
 
 async function getAppointmentForProvider(id: string) {
   return prisma.appointment.findUnique({

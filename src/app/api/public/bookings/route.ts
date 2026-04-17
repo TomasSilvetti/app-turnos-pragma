@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { sendPushToServiceProvider } from "@/lib/push-notifications";
 import { sendWhatsApp } from "@/lib/twilio";
 import { emitNewBooking } from "@/lib/booking-emitter";
 
-const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);

@@ -1,10 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { verifyClientToken } from "@/lib/cliente-auth";
 import LoginPageClient from "@/components/public/LoginPageClient";
 
-const prisma = new PrismaClient();
 
 const DEFAULT_BRAND_COLOR = "#253551";
 

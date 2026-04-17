@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { z } from "zod";
 
-const prisma = new PrismaClient();
 
 const createExpenseSchema = z.object({
   descripcion: z.string().trim().min(1, "La descripción es requerida"),

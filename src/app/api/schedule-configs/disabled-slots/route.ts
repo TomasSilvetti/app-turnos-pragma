@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import type { NextAuthRequest } from "next-auth";
 
-const prisma = new PrismaClient();
 
 // GET /api/schedule-configs/disabled-slots?configId=xxx&date=YYYY-MM-DD
 export const GET = auth(async (request: NextAuthRequest) => {

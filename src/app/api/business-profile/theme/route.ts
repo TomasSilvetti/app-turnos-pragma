@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 
-const prisma = new PrismaClient();
 
 const VALID_THEMES = ["light", "dark"] as const;
 type Theme = (typeof VALID_THEMES)[number];

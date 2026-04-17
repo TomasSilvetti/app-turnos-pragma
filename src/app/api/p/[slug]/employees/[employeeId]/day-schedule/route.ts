@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
-const prisma = new PrismaClient();
 
 // GET /api/p/[slug]/employees/[employeeId]/day-schedule?date=YYYY-MM-DD
 export async function GET(
@@ -49,8 +48,8 @@ export async function GET(
   const [year, month, day] = date.split("-").map(Number);
   const dayOfWeek = (new Date(year, month - 1, day).getDay() + 6) % 7;
 
-  // Buscar ScheduleConfig activa para ese empleado y día
-  const scheduleConfig = await prisma.scheduleConfig.findFirst({
+  // Buscar todas las ScheduleConfigs activas para ese empleado y día
+  const scheduleConfigs = await prisma.scheduleConfig.findMany({
     where: {
       businessProfileId: profile.id,
       serviceProviderId: employeeId,
@@ -64,13 +63,33 @@ export async function GET(
         select: { id: true, title: true, duracion: true, description: true, price: true },
       },
     },
+    orderBy: { startTime: "asc" },
   });
 
-  if (!scheduleConfig) {
+  if (scheduleConfigs.length === 0) {
     return NextResponse.json(
       { error: "No hay horario de atención configurado para este día" },
       { status: 404 }
     );
+  }
+
+  const startTime = scheduleConfigs[0].startTime;
+  const endTime = scheduleConfigs[scheduleConfigs.length - 1].endTime;
+
+  // Calcular huecos entre franjas consecutivas
+  const gaps: { from: string; to: string }[] = [];
+  for (let i = 0; i < scheduleConfigs.length - 1; i++) {
+    if (scheduleConfigs[i].endTime < scheduleConfigs[i + 1].startTime) {
+      gaps.push({ from: scheduleConfigs[i].endTime, to: scheduleConfigs[i + 1].startTime });
+    }
+  }
+
+  // Mergear serviceTypes (deduplicar por id)
+  const serviceTypesMap = new Map<string, typeof scheduleConfigs[0]["serviceTypes"][0]>();
+  for (const config of scheduleConfigs) {
+    for (const st of config.serviceTypes) {
+      serviceTypesMap.set(st.id, st);
+    }
   }
 
   // Turnos activos del empleado para esa fecha
@@ -90,14 +109,15 @@ export async function GET(
   });
 
   return NextResponse.json({
-    startTime: scheduleConfig.startTime,
-    endTime: scheduleConfig.endTime,
+    startTime,
+    endTime,
+    gaps,
     appointments: appointments.map((a) => ({
       id: a.id,
       time: a.time,
       duracion: a.serviceType?.duracion ?? 0,
     })),
-    serviceTypes: scheduleConfig.serviceTypes.map((st) => ({
+    serviceTypes: [...serviceTypesMap.values()].map((st) => ({
       id: st.id,
       title: st.title,
       duracion: st.duracion ?? 0,

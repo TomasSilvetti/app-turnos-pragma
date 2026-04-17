@@ -3,10 +3,9 @@ import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { verifyClientToken } from "@/lib/cliente-auth";
 
-const prisma = new PrismaClient();
 
 const DEFAULT_BRAND_COLOR = "#253551";
 

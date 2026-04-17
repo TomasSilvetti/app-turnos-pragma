@@ -18,9 +18,12 @@ export type ExistingAppointment = {
   duracion: number; // minutos
 };
 
+type Gap = { from: string; to: string };
+
 type Props = {
   startTime: string; // "HH:mm" — inicio del horario de atención
   endTime: string; // "HH:mm" — fin del horario de atención
+  gaps?: Gap[];
   serviceTypes: ServiceTypeOption[];
   appointments: ExistingAppointment[];
   paymentMethods: string[];
@@ -57,6 +60,15 @@ function hasOverlap(
   });
 }
 
+function overlapsGap(newStartMin: number, newEndMin: number, gaps?: Gap[]): boolean {
+  if (!gaps) return false;
+  return gaps.some((gap) => {
+    const gapStart = timeToMinutes(gap.from);
+    const gapEnd = timeToMinutes(gap.to);
+    return newStartMin < gapEnd && newEndMin > gapStart;
+  });
+}
+
 function formatPrice(price: number): string {
   if (price === 0) return "Gratuito";
   return `$${price.toLocaleString("es-AR")}`;
@@ -65,6 +77,7 @@ function formatPrice(price: number): string {
 export default function DayScheduleBookingForm({
   startTime,
   endTime,
+  gaps,
   serviceTypes,
   appointments,
   paymentMethods,
@@ -109,6 +122,10 @@ export default function DayScheduleBookingForm({
       };
     }
 
+    if (overlapsGap(newStartMin, newEndMin, gaps)) {
+      return { error: "El horario seleccionado cae en un período sin cobertura" };
+    }
+
     if (hasOverlap(newStartMin, newEndMin, appointments)) {
       return {
         error: "El horario seleccionado se superpone con un turno ya reservado",
@@ -117,7 +134,7 @@ export default function DayScheduleBookingForm({
     }
 
     return { endTime: minutesToLabel(newEndMin) };
-  }, [inputTime, selectedService, startTime, endTime, appointments]);
+  }, [inputTime, selectedService, startTime, endTime, gaps, appointments]);
 
   const needsPaymentMethod = paymentMethods.length > 0;
   const canConfirm =
@@ -163,6 +180,7 @@ export default function DayScheduleBookingForm({
           hasError={!!validation?.error}
           minTime={startTime}
           maxTime={endTime}
+          gaps={gaps}
         />
       </div>
 

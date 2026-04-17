@@ -65,6 +65,7 @@ type Employee = {
 type DayScheduleData = {
   startTime: string;
   endTime: string;
+  gaps?: { from: string; to: string }[];
   appointments: ScheduledAppointment[];
   serviceTypes: ServiceTypeOption[]; // ServiceTypeOption ya incluye description y price
 };
@@ -655,9 +656,20 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                 </div>
               ) : daySchedule ? (
                 <>
+                  <DayScheduleBookingForm
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    gaps={daySchedule.gaps}
+                    serviceTypes={daySchedule.serviceTypes}
+                    appointments={daySchedule.appointments}
+                    paymentMethods={paymentMethods}
+                    onConfirm={handlePorTipoConfirm}
+                    onPreviewChange={setPorTipoPreview}
+                  />
                   <DayScheduleColumn
                     startTime={daySchedule.startTime}
                     endTime={daySchedule.endTime}
+                    gaps={daySchedule.gaps}
                     appointments={daySchedule.appointments}
                     previewAppointment={porTipoPreview}
                     clientAppointment={(() => {
@@ -675,15 +687,6 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                         onClick: () => setClientBookingOptionsTarget(clientBooking),
                       };
                     })()}
-                  />
-                  <DayScheduleBookingForm
-                    startTime={daySchedule.startTime}
-                    endTime={daySchedule.endTime}
-                    serviceTypes={daySchedule.serviceTypes}
-                    appointments={daySchedule.appointments}
-                    paymentMethods={paymentMethods}
-                    onConfirm={handlePorTipoConfirm}
-                    onPreviewChange={setPorTipoPreview}
                   />
                   {porTipoBookingError && (
                     <p role="alert" className="font-body text-sm text-red-500 dark:text-red-400 px-1">

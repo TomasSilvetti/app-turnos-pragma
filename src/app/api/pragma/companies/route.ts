@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 import { verifySessionToken, PRAGMA_COOKIE } from "@/lib/pragma-auth";
 
-const prisma = new PrismaClient();
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(PRAGMA_COOKIE)?.value;
