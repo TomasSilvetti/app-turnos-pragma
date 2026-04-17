@@ -117,24 +117,29 @@ export async function POST(
   const [year, month, day] = date.split("-").map(Number);
   const dayOfWeek = new Date(year, month - 1, day).getDay();
 
-  const scheduleConfig = await prisma.scheduleConfig.findFirst({
+  const scheduleConfigs = await prisma.scheduleConfig.findMany({
     where: {
       serviceProviderId: profile.serviceProviderId,
       isActive: true,
       daysOfWeek: { has: dayOfWeek },
     },
-    select: { endTime: true },
+    select: { startTime: true, endTime: true },
   });
 
-  if (!scheduleConfig) {
+  if (scheduleConfigs.length === 0) {
     return NextResponse.json(
       { error: "No hay horario de atención configurado para este día" },
       { status: 404 }
     );
   }
 
-  const scheduleEndMin = timeToMinutes(scheduleConfig.endTime);
-  if (endMin > scheduleEndMin) {
+  const fitsInAnyConfig = scheduleConfigs.some((config) => {
+    const configStartMin = timeToMinutes(config.startTime);
+    const configEndMin = timeToMinutes(config.endTime);
+    return startMin >= configStartMin && endMin <= configEndMin;
+  });
+
+  if (!fitsInAnyConfig) {
     return NextResponse.json(
       { error: "El turno finaliza fuera del horario de atención" },
       { status: 409 }
