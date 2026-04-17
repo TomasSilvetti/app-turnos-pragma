@@ -218,15 +218,40 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     fetchSlots();
   }, [fetchSlots]);
 
-  // Ref para acceder siempre al fetchSlots más reciente sin recrear el EventSource
+  // Refs para acceder siempre a las funciones más recientes sin recrear el EventSource
   const fetchSlotsRef = useRef(fetchSlots);
   useEffect(() => { fetchSlotsRef.current = fetchSlots; }, [fetchSlots]);
+
+  const fetchClientBookingsRef = useRef(fetchClientBookings);
+  useEffect(() => { fetchClientBookingsRef.current = fetchClientBookings; }, [fetchClientBookings]);
+
+  // Refs para el estado POR_TIPO que se necesita dentro del handler SSE
+  const isPorTipoRef = useRef(isPorTipo);
+  useEffect(() => { isPorTipoRef.current = isPorTipo; }, [isPorTipo]);
+
+  const selectedEmployeeIdRef = useRef(selectedEmployeeId);
+  useEffect(() => { selectedEmployeeIdRef.current = selectedEmployeeId; }, [selectedEmployeeId]);
+
+  const selectedDateRef = useRef(selectedDate);
+  useEffect(() => { selectedDateRef.current = selectedDate; }, [selectedDate]);
 
   // Escuchar cambios de disponibilidad en tiempo real via SSE
   // Solo depende de slug: la conexión permanece estable sin importar cambios de estado
   useEffect(() => {
     const es = new EventSource(`/api/p/${slug}/stream`);
-    es.onmessage = () => fetchSlotsRef.current();
+    es.onmessage = () => {
+      fetchSlotsRef.current();
+      fetchClientBookingsRef.current();
+      // Para empleados POR_TIPO, refrescar también el day-schedule del día seleccionado
+      if (isPorTipoRef.current && selectedEmployeeIdRef.current && selectedDateRef.current) {
+        fetch(
+          `/api/p/${slug}/employees/${selectedEmployeeIdRef.current}/day-schedule?date=${selectedDateRef.current}`
+        )
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: DayScheduleData | null) => setDaySchedule(d))
+          .catch(() => {});
+      }
+    };
     es.onerror = () => es.close();
     return () => es.close();
   }, [slug]);

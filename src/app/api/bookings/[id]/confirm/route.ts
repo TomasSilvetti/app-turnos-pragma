@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { emitNewBooking } from "@/lib/booking-emitter";
 
 const prisma = new PrismaClient();
 
@@ -47,6 +48,8 @@ export async function PATCH(
       updatedAt: true,
     },
   });
+
+  emitNewBooking();
 
   return NextResponse.json(updated, { status: 200 });
 }

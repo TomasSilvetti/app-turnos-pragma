@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { getClientSession } from "@/lib/cliente-auth";
+import { emitNewBooking } from "@/lib/booking-emitter";
 
 const prisma = new PrismaClient();
 
@@ -61,6 +62,8 @@ export async function DELETE(
     where: { id: bookingId },
     data: { status: "cancelled" },
   });
+
+  emitNewBooking();
 
   return NextResponse.json({ success: true }, { status: 200 });
 }

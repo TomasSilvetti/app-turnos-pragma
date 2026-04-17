@@ -8,23 +8,40 @@ export async function GET() {
   }
 
   const encoder = new TextEncoder();
+  let closed = false;
+
   const stream = new ReadableStream({
     start(controller) {
       // Enviar comentario inicial para mantener la conexión viva
       controller.enqueue(encoder.encode(": connected\n\n"));
 
       const unsubscribe = subscribeToNewBookings(() => {
-        controller.enqueue(encoder.encode("data: new-booking\n\n"));
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode("data: new-booking\n\n"));
+        } catch {
+          // El controller se cerró entre la verificación y el enqueue
+        }
       });
 
       // Cleanup cuando el cliente desconecta
       const cleanup = () => {
+        if (closed) return;
+        closed = true;
         unsubscribe();
-        controller.close();
+        try {
+          controller.close();
+        } catch {
+          // Ya estaba cerrado
+        }
       };
 
       // Keep-alive cada 25 segundos para evitar timeouts de proxies
       const keepAlive = setInterval(() => {
+        if (closed) {
+          clearInterval(keepAlive);
+          return;
+        }
         try {
           controller.enqueue(encoder.encode(": keep-alive\n\n"));
         } catch {
@@ -39,6 +56,7 @@ export async function GET() {
       };
     },
     cancel(controller) {
+      closed = true;
       const ctrl = controller as unknown as { _cleanup?: () => void };
       ctrl._cleanup?.();
     },

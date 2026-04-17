@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/../auth";
+import { emitNewBooking } from "@/lib/booking-emitter";
 
 const prisma = new PrismaClient();
 
@@ -40,6 +41,8 @@ export async function PATCH(
       status: "requires_reschedule",
     },
   });
+
+  emitNewBooking();
 
   return NextResponse.json({ id }, { status: 200 });
 }
