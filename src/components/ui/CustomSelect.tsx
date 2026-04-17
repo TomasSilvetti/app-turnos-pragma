@@ -27,6 +27,7 @@ export function CustomSelect({
   className,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   const selected = options.find((o) => o.value === value);
@@ -56,7 +57,14 @@ export function CustomSelect({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (!open && ref.current) {
+            const rect = ref.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            setOpenUpward(spaceBelow < 220);
+          }
+          setOpen((v) => !v);
+        }}
         className={cn(
           "w-full flex items-center justify-between px-3 py-2 rounded-xl border text-sm transition-colors",
           "bg-white dark:bg-[#1e293b]",
@@ -90,7 +98,9 @@ export function CustomSelect({
         <ul
           role="listbox"
           className={cn(
-            "absolute z-50 mt-1.5 w-full rounded-xl border shadow-lg overflow-hidden py-1",
+            "absolute z-50 w-full rounded-xl border shadow-lg overflow-y-auto py-1",
+            "max-h-52",
+            openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5",
             "bg-white dark:bg-[#1e293b]",
             "border-[#E0E0DB] dark:border-[#2d3548]"
           )}
