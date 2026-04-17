@@ -8,7 +8,7 @@ import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
 import ClientBookingOptionsModal from "./ClientBookingOptionsModal";
 import ClientRescheduleModal from "./ClientRescheduleModal";
-import DayScheduleColumn, { type ScheduledAppointment } from "./DayScheduleColumn";
+import DayScheduleColumn, { type ScheduledAppointment, type PreviewAppointment } from "./DayScheduleColumn";
 import DayScheduleBookingForm, { type ServiceTypeOption } from "./DayScheduleBookingForm";
 
 type Slot = {
@@ -131,6 +131,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [isLoadingDaySchedule, setIsLoadingDaySchedule] = useState(false);
   const [porTipoBookingError, setPorTipoBookingError] = useState<string | null>(null);
   const [porTipoBookingLoading, setPorTipoBookingLoading] = useState(false);
+  const [porTipoPreview, setPorTipoPreview] = useState<PreviewAppointment | null>(null);
   const [porTipoDaysOfWeek, setPorTipoDaysOfWeek] = useState<number[] | null>(null);
 
   const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
@@ -245,6 +246,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     setDaySchedule(null);
     setPorTipoBookingError(null);
     setPorTipoDaysOfWeek(null);
+    setPorTipoPreview(null);
   }, []);
 
   const availableDates = [...new Set(slots.map((s) => s.date))];
@@ -629,6 +631,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                     startTime={daySchedule.startTime}
                     endTime={daySchedule.endTime}
                     appointments={daySchedule.appointments}
+                    previewAppointment={porTipoPreview}
                   />
                   <DayScheduleBookingForm
                     startTime={daySchedule.startTime}
@@ -637,6 +640,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                     appointments={daySchedule.appointments}
                     paymentMethods={paymentMethods}
                     onConfirm={handlePorTipoConfirm}
+                    onPreviewChange={setPorTipoPreview}
                   />
                   {porTipoBookingError && (
                     <p role="alert" className="font-body text-sm text-red-500 dark:text-red-400 px-1">

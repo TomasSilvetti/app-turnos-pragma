@@ -5,10 +5,16 @@ export type ScheduledAppointment = {
   duracion: number; // duración en minutos
 };
 
+export type PreviewAppointment = {
+  time: string; // "HH:mm"
+  duracion: number; // duración en minutos
+};
+
 type Props = {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
   appointments: ScheduledAppointment[];
+  previewAppointment?: PreviewAppointment | null;
 };
 
 function timeToMinutes(time: string): number {
@@ -26,6 +32,7 @@ export default function DayScheduleColumn({
   startTime,
   endTime,
   appointments,
+  previewAppointment,
 }: Props) {
   const startMin = timeToMinutes(startTime);
   const endMin = timeToMinutes(endTime);
@@ -73,6 +80,35 @@ export default function DayScheduleColumn({
             </div>
           );
         })}
+
+        {/* Bloque preview: turno que se está por sacar */}
+        {previewAppointment && (() => {
+          const prevStartMin = timeToMinutes(previewAppointment.time);
+          const prevEndMin = prevStartMin + previewAppointment.duracion;
+          const topPct = ((prevStartMin - startMin) / totalMin) * 100;
+          const heightPct = (previewAppointment.duracion / totalMin) * 100;
+          const endLabel = minutesToLabel(prevEndMin);
+          return (
+            <div
+              className="absolute left-12 right-0 rounded-md flex flex-col justify-center px-3 py-1 overflow-hidden"
+              style={{
+                top: `${topPct}%`,
+                height: `${heightPct}%`,
+                backgroundColor: "color-mix(in srgb, #22c55e 18%, transparent)",
+                borderLeft: "3px solid #22c55e",
+              }}
+              role="img"
+              aria-label={`Tu turno de ${previewAppointment.time} a ${endLabel}`}
+            >
+              <span className="font-small text-[11px] font-semibold leading-tight text-emerald-600 dark:text-emerald-400 truncate">
+                {previewAppointment.time} – {endLabel}
+              </span>
+              <span className="font-small text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400 opacity-70 truncate uppercase tracking-wide">
+                Tu turno
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Bloques de turnos reservados */}
         {appointments.map((appt, idx) => {

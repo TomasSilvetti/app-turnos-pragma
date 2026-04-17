@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CustomSelect } from "@/components/ui/CustomSelect";
 import { Button } from "@/components/ui/button";
 import { TimePicker24h } from "@/components/ui/TimePicker24h";
@@ -30,6 +30,7 @@ type Props = {
     serviceTypeId: string,
     paymentMethod: string | null
   ) => void;
+  onPreviewChange?: (preview: { time: string; duracion: number } | null) => void;
 };
 
 function timeToMinutes(time: string): number {
@@ -67,12 +68,21 @@ export default function DayScheduleBookingForm({
   appointments,
   paymentMethods,
   onConfirm,
+  onPreviewChange,
 }: Props) {
   const [inputTime, setInputTime] = useState("");
   const [serviceTypeId, setServiceTypeId] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
 
   const selectedService = serviceTypes.find((s) => s.id === serviceTypeId);
+
+  useEffect(() => {
+    const preview =
+      inputTime && /^\d{2}:\d{2}$/.test(inputTime) && selectedService
+        ? { time: inputTime, duracion: selectedService.duracion }
+        : null;
+    onPreviewChange?.(preview);
+  }, [inputTime, selectedService, onPreviewChange]);
 
   const validation = useMemo(() => {
     if (!inputTime || !selectedService) return null;
