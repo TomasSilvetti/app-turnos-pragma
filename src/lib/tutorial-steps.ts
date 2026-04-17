@@ -38,17 +38,6 @@ export const stepsPropietario: TutorialStep[] = [
       'Hacé clic en "Nueva sucursal", ingresá el nombre y la dirección, y guardá. Podés agregar más sucursales después.',
   },
   {
-    title: "Tipos de turno",
-    description:
-      "Definí los servicios que ofrecés: título, descripción y precio. Cada tipo de turno puede asociarse a una configuración de horarios.",
-    icon: "label",
-    moduleHref: "/dashboard/tipos-de-turno",
-    moduleLabel: "Ir a tipos de turno",
-    tooltipTitle: "Creá tu primer tipo de turno",
-    tooltipDescription:
-      'Hacé clic en "Nuevo tipo de turno", completá el título, la descripción y el precio, y guardá.',
-  },
-  {
     title: "Horarios y configuración de turnos",
     description:
       "Configurá tu disponibilidad semanal: qué días atendés, en qué horarios y con qué intervalo entre turnos.",
@@ -57,7 +46,7 @@ export const stepsPropietario: TutorialStep[] = [
     moduleLabel: "Ir a configuración de turnos",
     tooltipTitle: "Configurá tus horarios de atención",
     tooltipDescription:
-      "Creá una configuración indicando los días de la semana, el rango horario y el intervalo entre turnos. Podés asociarla a tipos de turno específicos.",
+      "Creá una configuración con los días y horarios en que atendés. Con el toggle podés elegir entre duración fija (todos los turnos duran lo mismo) o duración por tipo de turno (cada servicio define su propia duración).",
   },
   {
     title: "Reprogramaciones",
@@ -112,7 +101,7 @@ export const stepsPropietario: TutorialStep[] = [
     moduleLabel: "Ir a finanzas",
     tooltipTitle: "Explorá el módulo de finanzas",
     tooltipDescription:
-      "Acá podés ver los ingresos por turnos, registrar egresos y consultar el balance neto por período.",
+      "Acá podés ver los ingresos por turnos, registrar egresos y consultar el balance neto por período. Intenta cargar un egreso de prueba.",
   },
   {
     title: "Clientes",
@@ -141,26 +130,15 @@ export const stepsEmpleado: TutorialStep[] = [
     icon: "waving_hand",
   },
   {
-    title: "Tipos de turno",
-    description:
-      "Acá podés ver los servicios que ofrece el negocio. Cada tipo de turno tiene título, descripción y precio definidos por el propietario.",
-    icon: "label",
-    moduleHref: "/dashboard/tipos-de-turno",
-    moduleLabel: "Ir a tipos de turno",
-    tooltipTitle: "Conocé los servicios del negocio",
-    tooltipDescription:
-      "Este listado muestra los servicios que ofrece el negocio y que están configurados por los distintos integrantes de la empresa. intenta agregar un nuevo tipo de turno.",
-  },
-  {
     title: "Configuración de turnos",
     description:
-      "Consultá la disponibilidad semanal configurada: días, horarios e intervalos.",
+      "Configurá tu disponibilidad semanal: días, horarios e intervalos. Podés elegir entre duración fija para todos tus turnos o definir una duración distinta según el tipo de turno.",
     icon: "calendar_month",
     moduleHref: "/dashboard/configuracion-turnos",
     moduleLabel: "Ir a configuración de turnos",
-    tooltipTitle: "Revisá la disponibilidad semanal",
+    tooltipTitle: "Configurá tus horarios de atención",
     tooltipDescription:
-      "Acá podés configurar tu disponibilidad semanal. Intenta crear una nueva configuracion.",
+      "Creá una configuración con los días y horarios en que atendés. Con el toggle podés elegir entre duración fija (todos los turnos duran lo mismo) o duración por tipo de turno (cada servicio define su propia duración).",
   },
   {
     title: "Turnos del día",
