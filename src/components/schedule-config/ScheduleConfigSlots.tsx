@@ -98,7 +98,9 @@ export function ScheduleConfigSlots({
   const dayCode = DAY_CODE_BY_JS[getDay(selectedDay)];
   const activeConfig = configs.find((c) => c.isActive && c.daysOfWeek.includes(dayCode));
 
-  const slots = activeConfig
+  const isPorTipo = activeConfig ? activeConfig.intervalMinutes === 0 : false;
+
+  const slots = activeConfig && !isPorTipo
     ? generateSlots(activeConfig.startTime, activeConfig.endTime, activeConfig.intervalMinutes)
     : [];
 
@@ -148,10 +150,26 @@ export function ScheduleConfigSlots({
               <div key={i} className="h-12 rounded-lg bg-gray-100 dark:bg-[#2d3548] animate-pulse" aria-hidden="true" />
             ))}
           </div>
-        ) : slots.length === 0 ? (
+        ) : !activeConfig ? (
           <p className="text-sm text-gray-400 dark:text-slate-500 text-center py-4">
             No hay turnos disponibles para este día.
           </p>
+        ) : isPorTipo ? (
+          <div aria-label={`Horario del día ${dayLabel}`}>
+            <p className="text-xs text-gray-400 dark:text-slate-500 mb-3">
+              Horario: {activeConfig.startTime} – {activeConfig.endTime} · duración según tipo de turno
+            </p>
+            <div className="relative">
+              {generateSlots(activeConfig.startTime, activeConfig.endTime, 60).map((time) => (
+                <div key={time} className="flex items-center gap-3 h-14">
+                  <span className="text-xs text-gray-400 dark:text-slate-500 w-10 shrink-0 font-heading">
+                    {time}
+                  </span>
+                  <div className="flex-1 border-t border-gray-100 dark:border-[#2d3548]" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <ul className={cn("grid grid-cols-2 gap-2")} aria-label={`Turnos disponibles para ${dayLabel}`}>
             {slots.map((time) => {

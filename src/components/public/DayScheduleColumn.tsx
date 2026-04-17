@@ -192,11 +192,6 @@ export default function DayScheduleColumn({
         })()}
       </div>
 
-      {appointments.length === 0 && (
-        <p className="font-body text-sm text-gray-400 dark:text-[#64748b] text-center mt-2">
-          Sin turnos reservados en este día
-        </p>
-      )}
     </div>
   );
 }
