@@ -22,11 +22,10 @@ export async function GET(
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  console.log("[employees] slug:", slug, "sucursalId:", sucursalId, "profile.id:", profile.id);
-
-  const sucursal = await prisma.sucursal.findFirst({
-    where: { id: sucursalId, businessProfileId: profile.id },
+  const sucursal = await prisma.sucursal.findUnique({
+    where: { id: sucursalId },
     select: {
+      businessProfileId: true,
       empleados: {
         select: {
           serviceProvider: { select: { id: true, name: true, modoTurno: true } },
@@ -35,7 +34,7 @@ export async function GET(
     },
   });
 
-  if (!sucursal) {
+  if (!sucursal || sucursal.businessProfileId !== profile.id) {
     return NextResponse.json({ error: "Sucursal no encontrada" }, { status: 404 });
   }
 
