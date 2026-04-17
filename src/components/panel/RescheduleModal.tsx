@@ -414,6 +414,16 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                 </div>
               ) : daySchedule ? (
                 <>
+                  <DayScheduleBookingForm
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    serviceTypes={daySchedule.serviceTypes}
+                    appointments={daySchedule.appointments}
+                    paymentMethods={paymentMethods}
+                    onConfirm={handleConfirmPorTipo}
+                    onPreviewChange={setPreview}
+                    confirmLabel="Reprogramar"
+                  />
                   <DayScheduleColumn
                     startTime={daySchedule.startTime}
                     endTime={daySchedule.endTime}
@@ -434,16 +444,6 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                           }
                         : null
                     }
-                  />
-                  <DayScheduleBookingForm
-                    startTime={daySchedule.startTime}
-                    endTime={daySchedule.endTime}
-                    serviceTypes={daySchedule.serviceTypes}
-                    appointments={daySchedule.appointments}
-                    paymentMethods={paymentMethods}
-                    onConfirm={handleConfirmPorTipo}
-                    onPreviewChange={setPreview}
-                    confirmLabel="Reprogramar"
                   />
                 </>
               ) : (

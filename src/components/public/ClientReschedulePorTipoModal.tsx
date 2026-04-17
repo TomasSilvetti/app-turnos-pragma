@@ -229,12 +229,6 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
                 </div>
               ) : daySchedule ? (
                 <>
-                  <DayScheduleColumn
-                    startTime={daySchedule.startTime}
-                    endTime={daySchedule.endTime}
-                    appointments={daySchedule.appointments}
-                    previewAppointment={preview}
-                  />
                   <DayScheduleBookingForm
                     startTime={daySchedule.startTime}
                     endTime={daySchedule.endTime}
@@ -244,6 +238,12 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
                     onConfirm={(startTime) => handleConfirm(startTime)}
                     onPreviewChange={setPreview}
                     confirmLabel="Solicitar reprogramación"
+                  />
+                  <DayScheduleColumn
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    appointments={daySchedule.appointments}
+                    previewAppointment={preview}
                   />
                 </>
               ) : (
