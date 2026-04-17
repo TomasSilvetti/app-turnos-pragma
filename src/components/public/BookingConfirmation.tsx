@@ -185,12 +185,27 @@ export default function BookingConfirmation({
         </div>
       )}
 
-      {/* WhatsApp */}
-      {phone && (
-        <div className="w-full flex flex-col items-center gap-2">
-          <p className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b]">
-            Enviá el comprobante a este WhatsApp
+      {/* Efectivo: explicación sin botón WhatsApp */}
+      {paymentMethod === "cash" && (
+        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-3">
+          <p className="font-body text-xs text-[#2A2829]/60 dark:text-[#64748b] text-center">
+            Abonás en efectivo al momento del turno.
           </p>
+        </div>
+      )}
+
+      {/* Transferencia: explicación + CBU/alias + WhatsApp */}
+      {paymentMethod === "transfer" && (
+        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-3">
+          <p className="font-body text-xs text-[#2A2829]/60 dark:text-[#64748b] text-center">
+            Realizá la transferencia y enviá el comprobante por WhatsApp.
+          </p>
+        </div>
+      )}
+
+      {/* WhatsApp (solo para transferencia) */}
+      {paymentMethod === "transfer" && phone && (
+        <div className="w-full flex flex-col items-center gap-2">
           <a
             href={`https://wa.me/${phone.replace(/\D/g, "")}`}
             target="_blank"

@@ -20,6 +20,8 @@ function generateSlotsForConfig(
   skipBefore: Date,
   sucursalId: string | null = null
 ): { date: string; time: string; scheduleConfigId: string; serviceProviderId: string; isActive: boolean; sucursalId: string | null }[] {
+  if (intervalMinutes <= 0) return [];
+
   const startTotal = parseTimeToMinutes(startTime);
   const endTotal = parseTimeToMinutes(endTime);
   const daysSet = new Set(daysOfWeek);

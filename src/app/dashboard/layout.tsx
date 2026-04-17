@@ -18,8 +18,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: "Perfil", href: "/dashboard/perfil", icon: "person", roles: ["propietario", "administrador"] },
-  { label: "Tipos de turno", href: "/dashboard/tipos-de-turno", icon: "label" },
-  { label: "Configuración de turnos", href: "/dashboard/configuracion-turnos", icon: "calendar_month" },
+{ label: "Configuración de turnos", href: "/dashboard/configuracion-turnos", icon: "calendar_month" },
   { label: "Turnos reservados", href: "/dashboard/turnos-reservados", icon: "bookmark" },
   { label: "Reprogramaciones", href: "/dashboard/reprogramaciones", icon: "event_repeat", roles: ["propietario", "administrador", "empleado"] },
   { label: "Finanzas", href: "/dashboard/finanzas", icon: "payments", roles: ["propietario", "administrador"] },

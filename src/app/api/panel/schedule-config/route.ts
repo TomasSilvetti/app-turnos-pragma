@@ -17,6 +17,8 @@ function generateSlotsForMonth(
   intervalMinutes: number,
   daysOfWeek: number[]
 ): { date: string; time: string }[] {
+  if (intervalMinutes <= 0) return [];
+
   const startTotal = parseTimeToMinutes(startTime);
   const endTotal = parseTimeToMinutes(endTime);
   const daysSet = new Set(daysOfWeek);

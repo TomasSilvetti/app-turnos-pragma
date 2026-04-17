@@ -18,6 +18,7 @@ type ScheduleConfigListProps = {
   onDelete: (id: string) => void;
   onToggle: (id: string) => void;
   onAdd: () => void;
+  isToggleDisabled?: (config: ScheduleConfig) => boolean;
 };
 
 const DIAS_LABEL: Record<string, string> = {
@@ -41,10 +42,12 @@ function Toggle({
   checked,
   onChange,
   label,
+  disabled,
 }: {
   checked: boolean;
   onChange: () => void;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -52,9 +55,12 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={onChange}
+      onClick={disabled ? undefined : onChange}
+      disabled={disabled}
+      title={disabled ? "Desactivá 'Duración por tipo de turno' para poder activar esta configuración" : undefined}
       className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2",
+        "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2",
+        disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
         checked ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#2d3548]"
       )}
     >
@@ -74,6 +80,7 @@ export function ScheduleConfigList({
   onDelete,
   onToggle,
   onAdd,
+  isToggleDisabled,
 }: ScheduleConfigListProps) {
   if (configs.length === 0) {
     return (
@@ -130,6 +137,7 @@ export function ScheduleConfigList({
                 checked={config.isActive}
                 onChange={() => onToggle(config.id)}
                 label={config.isActive ? `Desactivar ${config.nombre}` : `Activar ${config.nombre}`}
+                disabled={isToggleDisabled?.(config) ?? false}
               />
               <Button
                 size="sm"

@@ -23,7 +23,7 @@ export async function GET(
     select: {
       empleados: {
         select: {
-          serviceProvider: { select: { id: true, name: true } },
+          serviceProvider: { select: { id: true, name: true, modoTurno: true } },
         },
       },
     },
@@ -36,6 +36,7 @@ export async function GET(
   const employees = sucursal.empleados.map((e) => ({
     id: e.serviceProvider.id,
     name: e.serviceProvider.name,
+    modoTurno: e.serviceProvider.modoTurno,
   }));
 
   return NextResponse.json(employees);

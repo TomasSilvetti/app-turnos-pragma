@@ -88,6 +88,27 @@ export const POST = auth(async (req: NextAuthRequest) => {
 
   const { businessProfileId } = result;
 
+  // Validar modoTurno: si es POR_TIPO, debe existir al menos un ServiceType con duracion
+  const sp = await prisma.serviceProvider.findUnique({
+    where: { id: userId },
+    select: { modoTurno: true },
+  });
+
+  if (sp?.modoTurno === "POR_TIPO") {
+    const tiposConDuracion = await prisma.serviceType.count({
+      where: {
+        businessProfileId,
+        duracion: { not: null },
+      },
+    });
+    if (tiposConDuracion === 0) {
+      return NextResponse.json(
+        { error: "Debés tener al menos un tipo de turno con duración definida para agregar una configuración de horario" },
+        { status: 400 }
+      );
+    }
+  }
+
   const body = await req.json();
   const { name, startTime, endTime, intervalMinutes, daysOfWeek, price, serviceTypeIds } = body;
 

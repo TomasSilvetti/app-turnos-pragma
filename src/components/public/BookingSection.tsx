@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { format, startOfMonth } from "date-fns";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
 import MiniCalendar from "./MiniCalendar";
 import AppointmentSlots, { type Appointment } from "./AppointmentSlots";
 import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
 import ClientBookingOptionsModal from "./ClientBookingOptionsModal";
 import ClientRescheduleModal from "./ClientRescheduleModal";
+import DayScheduleColumn, { type ScheduledAppointment } from "./DayScheduleColumn";
+import DayScheduleBookingForm, { type ServiceTypeOption } from "./DayScheduleBookingForm";
 
 type Slot = {
   id: string;
@@ -56,6 +58,14 @@ type Sucursal = {
 type Employee = {
   id: string;
   name: string;
+  modoTurno?: "FIJO" | "POR_TIPO";
+};
+
+type DayScheduleData = {
+  startTime: string;
+  endTime: string;
+  appointments: ScheduledAppointment[];
+  serviceTypes: ServiceTypeOption[]; // ServiceTypeOption ya incluye description y price
 };
 
 type Props = {
@@ -116,6 +126,16 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
   const [empleadosLoading, setEmpleadosLoading] = useState(false);
 
+  // Estado para el flujo POR_TIPO
+  const [daySchedule, setDaySchedule] = useState<DayScheduleData | null>(null);
+  const [isLoadingDaySchedule, setIsLoadingDaySchedule] = useState(false);
+  const [porTipoBookingError, setPorTipoBookingError] = useState<string | null>(null);
+  const [porTipoBookingLoading, setPorTipoBookingLoading] = useState(false);
+  const [porTipoDaysOfWeek, setPorTipoDaysOfWeek] = useState<number[] | null>(null);
+
+  const selectedEmployee = employees.find((e) => e.id === selectedEmployeeId);
+  const isPorTipo = selectedEmployee?.modoTurno === "POR_TIPO";
+
   // Cargar empleados cuando cambia la sucursal (client-side, lazy)
   useEffect(() => {
     if (!selectedSucursalId) {
@@ -140,6 +160,36 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       .catch(() => setEmployees([]))
       .finally(() => setEmpleadosLoading(false));
   }, [slug, selectedSucursalId]);
+
+  // Cargar días de semana configurados para empleados POR_TIPO
+  useEffect(() => {
+    if (!isPorTipo || !selectedEmployeeId) {
+      setPorTipoDaysOfWeek(null);
+      return;
+    }
+    fetch(`/api/p/${slug}/employees/${selectedEmployeeId}/schedule-days`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { daysOfWeek: number[] } | null) =>
+        setPorTipoDaysOfWeek(data?.daysOfWeek ?? null)
+      )
+      .catch(() => setPorTipoDaysOfWeek(null));
+  }, [slug, isPorTipo, selectedEmployeeId]);
+
+  // Cargar day-schedule para empleados POR_TIPO cuando cambia la fecha
+  useEffect(() => {
+    if (!isPorTipo || !selectedEmployeeId || !selectedDate) {
+      setDaySchedule(null);
+      return;
+    }
+    setIsLoadingDaySchedule(true);
+    fetch(
+      `/api/p/${slug}/employees/${selectedEmployeeId}/day-schedule?date=${selectedDate}`
+    )
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: DayScheduleData | null) => setDaySchedule(data))
+      .catch(() => setDaySchedule(null))
+      .finally(() => setIsLoadingDaySchedule(false));
+  }, [slug, isPorTipo, selectedEmployeeId, selectedDate]);
 
   // Cargar slots cuando cambia el mes o el empleado
   const fetchSlots = useCallback(() => {
@@ -192,9 +242,22 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     setSelectedAppointment(null);
     setBookingError(null);
     setSlots([]);
+    setDaySchedule(null);
+    setPorTipoBookingError(null);
+    setPorTipoDaysOfWeek(null);
   }, []);
 
   const availableDates = [...new Set(slots.map((s) => s.date))];
+
+  // Para POR_TIPO: generar solo los días del mes visible que tienen horario configurado
+  const porTipoAvailableDates = useMemo<string[] | undefined>(() => {
+    if (!isPorTipo || !porTipoDaysOfWeek || porTipoDaysOfWeek.length === 0) return undefined;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return eachDayOfInterval({ start: startOfMonth(viewMonth), end: endOfMonth(viewMonth) })
+      .filter((d) => d >= today && porTipoDaysOfWeek.includes((getDay(d) + 6) % 7))
+      .map((d) => format(d, "yyyy-MM-dd"));
+  }, [isPorTipo, porTipoDaysOfWeek, viewMonth]);
 
   const appointmentsForDate: Appointment[] = slots
     .filter((s) => s.date === selectedDate)
@@ -312,6 +375,70 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       );
     } finally {
       setIsBooking(false);
+    }
+  }
+
+  async function handlePorTipoConfirm(
+    startTime: string,
+    _endTime: string,
+    serviceTypeId: string,
+    paymentMethod: string | null
+  ) {
+    if (!selectedDate || !selectedEmployeeId) return;
+    setPorTipoBookingLoading(true);
+    setPorTipoBookingError(null);
+    try {
+      const res = await fetch(
+        `/api/p/${slug}/employees/${selectedEmployeeId}/bookings`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            date: selectedDate,
+            startTime,
+            serviceTypeId,
+            clientName: clientSession
+              ? `${clientSession.nombre} ${clientSession.apellido}`
+              : "Cliente",
+            clientPhone: "—",
+          }),
+        }
+      );
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        throw new Error(json.error ?? "Error al reservar el turno");
+      }
+      const data = await res.json();
+      const serviceType = daySchedule?.serviceTypes.find((s) => s.id === serviceTypeId);
+      setBookingResult({
+        businessName,
+        date: selectedDate,
+        time: startTime,
+        price: serviceType?.price ?? 0,
+        cbu,
+        alias,
+        phone,
+        clientName: clientSession
+          ? `${clientSession.nombre} ${clientSession.apellido}`
+          : "Cliente",
+        paymentMethod,
+      });
+      // Refrescar day-schedule para que el nuevo turno aparezca en la columna
+      if (selectedDate) {
+        fetch(
+          `/api/p/${slug}/employees/${selectedEmployeeId}/day-schedule?date=${selectedDate}`
+        )
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d: DayScheduleData | null) => setDaySchedule(d))
+          .catch(() => {});
+      }
+      void data;
+    } catch (err) {
+      setPorTipoBookingError(
+        err instanceof Error ? err.message : "Error al reservar el turno"
+      );
+    } finally {
+      setPorTipoBookingLoading(false);
     }
   }
 
@@ -481,7 +608,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       {selectedEmployeeId && (
         <>
           <MiniCalendar
-            availableDates={availableDates}
+            availableDates={isPorTipo ? porTipoAvailableDates : availableDates}
             selectedDate={selectedDate}
             viewMonth={viewMonth}
             onMonthChange={handleMonthChange}
@@ -489,16 +616,60 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             clientBookingDates={clientBookingDates}
           />
 
-          {isLoadingSlots ? (
-            <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
-              <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
-            </div>
+          {isPorTipo ? (
+            /* Flujo POR_TIPO: columna temporal + formulario */
+            selectedDate && (
+              isLoadingDaySchedule ? (
+                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+                  <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando horarios...</p>
+                </div>
+              ) : daySchedule ? (
+                <>
+                  <DayScheduleColumn
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    appointments={daySchedule.appointments}
+                  />
+                  <DayScheduleBookingForm
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    serviceTypes={daySchedule.serviceTypes}
+                    appointments={daySchedule.appointments}
+                    paymentMethods={paymentMethods}
+                    onConfirm={handlePorTipoConfirm}
+                  />
+                  {porTipoBookingError && (
+                    <p role="alert" className="font-body text-sm text-red-500 dark:text-red-400 px-1">
+                      {porTipoBookingError}
+                    </p>
+                  )}
+                  {porTipoBookingLoading && (
+                    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 text-center">
+                      <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50">Confirmando reserva...</p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                  <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
+                    No hay horario de atención configurado para este día.
+                  </p>
+                </div>
+              )
+            )
           ) : (
-            <AppointmentSlots
-              appointments={appointmentsForDate}
-              onSelect={handleAppointmentSelect}
-              clientBookingTimes={clientBookingTimesForDate}
-            />
+            /* Flujo FIJO: grilla de slots */
+            isLoadingSlots ? (
+              <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+                <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
+              </div>
+            ) : (
+              <AppointmentSlots
+                appointments={appointmentsForDate}
+                onSelect={handleAppointmentSelect}
+                clientBookingTimes={clientBookingTimesForDate}
+              />
+            )
           )}
         </>
       )}

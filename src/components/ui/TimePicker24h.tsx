@@ -9,18 +9,45 @@ interface TimePicker24hProps {
   onChange: (value: string) => void;
   hasError?: boolean;
   dropdownAlign?: "left" | "right";
+  minTime?: string; // "HH:MM" — hora mínima seleccionable (inclusive)
+  maxTime?: string; // "HH:MM" — hora máxima seleccionable (inclusive)
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
-const MINUTES = ["00", "15", "30", "45"];
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"));
+const ALL_MINUTES = ["00", "15", "30", "45"];
 
-export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "left" }: TimePicker24hProps) {
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "left", minTime, maxTime }: TimePicker24hProps) {
+  const minTotalMin = minTime ? timeToMinutes(minTime) : 0;
+  const maxTotalMin = maxTime ? timeToMinutes(maxTime) : 23 * 60 + 59;
+
+  const minHour = Math.floor(minTotalMin / 60);
+  const maxHour = Math.floor(maxTotalMin / 60);
+
+  const HOURS = ALL_HOURS.filter((h) => {
+    const hNum = parseInt(h);
+    return hNum >= minHour && hNum <= maxHour;
+  });
+
+  const [selHourStr, selMinStr] = value ? value.split(":") : ["", ""];
+  const selHourNum = selHourStr ? parseInt(selHourStr) : null;
+
+  const MINUTES = ALL_MINUTES.filter((m) => {
+    if (selHourNum === null) return true;
+    const candidateMin = selHourNum * 60 + parseInt(m);
+    return candidateMin >= minTotalMin && candidateMin <= maxTotalMin;
+  });
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hourRef = useRef<HTMLDivElement>(null);
   const minuteRef = useRef<HTMLDivElement>(null);
 
-  const [selectedHour, selectedMinute] = value ? value.split(":") : ["", ""];
+  const selectedHour = selHourStr;
+  const selectedMinute = selMinStr;
 
   // Close on outside click
   useEffect(() => {

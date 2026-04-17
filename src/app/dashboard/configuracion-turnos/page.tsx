@@ -8,6 +8,7 @@ import { ScheduleConfigSlots } from "@/components/schedule-config/ScheduleConfig
 import { DeleteScheduleConfigDialog } from "@/components/schedule-config/DeleteScheduleConfigDialog";
 import { EditConflictDialog, type ConflictingBooking } from "@/components/schedule-config/EditConflictDialog";
 import { RescheduleNoticeDialog } from "@/components/schedule-config/RescheduleNoticeDialog";
+import { ModoTurnoToggle } from "@/components/schedule-config/ModoTurnoToggle";
 
 const DIAS_LABEL: Record<string, string> = {
   L: "Lunes", M: "Martes", X: "Miércoles", J: "Jueves", V: "Viernes", S: "Sábado", D: "Domingo",
@@ -58,11 +59,10 @@ function getConflictingDays(
     const sharedDays = c.daysOfWeek.filter((d) => targetDaysSet.has(d));
     if (sharedDays.length === 0) continue;
 
-    // Si tenemos horarios, verificar solapamiento
     if (newStart !== null && newEnd !== null) {
       const cfgStart = parseMinutes(c.startTime);
       const cfgEnd = parseMinutes(c.endTime);
-      if (!(newStart < cfgEnd && cfgStart < newEnd)) continue; // no se solapan
+      if (!(newStart < cfgEnd && cfgStart < newEnd)) continue;
     }
 
     for (const d of sharedDays) conflictingDays.add(d);
@@ -79,6 +79,8 @@ type PendingSubmitData = {
 export default function ConfiguracionTurnosPage() {
   const [configs, setConfigs] = useState<ScheduleConfig[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+  const [modoTurno, setModoTurno] = useState<"FIJO" | "POR_TIPO">("FIJO");
+  const [modoTurnoLoading, setModoTurnoLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<ScheduleConfig & { serviceTypeIds?: string[] } | null>(null);
@@ -87,9 +89,7 @@ export default function ConfiguracionTurnosPage() {
   const [modalError, setModalError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [noServiceTypesWarning, setNoServiceTypesWarning] = useState(false);
 
-  // Estado para el flujo de conflictos al editar
   const [editConflicting, setEditConflicting] = useState<ConflictingBooking[] | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState<PendingSubmitData | null>(null);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
@@ -99,21 +99,52 @@ export default function ConfiguracionTurnosPage() {
     Promise.all([
       fetch("/api/schedule-configs").then((r) => r.json()),
       fetch("/api/service-types").then((r) => r.json()),
-    ]).then(([configsData, typesData]) => {
+      fetch("/api/service-providers/me/modo-turno").then((r) => r.json()),
+    ]).then(([configsData, typesData, modoData]) => {
       if (Array.isArray(configsData)) {
         setConfigs((configsData as ApiScheduleConfig[]).map(mapFromApi));
       }
       if (Array.isArray(typesData)) {
-        setServiceTypes(typesData.map((t: { id: string; title: string }) => ({ id: t.id, titulo: t.title })));
+        setServiceTypes(
+          typesData.map((t: { id: string; title: string; price: number; duracion?: number | null }) => ({
+            id: t.id,
+            titulo: t.title,
+            precio: t.price,
+            duracion: t.duracion ?? null,
+          }))
+        );
       }
-    }).finally(() => setLoading(false));
+      if (modoData?.modoTurno) {
+        setModoTurno(modoData.modoTurno);
+      }
+    }).finally(() => {
+      setLoading(false);
+      setModoTurnoLoading(false);
+    });
   }, []);
 
-  function handleAdd() {
-    if (serviceTypes.length === 0) {
-      setNoServiceTypesWarning(true);
-      return;
+  async function handleModoTurnoChange(activado: boolean) {
+    const nuevoModo = activado ? "POR_TIPO" : "FIJO";
+    setModoTurno(nuevoModo);
+
+    await fetch("/api/service-providers/me/modo-turno", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ modoTurno: nuevoModo }),
+    });
+
+    if (nuevoModo === "POR_TIPO") {
+      const activeConfigs = configs.filter((c) => c.isActive);
+      await Promise.all(
+        activeConfigs.map((c) =>
+          fetch(`/api/schedule-configs/${c.id}/toggle`, { method: "PATCH" })
+        )
+      );
+      setConfigs((prev) => prev.map((c) => ({ ...c, isActive: false })));
     }
+  }
+
+  function handleAdd() {
     setEditingConfig(null);
     setModalError(null);
     setModalOpen(true);
@@ -198,7 +229,6 @@ export default function ConfiguracionTurnosPage() {
     setToggleError(null);
 
     if (editingConfig) {
-      // Verificar si hay turnos conflictivos con la nueva configuración
       const checkRes = await fetch(`/api/schedule-configs/${editingConfig.id}/edit-check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -212,14 +242,12 @@ export default function ConfiguracionTurnosPage() {
       if (checkRes.ok) {
         const { conflicting }: { conflicting: ConflictingBooking[] } = await checkRes.json();
         if (conflicting.length > 0) {
-          // Hay conflictos: guardar los datos pendientes y mostrar el diálogo
           setPendingSubmit({ configId: editingConfig.id, formData: data });
           setEditConflicting(conflicting);
-          return false; // No cerrar el modal todavía
+          return false;
         }
       }
 
-      // Sin conflictos: guardar directamente
       const ok = await performSave(editingConfig.id, data, false);
       return ok ? undefined : false;
     } else {
@@ -296,18 +324,15 @@ export default function ConfiguracionTurnosPage() {
         </p>
       </div>
 
-      {noServiceTypesWarning && (
-        <div className="mb-4 rounded-md border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
-          <p className="font-medium">Necesitás un tipo de turno para continuar</p>
-          <p className="mt-0.5">
-            Antes de crear una configuración de turnos, creá al menos un tipo de turno en la sección{" "}
-            <a href="/dashboard/tipos-de-turno" className="underline underline-offset-2 hover:opacity-80">
-              Tipos de turno
-            </a>
-            .
-          </p>
-        </div>
-      )}
+      {/* Toggle de modo de duración */}
+      <div className="mb-5">
+        <ModoTurnoToggle
+          value={modoTurno === "POR_TIPO"}
+          onChange={handleModoTurnoChange}
+          disabled={modoTurnoLoading}
+        />
+      </div>
+
 
       {loading ? (
         <div className="space-y-3">
@@ -323,6 +348,7 @@ export default function ConfiguracionTurnosPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggle={handleToggle}
+            isToggleDisabled={(config) => modoTurno === "POR_TIPO" && config.intervalMinutes > 0}
           />
 
           {toggleError && (
@@ -372,6 +398,8 @@ export default function ConfiguracionTurnosPage() {
         onSubmit={handleSubmit}
         initialData={editingConfig ?? undefined}
         serviceTypes={serviceTypes}
+        modoTurno={modoTurno}
+        onServiceTypesChange={setServiceTypes}
         error={modalError ?? undefined}
       />
     </div>

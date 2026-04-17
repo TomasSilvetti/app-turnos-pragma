@@ -25,6 +25,7 @@ model ServiceProvider {
   pushSubscriptions   PushSubscription[]
   scheduleConfigs     ScheduleConfig[]
   tutorialCompleted   Boolean            @default(false)
+  modoTurno           ModoTurno          @default(FIJO)
 
   @@map("service_providers")
 }
@@ -121,6 +122,7 @@ model ServiceType {
   title             String
   description       String?
   price             Decimal
+  duracion          Int?
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   businessProfileId String
@@ -235,6 +237,11 @@ model PushSubscription {
   serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
 
   @@map("push_subscriptions")
+}
+
+enum ModoTurno {
+  FIJO
+  POR_TIPO
 }
 
 enum ServiceProviderRol {

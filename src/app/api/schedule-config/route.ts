@@ -5,6 +5,8 @@ import { auth } from "@/../auth";
 const prisma = new PrismaClient();
 
 function generateSlots(startTime: string, endTime: string, intervalMinutes: number): string[] {
+  if (intervalMinutes <= 0) return [];
+
   const [startH, startM] = startTime.split(":").map(Number);
   const [endH, endM] = endTime.split(":").map(Number);
   const startTotal = startH * 60 + startM;

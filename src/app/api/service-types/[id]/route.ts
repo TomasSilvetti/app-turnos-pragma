@@ -45,7 +45,66 @@ export const PUT = auth(async (
   const updated = await prisma.serviceType.update({
     where: { id },
     data: { title, description, price: parsedPrice },
-    select: { id: true, title: true, description: true, price: true },
+    select: { id: true, title: true, description: true, price: true, duracion: true },
+  });
+
+  return NextResponse.json(updated, { status: 200 });
+});
+
+export const PATCH = auth(async (
+  req: NextAuthRequest,
+  context: { params: Promise<{ id: string }> }
+) => {
+  if (!req.auth?.user?.id) {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+
+  const businessProfile = await resolveBusinessProfile(req.auth.user.id);
+
+  if (!businessProfile) {
+    return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
+  }
+
+  const existing = await prisma.serviceType.findFirst({
+    where: { id, businessProfileId: businessProfile.id },
+  });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Tipo de turno no encontrado" }, { status: 404 });
+  }
+
+  const body = await req.json();
+  const { title, price, duracion } = body;
+
+  if (!title || price === undefined || price === null) {
+    return NextResponse.json({ error: "Los campos title y price son requeridos" }, { status: 400 });
+  }
+
+  const parsedPrice = Number(price);
+  if (isNaN(parsedPrice) || parsedPrice <= 0) {
+    return NextResponse.json({ error: "El precio debe ser un número mayor a cero" }, { status: 400 });
+  }
+
+  const parsedDuracion =
+    duracion === undefined || duracion === null || duracion === ""
+      ? null
+      : Number(duracion);
+
+  if (parsedDuracion !== null && (isNaN(parsedDuracion) || parsedDuracion < 1)) {
+    return NextResponse.json({ error: "La duración debe ser un número mayor a cero" }, { status: 400 });
+  }
+
+  const updated = await prisma.serviceType.update({
+    where: { id },
+    data: {
+      title,
+      description: body.description ?? existing.description,
+      price: parsedPrice,
+      duracion: parsedDuracion,
+    },
+    select: { id: true, title: true, description: true, price: true, duracion: true },
   });
 
   return NextResponse.json(updated, { status: 200 });
@@ -72,7 +131,7 @@ export const DELETE = auth(async (
   });
 
   if (!existing) {
-    return NextResponse.json({ error: "Tipo de turno no encontrado" }, { status: 404 });
+    return NextResponse.json({ error: "Tipo de turno no encontrado" }, { status: 403 });
   }
 
   const today = new Date().toISOString().split("T")[0];

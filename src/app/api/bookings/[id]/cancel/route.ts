@@ -34,7 +34,13 @@ export async function PATCH(
     return NextResponse.json({ error: "El turno ya fue cancelado" }, { status: 400 });
   }
 
-  await prisma.booking.delete({ where: { id } });
+  await prisma.$transaction([
+    prisma.booking.delete({ where: { id } }),
+    prisma.appointment.update({
+      where: { id: booking.appointmentId },
+      data: { isActive: false },
+    }),
+  ]);
 
   emitNewBooking();
 

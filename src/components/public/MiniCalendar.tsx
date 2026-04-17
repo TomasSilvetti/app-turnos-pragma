@@ -15,7 +15,7 @@ import { es } from "date-fns/locale";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Props = {
-  availableDates: string[]; // YYYY-MM-DD
+  availableDates?: string[]; // YYYY-MM-DD — si es undefined, todos los días son seleccionables
   selectedDate: string | null;
   viewMonth: Date;
   onMonthChange: (month: Date) => void;
@@ -42,10 +42,16 @@ export default function MiniCalendar({
 
   const firstDayOfWeek = (getDay(monthStart) + 6) % 7;
 
-  const availableSet = new Set(availableDates);
+  const availableSet = availableDates !== undefined ? new Set(availableDates) : null;
   const clientBookingSet = new Set(clientBookingDates ?? []);
 
   function isAvailable(day: Date) {
+    // Si availableDates es undefined, todos los días desde hoy son seleccionables
+    if (availableSet === null) {
+      const todayStart = new Date(today);
+      todayStart.setHours(0, 0, 0, 0);
+      return day >= todayStart;
+    }
     return availableSet.has(format(day, "yyyy-MM-dd"));
   }
 
