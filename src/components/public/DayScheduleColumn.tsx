@@ -22,6 +22,7 @@ type Props = {
   appointments: ScheduledAppointment[];
   previewAppointment?: PreviewAppointment | null;
   clientAppointment?: ClientOwnAppointment | null;
+  clientAppointmentVariant?: "green" | "amber";
 };
 
 function timeToMinutes(time: string): number {
@@ -41,7 +42,15 @@ export default function DayScheduleColumn({
   appointments,
   previewAppointment,
   clientAppointment,
+  clientAppointmentVariant = "green",
 }: Props) {
+  const clientColor = clientAppointmentVariant === "amber" ? "#f59e0b" : "#22c55e";
+  const clientBg = clientAppointmentVariant === "amber"
+    ? "color-mix(in srgb, #f59e0b 18%, transparent)"
+    : "color-mix(in srgb, #22c55e 18%, transparent)";
+  const clientTextClass = clientAppointmentVariant === "amber"
+    ? "text-amber-500 dark:text-amber-400"
+    : "text-emerald-600 dark:text-emerald-400";
   const startMin = timeToMinutes(startTime);
   const endMin = timeToMinutes(endTime);
   const totalMin = endMin - startMin;
@@ -167,15 +176,15 @@ export default function DayScheduleColumn({
               style={{
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
-                backgroundColor: "color-mix(in srgb, #22c55e 18%, transparent)",
-                borderLeft: "3px solid #22c55e",
+                backgroundColor: clientBg,
+                borderLeft: `3px solid ${clientColor}`,
               }}
               aria-label={`Tu turno de ${clientAppointment.time} a ${endLabel}. Clic para opciones.`}
             >
-              <span className="font-small text-[11px] font-semibold leading-tight text-emerald-600 dark:text-emerald-400 truncate">
+              <span className={`font-small text-[11px] font-semibold leading-tight truncate ${clientTextClass}`}>
                 {clientAppointment.time} – {endLabel}
               </span>
-              <span className="font-small text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400 opacity-70 truncate uppercase tracking-wide">
+              <span className={`font-small text-[10px] font-medium leading-tight opacity-70 truncate uppercase tracking-wide ${clientTextClass}`}>
                 Tu turno
               </span>
             </button>

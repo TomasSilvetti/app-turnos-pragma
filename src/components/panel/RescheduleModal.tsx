@@ -5,9 +5,18 @@ import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { X, AlertCircle, Loader2, MessageCircle } from "lucide-react";
 import MiniCalendar from "@/components/public/MiniCalendar";
+import DayScheduleColumn, { type ScheduledAppointment, type PreviewAppointment } from "@/components/public/DayScheduleColumn";
+import DayScheduleBookingForm, { type ServiceTypeOption } from "@/components/public/DayScheduleBookingForm";
 import type { RescheduleItem } from "./RescheduleList";
 
 type Slot = { id: string; time: string };
+
+type DayScheduleData = {
+  startTime: string;
+  endTime: string;
+  appointments: ScheduledAppointment[];
+  serviceTypes: ServiceTypeOption[];
+};
 
 type RescheduleContext = {
   sucursalId: string | null;
@@ -16,6 +25,8 @@ type RescheduleContext = {
   empleadoValid: boolean;
   noEmpleadosDisponibles: boolean;
   slug: string;
+  modoTurno: string;
+  serviceTypeId: string | null;
 };
 
 type Props = {
@@ -49,6 +60,14 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
   const [contextError, setContextError] = useState(false);
 
   const [selectedEmpleadoId, setSelectedEmpleadoId] = useState<string | null>(null);
+  const [modoTurno, setModoTurno] = useState<string>("FIJO");
+  const [serviceTypeId, setServiceTypeId] = useState<string | null>(null);
+  const [slug, setSlug] = useState<string | null>(null);
+
+  // POR_TIPO: columna temporal + formulario
+  const [daySchedule, setDaySchedule] = useState<DayScheduleData | null>(null);
+  const [preview, setPreview] = useState<PreviewAppointment | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<string[]>([]);
 
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -76,13 +95,25 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
       .then((ctx) => {
         setContextError(false);
         setSelectedEmpleadoId(ctx.empleadoId);
+        setModoTurno(ctx.modoTurno ?? "FIJO");
+        setServiceTypeId(ctx.serviceTypeId ?? null);
+        setSlug(ctx.slug ?? null);
       })
       .catch(() => setContextError(true))
       .finally(() => setContextLoading(false));
   }, [item.bookingId]);
 
-  // Cargar fechas disponibles cuando cambia el mes o el empleado
-  const fetchDates = useCallback(async (month: Date, empleadoId: string | null) => {
+  // Cargar métodos de pago cuando se conoce el slug (para POR_TIPO)
+  useEffect(() => {
+    if (!slug) return;
+    fetch(`/api/public/business/${slug}/payment-methods`)
+      .then((r) => r.json())
+      .then((data: { methods: string[] }) => setPaymentMethods(data.methods ?? []))
+      .catch(() => {});
+  }, [slug]);
+
+  // Cargar fechas disponibles cuando cambia el mes, el empleado o el modo
+  const fetchDates = useCallback(async (month: Date, empleadoId: string | null, modo: string, slugVal: string | null) => {
     if (!empleadoId) {
       setAvailableDates([]);
       return;
@@ -94,12 +125,35 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
     setSelectedSlot(null);
     setNoConfigs(false);
     try {
-      const monthStr = format(month, "yyyy-MM");
-      const res = await fetch(`/api/panel/reschedules/available-slots?month=${monthStr}&employeeId=${empleadoId}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setAvailableDates(data.dates ?? []);
-      if (data.noConfigs) setNoConfigs(true);
+      if (modo === "POR_TIPO" && slugVal) {
+        const res = await fetch(`/api/p/${slugVal}/employees/${empleadoId}/schedule-days`);
+        if (!res.ok) throw new Error();
+        const data = await res.json() as { daysOfWeek: number[] };
+        const dows = data.daysOfWeek ?? [];
+        if (dows.length === 0) { setNoConfigs(true); return; }
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const year = month.getFullYear();
+        const monthIdx = month.getMonth();
+        const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+        const available: string[] = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+          const d = new Date(year, monthIdx, day);
+          if (d < today) continue;
+          const isoDay = (d.getDay() + 6) % 7;
+          if (dows.includes(isoDay)) {
+            available.push(`${year}-${String(monthIdx + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+          }
+        }
+        setAvailableDates(available);
+      } else {
+        const monthStr = format(month, "yyyy-MM");
+        const res = await fetch(`/api/panel/reschedules/available-slots?month=${monthStr}&employeeId=${empleadoId}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setAvailableDates(data.dates ?? []);
+        if (data.noConfigs) setNoConfigs(true);
+      }
     } catch {
       setAvailableDates([]);
     } finally {
@@ -108,48 +162,81 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
   }, []);
 
   useEffect(() => {
-    fetchDates(viewMonth, selectedEmpleadoId);
-  }, [viewMonth, selectedEmpleadoId, fetchDates]);
+    fetchDates(viewMonth, selectedEmpleadoId, modoTurno, slug);
+  }, [viewMonth, selectedEmpleadoId, modoTurno, slug, fetchDates]);
 
-  // Fetch slots when date is selected
+  // Fetch slots/schedule when date is selected
   const handleDaySelect = useCallback(async (date: string) => {
     setSelectedDate(date);
     setSelectedSlot(null);
     setSlots([]);
+    setDaySchedule(null);
+    setPreview(null);
     setLoadingSlots(true);
     try {
-      const employeeParam = selectedEmpleadoId ? `&employeeId=${selectedEmpleadoId}` : "";
-      const res = await fetch(`/api/panel/reschedules/available-slots?date=${date}${employeeParam}`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      const fetchedSlots: Slot[] = data.appointments ?? [];
-
-      // Si el día seleccionado es el del turno original, inyectar el slot original
-      // (el backend no lo devuelve porque ya está ocupado)
-      if (date === item.appointmentDate) {
-        const originalTime = item.appointmentTime;
-        const alreadyPresent = fetchedSlots.some((s) => s.time === originalTime);
-        if (!alreadyPresent) {
-          const originalSlot: Slot = { id: `__original__`, time: originalTime };
-          // Insertar en orden cronológico
-          const inserted = [...fetchedSlots, originalSlot].sort((a, b) =>
-            a.time.localeCompare(b.time)
-          );
-          setSlots(inserted);
-          return;
+      if (modoTurno === "POR_TIPO" && slug && selectedEmpleadoId) {
+        const res = await fetch(`/api/p/${slug}/employees/${selectedEmpleadoId}/day-schedule?date=${date}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json() as DayScheduleData;
+        setDaySchedule(data);
+      } else {
+        const employeeParam = selectedEmpleadoId ? `&employeeId=${selectedEmpleadoId}` : "";
+        const res = await fetch(`/api/panel/reschedules/available-slots?date=${date}${employeeParam}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const fetchedSlots: Slot[] = data.appointments ?? [];
+        if (date === item.appointmentDate) {
+          const originalTime = item.appointmentTime;
+          const alreadyPresent = fetchedSlots.some((s) => s.time === originalTime);
+          if (!alreadyPresent) {
+            const originalSlot: Slot = { id: `__original__`, time: originalTime };
+            const inserted = [...fetchedSlots, originalSlot].sort((a, b) => a.time.localeCompare(b.time));
+            setSlots(inserted);
+            return;
+          }
         }
+        setSlots(fetchedSlots);
       }
-
-      setSlots(fetchedSlots);
     } catch {
       setSlots([]);
     } finally {
       setLoadingSlots(false);
     }
-  }, [selectedEmpleadoId]);
+  }, [selectedEmpleadoId, modoTurno, slug, item.appointmentDate, item.appointmentTime]);
 
   function handleMonthChange(month: Date) {
     setViewMonth(month);
+  }
+
+  async function handleConfirmPorTipo(startTime: string) {
+    if (!selectedDate || isSubmitting) return;
+    if (selectedDate === item.appointmentDate && startTime === item.appointmentTime) {
+      setError("El nuevo horario debe ser diferente al turno actual.");
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/panel/reschedules", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bookingId: item.bookingId,
+          date: selectedDate,
+          requestedTime: startTime,
+          clientName: item.clientName,
+          clientPhone: item.clientPhone,
+        }),
+      });
+      if (!res.ok) throw new Error();
+      setConfirmedSlot({ id: `__pt__${startTime}`, time: startTime });
+      setConfirmedDate(selectedDate);
+      setShowNotification(true);
+    } catch {
+      setError("No se pudo reprogramar el turno. Intentá de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   async function handleConfirm() {
@@ -158,15 +245,15 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
     setError(null);
 
     try {
+      const isPorTipo = modoTurno === "POR_TIPO";
+      const body = isPorTipo
+        ? { bookingId: item.bookingId, date: selectedDate, requestedTime: selectedSlot.time, clientName: item.clientName, clientPhone: item.clientPhone }
+        : { bookingId: item.bookingId, appointmentId: selectedSlot.id, clientName: item.clientName, clientPhone: item.clientPhone };
+
       const res = await fetch("/api/panel/reschedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookingId: item.bookingId,
-          appointmentId: selectedSlot.id,
-          clientName: item.clientName,
-          clientPhone: item.clientPhone,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!res.ok) throw new Error();
@@ -319,8 +406,57 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
               />
             )}
 
-            {/* Slots del día seleccionado */}
-            {selectedDate && (
+            {/* Día seleccionado: POR_TIPO → columna temporal + formulario */}
+            {selectedDate && modoTurno === "POR_TIPO" && (
+              loadingSlots ? (
+                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex items-center justify-center">
+                  <Loader2 size={20} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
+                </div>
+              ) : daySchedule ? (
+                <>
+                  <DayScheduleColumn
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    appointments={daySchedule.appointments}
+                    previewAppointment={preview}
+                    clientAppointmentVariant="amber"
+                    clientAppointment={
+                      selectedDate === item.appointmentDate
+                        ? {
+                            time: item.appointmentTime,
+                            duracion:
+                              (serviceTypeId
+                                ? daySchedule.serviceTypes.find((s) => s.id === serviceTypeId)?.duracion
+                                : undefined) ??
+                              daySchedule.serviceTypes[0]?.duracion ??
+                              30,
+                            onClick: () => {},
+                          }
+                        : null
+                    }
+                  />
+                  <DayScheduleBookingForm
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    serviceTypes={daySchedule.serviceTypes}
+                    appointments={daySchedule.appointments}
+                    paymentMethods={paymentMethods}
+                    onConfirm={handleConfirmPorTipo}
+                    onPreviewChange={setPreview}
+                    confirmLabel="Reprogramar"
+                  />
+                </>
+              ) : (
+                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                  <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
+                    No hay horario de atención configurado para este día.
+                  </p>
+                </div>
+              )
+            )}
+
+            {/* Día seleccionado: FIJO → cards de slots */}
+            {selectedDate && modoTurno !== "POR_TIPO" && (
               loadingSlots ? (
                 <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex items-center justify-center">
                   <Loader2 size={20} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
@@ -394,15 +530,17 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           >
             Cancelar
           </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={!selectedSlot || isSubmitting}
-            className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isSubmitting && <Loader2 size={14} className="animate-spin" />}
-            {isSubmitting ? "Confirmando..." : "Confirmar"}
-          </button>
+          {modoTurno !== "POR_TIPO" && (
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={!selectedSlot || isSubmitting}
+              className="flex-1 font-body text-sm text-white bg-[var(--brand-color)] rounded-md py-2.5 hover:bg-[#1c2a40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isSubmitting && <Loader2 size={14} className="animate-spin" />}
+              {isSubmitting ? "Confirmando..." : "Confirmar"}
+            </button>
+          )}
         </div>
       </div>
     </div>

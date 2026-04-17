@@ -153,6 +153,7 @@ export async function GET(request: NextRequest) {
   const month = request.nextUrl.searchParams.get("month");
   const date = request.nextUrl.searchParams.get("date");
   const employeeIdParam = request.nextUrl.searchParams.get("employeeId");
+  const serviceTypeIdParam = request.nextUrl.searchParams.get("serviceTypeId");
 
   // Si se pasa employeeId, validar que pertenezca al negocio del admin autenticado
   let serviceProviderId = sessionProviderId;
@@ -169,6 +170,113 @@ export async function GET(request: NextRequest) {
       if (membership) serviceProviderId = membership.serviceProviderId;
     }
   }
+
+  // --- POR_TIPO branch ---
+  const provider = await prisma.serviceProvider.findUnique({
+    where: { id: serviceProviderId },
+    select: { modoTurno: true },
+  });
+
+  if (provider?.modoTurno === "POR_TIPO") {
+    const bp = await prisma.businessProfile.findFirst({
+      where: {
+        OR: [
+          { serviceProviderId },
+          { empleados: { some: { serviceProviderId } } },
+        ],
+      },
+      select: { id: true },
+    });
+    if (!bp) return NextResponse.json({ dates: [], noConfigs: true });
+
+    const configs = await prisma.scheduleConfig.findMany({
+      where: { businessProfileId: bp.id, isActive: true },
+      select: { startTime: true, endTime: true, intervalMinutes: true, daysOfWeek: true },
+    });
+    if (configs.length === 0) return NextResponse.json({ dates: [], noConfigs: true });
+
+    if (month) {
+      if (!/^\d{4}-\d{2}$/.test(month))
+        return NextResponse.json({ error: "Formato de mes inválido (esperado YYYY-MM)" }, { status: 400 });
+
+      const [yearStr, monthStr] = month.split("-");
+      const year = Number(yearStr);
+      const monthIndex = Number(monthStr) - 1;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+      const availableDates: string[] = [];
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const d = new Date(year, monthIndex, day);
+        if (d < today) continue;
+        const isoDay = (d.getDay() + 6) % 7; // Mon=0..Sun=6
+        const covered = configs.some((c) => c.daysOfWeek.includes(isoDay) && c.intervalMinutes > 0);
+        if (covered) {
+          availableDates.push(`${year}-${String(monthIndex + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+        }
+      }
+      return NextResponse.json({ dates: availableDates });
+    }
+
+    if (date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date))
+        return NextResponse.json({ error: "Formato de fecha inválido (esperado YYYY-MM-DD)" }, { status: 400 });
+
+      const [yr, mo, dy] = date.split("-").map(Number);
+      const isoDay = (new Date(yr, mo - 1, dy).getDay() + 6) % 7; // Mon=0..Sun=6
+      const config = configs.find((c) => c.daysOfWeek.includes(isoDay) && c.intervalMinutes > 0);
+      if (!config) return NextResponse.json({ appointments: [] });
+
+      // Obtener duración del tipo de turno si se proveyó
+      let duracion = config.intervalMinutes;
+      if (serviceTypeIdParam) {
+        const st = await prisma.serviceType.findUnique({
+          where: { id: serviceTypeIdParam },
+          select: { duracion: true },
+        });
+        if (st?.duracion) duracion = st.duracion;
+      }
+
+      // Turnos activos que ocupan tiempo (excluye requires_reschedule para no bloquearse a sí mismo)
+      const existingAppts = await prisma.appointment.findMany({
+        where: {
+          serviceProviderId,
+          date,
+          isActive: true,
+          booking: { status: { in: ["pending", "confirmed"] } },
+        },
+        select: { time: true, serviceType: { select: { duracion: true } } },
+      });
+
+      const occupied = existingAppts.map((a) => ({
+        time: a.time,
+        duracion: a.serviceType?.duracion ?? duracion,
+      }));
+
+      const startTotal = parseTimeToMinutes(config.startTime);
+      const endTotal = parseTimeToMinutes(config.endTime);
+      const slots: { id: string; time: string }[] = [];
+
+      for (let t = startTotal; t + duracion <= endTotal; t += config.intervalMinutes) {
+        const h = Math.floor(t / 60).toString().padStart(2, "0");
+        const m = (t % 60).toString().padStart(2, "0");
+        const time = `${h}:${m}`;
+        const slotEnd = t + duracion;
+        const overlaps = occupied.some((o) => {
+          const oStart = parseTimeToMinutes(o.time);
+          const oEnd = oStart + o.duracion;
+          return t < oEnd && slotEnd > oStart;
+        });
+        if (!overlaps) slots.push({ id: `__pt__${time}`, time });
+      }
+
+      return NextResponse.json({ appointments: slots });
+    }
+
+    return NextResponse.json({ error: "Se requiere el parámetro 'month' o 'date'" }, { status: 400 });
+  }
+  // --- fin POR_TIPO ---
 
   if (month) {
     if (!/^\d{4}-\d{2}$/.test(month))

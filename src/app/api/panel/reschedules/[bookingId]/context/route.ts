@@ -53,6 +53,8 @@ export async function GET(
         select: {
           sucursalId: true,
           serviceProviderId: true,
+          serviceTypeId: true,
+          serviceProvider: { select: { modoTurno: true } },
         },
       },
     },
@@ -81,6 +83,8 @@ export async function GET(
       empleadoValid: false,
       noEmpleadosDisponibles: true,
       slug: businessProfile.slug,
+      modoTurno: booking.appointment.serviceProvider.modoTurno,
+      serviceTypeId: booking.appointment.serviceTypeId,
     });
   }
 
@@ -107,5 +111,7 @@ export async function GET(
     empleadoValid,
     noEmpleadosDisponibles: false,
     slug: businessProfile.slug,
+    modoTurno: booking.appointment.serviceProvider.modoTurno,
+    serviceTypeId: booking.appointment.serviceTypeId,
   });
 }
