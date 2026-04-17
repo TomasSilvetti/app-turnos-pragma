@@ -8,6 +8,7 @@ import BookingModal from "./BookingModal";
 import BookingConfirmation from "./BookingConfirmation";
 import ClientBookingOptionsModal from "./ClientBookingOptionsModal";
 import ClientRescheduleModal from "./ClientRescheduleModal";
+import ClientReschedulePorTipoModal from "./ClientReschedulePorTipoModal";
 import DayScheduleColumn, { type ScheduledAppointment, type PreviewAppointment } from "./DayScheduleColumn";
 import DayScheduleBookingForm, { type ServiceTypeOption } from "./DayScheduleBookingForm";
 
@@ -93,6 +94,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [clientBookings, setClientBookings] = useState<ClientBooking[]>([]);
   const [clientBookingOptionsTarget, setClientBookingOptionsTarget] = useState<ClientBooking | null>(null);
   const [clientRescheduleTarget, setClientRescheduleTarget] = useState<ClientBooking | null>(null);
+  const [porTipoRescheduleTarget, setPorTipoRescheduleTarget] = useState<ClientBooking | null>(null);
 
   useEffect(() => {
     fetch(`/api/public/business/${slug}/payment-methods`)
@@ -425,7 +427,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           : "Cliente",
         paymentMethod,
       });
-      // Refrescar day-schedule para que el nuevo turno aparezca en la columna
+      // Refrescar day-schedule y clientBookings para que el nuevo turno aparezca
       if (selectedDate) {
         fetch(
           `/api/p/${slug}/employees/${selectedEmployeeId}/day-schedule?date=${selectedDate}`
@@ -434,6 +436,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           .then((d: DayScheduleData | null) => setDaySchedule(d))
           .catch(() => {});
       }
+      fetchClientBookings();
       void data;
     } catch (err) {
       setPorTipoBookingError(
@@ -632,6 +635,21 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                     endTime={daySchedule.endTime}
                     appointments={daySchedule.appointments}
                     previewAppointment={porTipoPreview}
+                    clientAppointment={(() => {
+                      const clientBooking = clientBookings.find(
+                        (b) => b.employeeId === selectedEmployeeId && b.date === selectedDate
+                      );
+                      if (!clientBooking) return null;
+                      const appt = daySchedule.appointments.find(
+                        (a) => a.time === clientBooking.time
+                      );
+                      if (!appt) return null;
+                      return {
+                        time: appt.time,
+                        duracion: appt.duracion,
+                        onClick: () => setClientBookingOptionsTarget(clientBooking),
+                      };
+                    })()}
                   />
                   <DayScheduleBookingForm
                     startTime={daySchedule.startTime}
@@ -698,10 +716,24 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           onClose={() => setClientBookingOptionsTarget(null)}
           onCancelSuccess={(bookingId) => {
             setClientBookings((prev) => prev.filter((b) => b.bookingId !== bookingId));
+            // Refrescar day-schedule para que el bloque cancelado desaparezca
+            if (isPorTipo && selectedEmployeeId && selectedDate) {
+              fetch(
+                `/api/p/${slug}/employees/${selectedEmployeeId}/day-schedule?date=${selectedDate}`
+              )
+                .then((r) => (r.ok ? r.json() : null))
+                .then((d: DayScheduleData | null) => setDaySchedule(d))
+                .catch(() => {});
+            }
           }}
           onReschedule={(booking) => {
             setClientBookingOptionsTarget(null);
-            setClientRescheduleTarget(booking);
+            const bookingEmployee = employees.find((e) => e.id === booking.employeeId);
+            if (bookingEmployee?.modoTurno === "POR_TIPO") {
+              setPorTipoRescheduleTarget(booking);
+            } else {
+              setClientRescheduleTarget(booking);
+            }
           }}
         />
       )}
@@ -711,6 +743,14 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           booking={clientRescheduleTarget}
           slug={slug}
           onClose={() => setClientRescheduleTarget(null)}
+        />
+      )}
+
+      {porTipoRescheduleTarget && (
+        <ClientReschedulePorTipoModal
+          booking={porTipoRescheduleTarget}
+          slug={slug}
+          onClose={() => setPorTipoRescheduleTarget(null)}
         />
       )}
     </>

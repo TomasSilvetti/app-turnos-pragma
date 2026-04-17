@@ -79,7 +79,7 @@ export async function GET(
       serviceProviderId: employeeId,
       date,
       isActive: true,
-      booking: { isNot: null },
+      booking: { status: { in: ["pending", "confirmed"] } },
     },
     select: {
       id: true,

@@ -10,11 +10,18 @@ export type PreviewAppointment = {
   duracion: number; // duración en minutos
 };
 
+export type ClientOwnAppointment = {
+  time: string; // "HH:mm"
+  duracion: number; // minutos
+  onClick: () => void;
+};
+
 type Props = {
   startTime: string; // "HH:mm"
   endTime: string; // "HH:mm"
   appointments: ScheduledAppointment[];
   previewAppointment?: PreviewAppointment | null;
+  clientAppointment?: ClientOwnAppointment | null;
 };
 
 function timeToMinutes(time: string): number {
@@ -33,6 +40,7 @@ export default function DayScheduleColumn({
   endTime,
   appointments,
   previewAppointment,
+  clientAppointment,
 }: Props) {
   const startMin = timeToMinutes(startTime);
   const endMin = timeToMinutes(endTime);
@@ -112,6 +120,9 @@ export default function DayScheduleColumn({
 
         {/* Bloques de turnos reservados */}
         {appointments.map((appt, idx) => {
+          // Si este bloque pertenece al cliente, se renderiza aparte abajo
+          if (clientAppointment && appt.time === clientAppointment.time) return null;
+
           const apptStartMin = timeToMinutes(appt.time);
           const apptEndMin = apptStartMin + appt.duracion;
           const topPct = ((apptStartMin - startMin) / totalMin) * 100;
@@ -140,6 +151,36 @@ export default function DayScheduleColumn({
             </div>
           );
         })}
+
+        {/* Bloque del turno propio del cliente (clickeable) */}
+        {clientAppointment && (() => {
+          const clientStartMin = timeToMinutes(clientAppointment.time);
+          const clientEndMin = clientStartMin + clientAppointment.duracion;
+          const topPct = ((clientStartMin - startMin) / totalMin) * 100;
+          const heightPct = (clientAppointment.duracion / totalMin) * 100;
+          const endLabel = minutesToLabel(clientEndMin);
+          return (
+            <button
+              type="button"
+              onClick={clientAppointment.onClick}
+              className="absolute left-12 right-0 rounded-md flex flex-col justify-center px-3 py-1 overflow-hidden cursor-pointer hover:brightness-95 transition-all"
+              style={{
+                top: `${topPct}%`,
+                height: `${heightPct}%`,
+                backgroundColor: "color-mix(in srgb, #22c55e 18%, transparent)",
+                borderLeft: "3px solid #22c55e",
+              }}
+              aria-label={`Tu turno de ${clientAppointment.time} a ${endLabel}. Clic para opciones.`}
+            >
+              <span className="font-small text-[11px] font-semibold leading-tight text-emerald-600 dark:text-emerald-400 truncate">
+                {clientAppointment.time} – {endLabel}
+              </span>
+              <span className="font-small text-[10px] font-medium leading-tight text-emerald-600 dark:text-emerald-400 opacity-70 truncate uppercase tracking-wide">
+                Tu turno
+              </span>
+            </button>
+          );
+        })()}
       </div>
 
       {appointments.length === 0 && (

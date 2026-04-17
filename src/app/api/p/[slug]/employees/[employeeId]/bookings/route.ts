@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { getClientSession } from "@/lib/cliente-auth";
 
 const prisma = new PrismaClient();
 
@@ -32,6 +33,8 @@ export async function POST(
   { params }: { params: Promise<{ slug: string; employeeId: string }> }
 ) {
   const { slug, employeeId } = await params;
+
+  const clientSession = await getClientSession(request);
 
   let body: {
     date?: string;
@@ -184,6 +187,7 @@ export async function POST(
         appointmentId: appointment.id,
         clientName,
         clientPhone,
+        clienteId: clientSession?.clienteId ?? null,
         status: "pending",
       },
     });

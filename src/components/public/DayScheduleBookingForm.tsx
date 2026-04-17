@@ -31,6 +31,7 @@ type Props = {
     paymentMethod: string | null
   ) => void;
   onPreviewChange?: (preview: { time: string; duracion: number } | null) => void;
+  confirmLabel?: string;
 };
 
 function timeToMinutes(time: string): number {
@@ -69,6 +70,7 @@ export default function DayScheduleBookingForm({
   paymentMethods,
   onConfirm,
   onPreviewChange,
+  confirmLabel = "Confirmar reserva",
 }: Props) {
   const [inputTime, setInputTime] = useState("");
   const [serviceTypeId, setServiceTypeId] = useState("");
@@ -256,7 +258,7 @@ export default function DayScheduleBookingForm({
         aria-disabled={!canConfirm}
         className="w-full"
       >
-        Confirmar reserva
+        {confirmLabel}
       </Button>
     </div>
   );
