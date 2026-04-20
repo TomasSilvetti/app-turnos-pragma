@@ -10,11 +10,14 @@ export async function sendPushToServiceProvider(
   serviceProviderId: string,
   payload: NotificationPayload
 ): Promise<void> {
-  const vapidPublicKey = process.env.VAPID_PUBLIC_KEY ?? process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? process.env.VAPID_PUBLIC_KEY;
   const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
   const vapidSubject = process.env.VAPID_SUBJECT;
 
-  if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) return;
+  if (!vapidPublicKey || !vapidPrivateKey || !vapidSubject) {
+    console.error("[Push] Faltan env vars VAPID:", { vapidPublicKey: !!vapidPublicKey, vapidPrivateKey: !!vapidPrivateKey, vapidSubject: !!vapidSubject });
+    return;
+  }
 
   const webpush = (await import("web-push")).default;
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
@@ -22,7 +25,11 @@ export async function sendPushToServiceProvider(
     where: { serviceProviderId },
   });
 
-  if (subscriptions.length === 0) return;
+  console.log(`[Push] Enviando a ${subscriptions.length} suscripciones para serviceProvider ${serviceProviderId}`);
+  if (subscriptions.length === 0) {
+    console.warn("[Push] No hay suscripciones registradas para este serviceProvider");
+    return;
+  }
 
   const payloadStr = JSON.stringify(payload);
 
@@ -35,6 +42,7 @@ export async function sendPushToServiceProvider(
         );
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;
+        console.error("[Push] Error enviando notificación:", err);
         if (status === 410) {
           await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => {});
         }
