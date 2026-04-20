@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
   if (appointmentFull) {
     await sendPushToServiceProvider(appointmentFull.serviceProviderId, {
       title: "Nuevo turno reservado",
-      body: `${booking.clientName} el ${appointmentFull.date} a las ${appointmentFull.time}`,
+      body: `${booking.clientName} el ${appointmentFull.date.split("-").reverse().join("/")} a las ${appointmentFull.time}`,
     }).catch((err) => console.error("[Push] Error enviando notificación:", err));
   }
 

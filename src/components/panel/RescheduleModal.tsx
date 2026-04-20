@@ -566,12 +566,12 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-3 flex flex-col gap-1.5 text-xs font-body">
             <div className="flex gap-2 text-[#2A2829]/50 dark:text-[#64748b]">
               <span className="font-medium uppercase tracking-wide">Antes</span>
-              <span>{format(parseISO(item.appointmentDate), "d MMM yyyy", { locale: es })} · {item.appointmentTime}</span>
+              <span>{format(parseISO(item.appointmentDate), "dd/MM/yyyy")} · {item.appointmentTime}</span>
             </div>
             <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] my-0.5" />
             <div className="flex gap-2 text-[#2A2829] dark:text-[#e2e8f0]">
               <span className="font-medium uppercase tracking-wide">Ahora</span>
-              <span>{format(parseISO(confirmedDate), "d MMM yyyy", { locale: es })} · {confirmedSlot.time}</span>
+              <span>{format(parseISO(confirmedDate), "dd/MM/yyyy")} · {confirmedSlot.time}</span>
             </div>
           </div>
 

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { PushNotificationToggle } from "@/components/profile/PushNotificationToggle";
 import { AttendanceToggle } from "@/components/profile/AttendanceToggle";
+import { InstallPWAButton } from "@/components/InstallPWAButton";
 
 export default function ConfiguracionPage() {
   const { data: session } = useSession();
@@ -92,6 +93,11 @@ export default function ConfiguracionPage() {
 
           {/* Notificaciones push */}
           <PushNotificationToggle />
+
+          <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+
+          {/* Instalar PWA */}
+          <InstallPWAButton variant="panel" />
 
           <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
 

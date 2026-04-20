@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
 import { verifyClientToken } from "@/lib/cliente-auth";
+import { InstallPWAButton } from "@/components/InstallPWAButton";
 
 type BusinessPublicData = {
   name: string;
@@ -113,6 +114,9 @@ export default async function PublicBookingPage({
             </div>
           )}
         </div>
+
+        {/* Instalar PWA */}
+        <InstallPWAButton variant="public" />
 
         {/* Calendario y turnos */}
         <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} phone={business.phone} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} initialSucursales={business.sucursales} />
