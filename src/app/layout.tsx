@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   title: "Tuturno",
   description: "Gestión profesional de turnos",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
+  },
 };
 
 export default function RootLayout({
