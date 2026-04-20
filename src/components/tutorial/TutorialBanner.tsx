@@ -50,7 +50,7 @@ export function TutorialBanner() {
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-color)]">
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--brand-color)] dark:text-white">
             Tutorial — paso {stepIndex + 1} de {steps.length}
           </span>
           <span className="text-sm font-semibold text-[#2A2829] dark:text-[#e2e8f0] leading-tight">
@@ -58,7 +58,7 @@ export function TutorialBanner() {
           </span>
         </div>
         <span
-          className="material-symbols-outlined text-[var(--brand-color)] shrink-0 mt-0.5"
+          className="material-symbols-outlined text-[var(--brand-color)] dark:text-white shrink-0 mt-0.5"
           style={{ fontSize: "20px" }}
           translate="no"
         >

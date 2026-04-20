@@ -73,7 +73,7 @@ function TutorialContent() {
         <div className="flex items-start gap-4">
           <div className="shrink-0 w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#0f172a] flex items-center justify-center">
             <span
-              className="material-symbols-outlined text-[var(--brand-color)]"
+              className="material-symbols-outlined text-[var(--brand-color)] dark:text-white"
               style={{ fontSize: "24px" }}
               translate="no"
             >
@@ -89,7 +89,7 @@ function TutorialContent() {
         {step.moduleHref && (
           <Link
             href={`${step.moduleHref}?fromTutorial=${currentStep}`}
-            className="self-start flex items-center gap-2 rounded-md px-4 py-2 text-sm border border-[var(--brand-color)] text-[var(--brand-color)] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors"
+            className="self-start flex items-center gap-2 rounded-md px-4 py-2 text-sm border border-[var(--brand-color)] text-[var(--brand-color)] dark:border-white dark:text-white hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">arrow_forward</span>
             {step.moduleLabel}
