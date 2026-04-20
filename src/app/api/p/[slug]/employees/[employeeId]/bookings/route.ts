@@ -50,9 +50,10 @@ export async function POST(
     return NextResponse.json({ error: "Body inválido" }, { status: 400 });
   }
 
-  const { date, startTime, serviceTypeId, clientName, clientPhone } = body;
+  const { date, startTime, serviceTypeId, clientName, clientPhone: rawClientPhone } = body;
+  let clientPhone = rawClientPhone ?? "";
 
-  if (!date || !startTime || !serviceTypeId || !clientName || !clientPhone) {
+  if (!date || !startTime || !serviceTypeId || !clientName || !rawClientPhone) {
     return NextResponse.json(
       {
         error:
@@ -152,6 +153,15 @@ export async function POST(
       { error: "El turno finaliza fuera del horario de atención" },
       { status: 409 }
     );
+  }
+
+  // Resolver teléfono real si el cliente está autenticado
+  if (clientSession && (!clientPhone || !clientPhone.startsWith("+"))) {
+    const clienteData = await prisma.cliente.findUnique({
+      where: { id: clientSession.clienteId },
+      select: { telefono: true },
+    });
+    clientPhone = clienteData?.telefono ?? clientPhone;
   }
 
   // Transacción: verificar solapamiento y crear appointment + booking

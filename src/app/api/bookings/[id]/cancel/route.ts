@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
-import { sendWhatsApp } from "@/lib/twilio";
+import { sendWhatsAppTemplate } from "@/lib/twilio";
 
 
 export async function PATCH(
@@ -21,6 +21,7 @@ export async function PATCH(
     where: { id },
     include: {
       appointment: { select: { serviceProviderId: true, date: true, time: true } },
+      cliente: { select: { telefono: true } },
     },
   });
 
@@ -46,11 +47,23 @@ export async function PATCH(
 
   emitNewBooking();
 
-  if (booking.clientPhone) {
-    const message = `Hola ${booking.clientName}, lamentablemente debemos informarte que tu turno del ${booking.appointment.date} a las ${booking.appointment.time} hs ha sido cancelado. Disculpá los inconvenientes.`;
-    sendWhatsApp({ to: booking.clientPhone, body: message }).catch((err) =>
-      console.error("Error al enviar WhatsApp de cancelación:", err)
-    );
+  const phoneToNotify = booking.cliente?.telefono ?? booking.clientPhone;
+  const templateSid = process.env.TWILIO_CANCEL_TEMPLATE_SID;
+  if (phoneToNotify && phoneToNotify.startsWith("+") && templateSid) {
+    try {
+      const sid = await sendWhatsAppTemplate({
+        to: phoneToNotify,
+        contentSid: templateSid,
+        contentVariables: {
+          "1": booking.clientName,
+          "2": booking.appointment.date,
+          "3": booking.appointment.time,
+        },
+      });
+      console.log("[cancel] WhatsApp enviado OK, SID:", sid);
+    } catch (err) {
+      console.error("[cancel] Error al enviar WhatsApp:", err);
+    }
   }
 
   return NextResponse.json({ id }, { status: 200 });

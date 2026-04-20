@@ -8,31 +8,32 @@ export async function GET(
 ) {
   const { slug, sucursalId } = await params;
 
-  const profile = await prisma.businessProfile.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      serviceProvider: {
-        select: { id: true, name: true, modoTurno: true, isActive: true, attendsAppointments: true },
+  const [profile, sucursal] = await Promise.all([
+    prisma.businessProfile.findUnique({
+      where: { slug },
+      select: {
+        id: true,
+        serviceProvider: {
+          select: { id: true, name: true, modoTurno: true, isActive: true, attendsAppointments: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.sucursal.findUnique({
+      where: { id: sucursalId },
+      select: {
+        businessProfileId: true,
+        empleados: {
+          select: {
+            serviceProvider: { select: { id: true, name: true, modoTurno: true } },
+          },
+        },
+      },
+    }),
+  ]);
 
   if (!profile) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
-
-  const sucursal = await prisma.sucursal.findUnique({
-    where: { id: sucursalId },
-    select: {
-      businessProfileId: true,
-      empleados: {
-        select: {
-          serviceProvider: { select: { id: true, name: true, modoTurno: true } },
-        },
-      },
-    },
-  });
 
   if (!sucursal || sucursal.businessProfileId !== profile.id) {
     return NextResponse.json({ error: "Sucursal no encontrada" }, { status: 404 });

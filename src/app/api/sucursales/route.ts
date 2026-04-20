@@ -61,7 +61,7 @@ export const POST = auth(async (req: NextAuthRequest) => {
     });
 
     await tx.empleadoSucursal.create({
-      data: { serviceProviderId: req.auth!.user!.id, sucursalId: created.id },
+      data: { serviceProviderId: req.auth!.user!.id!, sucursalId: created.id },
     });
 
     return [created];
