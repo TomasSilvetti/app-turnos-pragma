@@ -1,0 +1,16 @@
+{
+  "name": "Tuturno",
+  "short_name": "Tuturno",
+  "description": "Gestión profesional de turnos",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2A2829",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
