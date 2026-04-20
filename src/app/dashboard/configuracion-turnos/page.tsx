@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { ScheduleConfigList, type ScheduleConfig } from "@/components/schedule-config/ScheduleConfigList";
 import { ScheduleConfigModal, type ScheduleConfigFormData, type ServiceType } from "@/components/schedule-config/ScheduleConfigModal";
 import { ScheduleConfigCalendar } from "@/components/schedule-config/ScheduleConfigCalendar";
@@ -82,6 +83,8 @@ export default function ConfiguracionTurnosPage() {
   const [modoTurno, setModoTurno] = useState<"FIJO" | "POR_TIPO">("FIJO");
   const [modoTurnoLoading, setModoTurnoLoading] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [hasSucursal, setHasSucursal] = useState<boolean | null>(null);
+  const [userRol, setUserRol] = useState<string>("propietario");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<ScheduleConfig & { serviceTypeIds?: string[] } | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
@@ -121,6 +124,18 @@ export default function ConfiguracionTurnosPage() {
       setLoading(false);
       setModoTurnoLoading(false);
     });
+
+    fetch("/api/me/sucursal")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data && typeof data.hasSucursal === "boolean") {
+          setHasSucursal(data.hasSucursal);
+          setUserRol(data.rol ?? "propietario");
+        } else {
+          setHasSucursal(true);
+        }
+      })
+      .catch(() => setHasSucursal(true));
   }, []);
 
   async function handleModoTurnoChange(activado: boolean) {
@@ -145,6 +160,7 @@ export default function ConfiguracionTurnosPage() {
   }
 
   function handleAdd() {
+    if (hasSucursal === false) return;
     setEditingConfig(null);
     setModalError(null);
     setModalOpen(true);
@@ -324,6 +340,22 @@ export default function ConfiguracionTurnosPage() {
         </p>
       </div>
 
+      {hasSucursal === false && (
+        <div className="mb-5 rounded-md border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm text-amber-800 dark:text-amber-400">
+          {(userRol === "administrador" || userRol === "propietario") ? (
+            <>
+              No podés crear configuraciones de horario porque no tenés una sucursal asignada. Asignate una sucursal desde el módulo de{" "}
+              <Link href="/dashboard/empleados" className="underline font-medium hover:text-amber-900 dark:hover:text-amber-300">
+                Empleados
+              </Link>
+              .
+            </>
+          ) : (
+            "No podés crear configuraciones de horario porque no tenés una sucursal asignada. Contactá al administrador para que te asigne una."
+          )}
+        </div>
+      )}
+
       {/* Toggle de modo de duración */}
       <div className="mb-5">
         <ModoTurnoToggle
@@ -349,6 +381,7 @@ export default function ConfiguracionTurnosPage() {
             onDelete={handleDelete}
             onToggle={handleToggle}
             isToggleDisabled={(config) => modoTurno === "POR_TIPO" && config.intervalMinutes > 0}
+            isAddDisabled={hasSucursal === false}
           />
 
           {toggleError && (

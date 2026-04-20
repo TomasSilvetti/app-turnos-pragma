@@ -87,6 +87,17 @@ export const POST = auth(async (req: NextAuthRequest) => {
 
   const { businessProfileId } = result;
 
+  const sucursal = await prisma.empleadoSucursal.findFirst({
+    where: { serviceProviderId: userId },
+    select: { sucursalId: true },
+  });
+  if (!sucursal) {
+    return NextResponse.json(
+      { error: "No podés crear una configuración de horario sin tener una sucursal asignada." },
+      { status: 400 }
+    );
+  }
+
   // Validar modoTurno: si es POR_TIPO, debe existir al menos un ServiceType con duracion
   const sp = await prisma.serviceProvider.findUnique({
     where: { id: userId },
