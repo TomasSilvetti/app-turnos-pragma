@@ -36,7 +36,9 @@ export default function RootLayout({
       lang="en"
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
-      <head />
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;});` }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <AuthSessionProvider>{children}</AuthSessionProvider>
       </body>

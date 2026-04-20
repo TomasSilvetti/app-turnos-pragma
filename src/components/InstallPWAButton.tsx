@@ -18,8 +18,15 @@ export function InstallPWAButton({ variant = "panel" }: { variant?: "banner" | "
       return;
     }
 
+    // El evento puede haberse disparado antes de que el componente montara
+    const cached = (window as unknown as Record<string, unknown>).__pwaPrompt as BeforeInstallPromptEvent | undefined;
+    if (cached) {
+      setDeferredPrompt(cached);
+    }
+
     function handler(e: Event) {
       e.preventDefault();
+      (window as unknown as Record<string, unknown>).__pwaPrompt = e;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     }
 
