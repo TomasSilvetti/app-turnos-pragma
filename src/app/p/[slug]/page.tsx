@@ -58,6 +58,9 @@ export default async function PublicBookingPage({
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
       <div className="w-full max-w-md flex flex-col gap-6">
+        {/* Banner instalar PWA */}
+        <InstallPWAButton variant="banner" />
+
         {/* Card del negocio */}
         <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col items-center gap-5">
           {/* Logo */}
@@ -114,9 +117,6 @@ export default async function PublicBookingPage({
             </div>
           )}
         </div>
-
-        {/* Instalar PWA */}
-        <InstallPWAButton variant="public" />
 
         {/* Calendario y turnos */}
         <BookingSection slug={slug} businessName={business.name} cbu={business.cbu} alias={business.alias} phone={business.phone} clientSession={clientSession} initialEmployeeId={initialEmployeeId ?? null} initialSucursales={business.sucursales} />
