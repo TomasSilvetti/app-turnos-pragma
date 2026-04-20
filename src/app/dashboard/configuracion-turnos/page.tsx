@@ -127,10 +127,24 @@ export default function ConfiguracionTurnosPage() {
 
     fetch("/api/me/sucursal")
       .then((r) => r.json())
-      .then((data) => {
+      .then(async (data) => {
         if (data && typeof data.hasSucursal === "boolean") {
           setHasSucursal(data.hasSucursal);
           setUserRol(data.rol ?? "propietario");
+
+          if (!data.hasSucursal) {
+            setConfigs((prev) => {
+              const activas = prev.filter((c) => c.isActive);
+              if (activas.length > 0) {
+                Promise.all(
+                  activas.map((c) =>
+                    fetch(`/api/schedule-configs/${c.id}/toggle`, { method: "PATCH" })
+                  )
+                );
+              }
+              return prev.map((c) => ({ ...c, isActive: false }));
+            });
+          }
         } else {
           setHasSucursal(true);
         }
@@ -380,7 +394,7 @@ export default function ConfiguracionTurnosPage() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggle={handleToggle}
-            isToggleDisabled={(config) => modoTurno === "POR_TIPO" && config.intervalMinutes > 0}
+            isToggleDisabled={(config) => hasSucursal === false || (modoTurno === "POR_TIPO" && config.intervalMinutes > 0)}
             isAddDisabled={hasSucursal === false}
           />
 
