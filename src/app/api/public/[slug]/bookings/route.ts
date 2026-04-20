@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendPushToServiceProvider } from "@/lib/push-notifications";
 
 
 function timeToMinutes(time: string): number {
@@ -200,6 +201,11 @@ export async function POST(
       { status: 409 }
     );
   }
+
+  sendPushToServiceProvider(profile.serviceProviderId, {
+    title: "Nuevo turno reservado",
+    body: `${clientName} reservó un turno para el ${date} a las ${startTime}`,
+  }).catch(() => {});
 
   return NextResponse.json(
     {
