@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { sendPushToServiceProvider } from "@/lib/push-notifications";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { BookingStatus } from "@prisma/client";
 
 
 export async function POST(request: NextRequest) {
@@ -56,8 +57,8 @@ export async function POST(request: NextRequest) {
   }
 
   const duplicateDayWhere = isAuthenticatedFlow
-    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as const }, appointment: { date: appointment.date } }
-    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as const }, appointment: { date: appointment.date } };
+    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } }
+    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } };
 
   const existingOnDate = await prisma.booking.findFirst({ where: duplicateDayWhere });
   if (existingOnDate) {
