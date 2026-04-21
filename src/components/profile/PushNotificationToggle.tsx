@@ -77,15 +77,20 @@ export function PushNotificationToggle() {
         const registration = await navigator.serviceWorker.ready;
 
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-        if (!vapidPublicKey) throw new Error("VAPID key no configurada");
+        if (!vapidPublicKey) throw new Error("VAPID_KEY_MISSING");
 
         const existingSub = await registration.pushManager.getSubscription();
         if (existingSub) await existingSub.unsubscribe();
 
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        });
+        let subscription: PushSubscription;
+        try {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          });
+        } catch (subErr) {
+          throw new Error(`SUBSCRIBE_FAILED: ${subErr instanceof Error ? subErr.message : subErr}`);
+        }
 
         const { endpoint, keys } = subscription.toJSON() as {
           endpoint: string;
@@ -98,13 +103,20 @@ export function PushNotificationToggle() {
           body: JSON.stringify({ endpoint, keys }),
         });
 
-        if (!res.ok) throw new Error("No se pudo guardar la suscripción");
+        if (!res.ok) throw new Error(`API_FAILED: ${res.status}`);
         localStorage.removeItem("push_notifications_disabled");
         setActive(true);
       }
     } catch (err) {
       console.error("[PushNotificationToggle] error:", err);
-      setErrorMsg("No se pudo actualizar la suscripción. Intentá de nuevo.");
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg === "VAPID_KEY_MISSING") {
+        setErrorMsg("Error de configuración del servidor. Contactá al soporte.");
+      } else if (msg.startsWith("SUBSCRIBE_FAILED")) {
+        setErrorMsg("El navegador rechazó la suscripción. Intentá recargar la página.");
+      } else {
+        setErrorMsg("No se pudo actualizar la suscripción. Intentá de nuevo.");
+      }
     } finally {
       setSaving(false);
     }
