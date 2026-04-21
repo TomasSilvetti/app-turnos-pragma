@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
 import { verifyClientToken } from "@/lib/cliente-auth";
+import { InstallPWAButton } from "@/components/InstallPWAButton";
 
 type BusinessPublicData = {
   name: string;
@@ -57,6 +58,9 @@ export default async function PublicBookingPage({
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
       <div className="w-full max-w-md flex flex-col gap-6">
+        {/* Banner instalar PWA */}
+        <InstallPWAButton variant="banner" />
+
         {/* Card del negocio */}
         <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col items-center gap-5">
           {/* Logo */}

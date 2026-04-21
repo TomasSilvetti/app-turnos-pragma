@@ -9,8 +9,10 @@ export const GET = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
+  const userId = req.auth.user.id;
+
   const sp = await prisma.serviceProvider.findUnique({
-    where: { id: req.auth.user.id },
+    where: { id: userId },
     select: { modoTurno: true },
   });
 
@@ -18,7 +20,20 @@ export const GET = auth(async (req: NextAuthRequest) => {
     return NextResponse.json({ error: "Empleado no encontrado" }, { status: 404 });
   }
 
-  return NextResponse.json({ modoTurno: sp.modoTurno }, { status: 200 });
+  const isOwner = !!(await prisma.businessProfile.findUnique({
+    where: { serviceProviderId: userId },
+    select: { id: true },
+  }));
+
+  let tieneSucursal = true;
+  if (!isOwner) {
+    const branchCount = await prisma.empleadoSucursal.count({
+      where: { serviceProviderId: userId },
+    });
+    tieneSucursal = branchCount > 0;
+  }
+
+  return NextResponse.json({ modoTurno: sp.modoTurno, tieneSucursal }, { status: 200 });
 });
 
 export const PATCH = auth(async (req: NextAuthRequest) => {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { sendWhatsAppTemplate } from "@/lib/twilio";
 
 
 export async function PATCH(
@@ -18,7 +19,10 @@ export async function PATCH(
 
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { appointment: { select: { serviceProviderId: true } } },
+    include: {
+      appointment: { select: { serviceProviderId: true, date: true, time: true } },
+      cliente: { select: { telefono: true } },
+    },
   });
 
   if (!booking) {
@@ -42,6 +46,25 @@ export async function PATCH(
   ]);
 
   emitNewBooking();
+
+  const phoneToNotify = booking.cliente?.telefono ?? booking.clientPhone;
+  const templateSid = process.env.TWILIO_CANCEL_TEMPLATE_SID;
+  if (phoneToNotify && phoneToNotify.startsWith("+") && templateSid) {
+    try {
+      const sid = await sendWhatsAppTemplate({
+        to: phoneToNotify,
+        contentSid: templateSid,
+        contentVariables: {
+          "1": booking.clientName,
+          "2": booking.appointment.date,
+          "3": booking.appointment.time,
+        },
+      });
+      console.log("[cancel] WhatsApp enviado OK, SID:", sid);
+    } catch (err) {
+      console.error("[cancel] Error al enviar WhatsApp:", err);
+    }
+  }
 
   return NextResponse.json({ id }, { status: 200 });
 }

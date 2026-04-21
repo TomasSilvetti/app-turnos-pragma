@@ -34,6 +34,7 @@ export default function HorariosPage() {
   const [configs, setConfigs] = useState<ConfigWithServiceTypes[]>([]);
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [modoTurno, setModoTurno] = useState<"FIJO" | "POR_TIPO">("FIJO");
+  const [tieneSucursal, setTieneSucursal] = useState(true);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingConfig, setEditingConfig] = useState<(ScheduleConfig & { serviceTypeIds?: string[] }) | undefined>();
@@ -61,6 +62,7 @@ export default function HorariosPage() {
       if (modoTurnoRes.ok) {
         const data = await modoTurnoRes.json();
         if (data?.modoTurno) setModoTurno(data.modoTurno);
+        if (data?.tieneSucursal === false) setTieneSucursal(false);
       }
 
       setLoading(false);

@@ -1,3 +1,4 @@
+// v2
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 

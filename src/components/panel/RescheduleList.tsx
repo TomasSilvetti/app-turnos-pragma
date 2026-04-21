@@ -99,8 +99,8 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  const originalDate = format(parseISO(item.appointmentDate), "d MMM yyyy", { locale: es });
-  const requestedDate = format(parseISO(item.requestedDate), "d MMM yyyy", { locale: es });
+  const originalDate = format(parseISO(item.appointmentDate), "dd/MM/yyyy");
+  const requestedDate = format(parseISO(item.requestedDate), "dd/MM/yyyy");
 
   return (
     <div
@@ -354,8 +354,8 @@ export default function RescheduleList() {
 
             {/* Solicitudes iniciadas por el cliente */}
             {clientItems.map((item) => {
-              const originalDate = format(parseISO(item.appointmentDate), "d MMM yyyy", { locale: es });
-              const requestedDate = format(parseISO(item.requestedDate), "d MMM yyyy", { locale: es });
+              const originalDate = format(parseISO(item.appointmentDate), "dd/MM/yyyy");
+              const requestedDate = format(parseISO(item.requestedDate), "dd/MM/yyyy");
               const isApproving = approvingId === item.id;
               return (
                 <div

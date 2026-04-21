@@ -122,7 +122,7 @@ function BookingRow({
   item: BookingItem;
   actions: React.ReactNode;
 }) {
-  const formattedDate = format(parseISO(item.appointmentDate), "EEE d MMM", { locale: es });
+  const formattedDate = format(parseISO(item.appointmentDate), "dd/MM/yyyy");
   const formattedPrice =
     item.serviceTypePrice !== null
       ? new Intl.NumberFormat("es-AR", {

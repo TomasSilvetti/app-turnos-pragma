@@ -22,8 +22,17 @@ export function PushNotificationToggle() {
 
     setSupported(true);
 
-    navigator.serviceWorker
-      .register("/sw.js")
+    if (Notification.permission === "granted") {
+      const manuallyDisabled = localStorage.getItem("push_notifications_disabled") === "true";
+      setActive(!manuallyDisabled);
+      setLoading(false);
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+      return;
+    }
+
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+
+    navigator.serviceWorker.ready
       .then((reg) => reg.pushManager.getSubscription())
       .then((sub) => setActive(!!sub))
       .catch(() => {})
@@ -36,9 +45,8 @@ export function PushNotificationToggle() {
     setErrorMsg(null);
 
     try {
-      const registration = await navigator.serviceWorker.ready;
-
       if (active) {
+        const registration = await navigator.serviceWorker.ready;
         const sub = await registration.pushManager.getSubscription();
         if (sub) {
           const endpoint = sub.endpoint;
@@ -49,16 +57,30 @@ export function PushNotificationToggle() {
             body: JSON.stringify({ endpoint }),
           });
         }
+        localStorage.setItem("push_notifications_disabled", "true");
         setActive(false);
       } else {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
+        if (Notification.permission === "denied") {
+          setErrorMsg("Las notificaciones están bloqueadas. Habilitálas desde la configuración del navegador.");
           setSaving(false);
           return;
         }
 
+        if (Notification.permission === "default") {
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            setSaving(false);
+            return;
+          }
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+
         const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
         if (!vapidPublicKey) throw new Error("VAPID key no configurada");
+
+        const existingSub = await registration.pushManager.getSubscription();
+        if (existingSub) await existingSub.unsubscribe();
 
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -77,9 +99,11 @@ export function PushNotificationToggle() {
         });
 
         if (!res.ok) throw new Error("No se pudo guardar la suscripción");
+        localStorage.removeItem("push_notifications_disabled");
         setActive(true);
       }
-    } catch {
+    } catch (err) {
+      console.error("[PushNotificationToggle] error:", err);
       setErrorMsg("No se pudo actualizar la suscripción. Intentá de nuevo.");
     } finally {
       setSaving(false);

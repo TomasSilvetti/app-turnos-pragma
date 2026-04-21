@@ -709,7 +709,8 @@ export function ScheduleConfigModal({
                     value={inlineDuracion}
                     onChange={(e) => setInlineDuracion(e.target.value)}
                     placeholder="Ej: 30"
-                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                    disabled={modoTurno === "FIJO"}
+                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-800"
                   />
                 </div>
               </div>

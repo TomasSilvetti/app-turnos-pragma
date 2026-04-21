@@ -19,6 +19,7 @@ type ScheduleConfigListProps = {
   onToggle: (id: string) => void;
   onAdd: () => void;
   isToggleDisabled?: (config: ScheduleConfig) => boolean;
+  isAddDisabled?: boolean;
 };
 
 const DIAS_LABEL: Record<string, string> = {
@@ -81,6 +82,7 @@ export function ScheduleConfigList({
   onToggle,
   onAdd,
   isToggleDisabled,
+  isAddDisabled,
 }: ScheduleConfigListProps) {
   if (configs.length === 0) {
     return (
@@ -96,7 +98,8 @@ export function ScheduleConfigList({
         </div>
         <Button
           onClick={onAdd}
-          className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40]"
+          disabled={isAddDisabled}
+          className="bg-[var(--brand-color)] text-white hover:bg-[#1c2a40] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Agregar horario
         </Button>
@@ -166,8 +169,9 @@ export function ScheduleConfigList({
       <div className="pt-1">
         <Button
           onClick={onAdd}
+          disabled={isAddDisabled}
           variant="outline"
-          className="w-full border-dashed border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[var(--brand-color)] hover:border-[var(--brand-color)]"
+          className="w-full border-dashed border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[var(--brand-color)] hover:border-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           + Agregar horario
         </Button>
