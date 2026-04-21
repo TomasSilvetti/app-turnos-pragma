@@ -171,6 +171,18 @@ export async function POST(
       return { conflict: "overlap" as const };
     }
 
+    const existingBookingOnDate = await tx.booking.findFirst({
+      where: {
+        clientPhone,
+        status: { in: ["pending", "confirmed"] },
+        appointment: { date },
+      },
+    });
+
+    if (existingBookingOnDate) {
+      return { conflict: "duplicate_day" as const };
+    }
+
     // Crear el Appointment
     const appointment = await tx.appointment.create({
       data: {
@@ -196,10 +208,11 @@ export async function POST(
   });
 
   if ("conflict" in result) {
-    return NextResponse.json(
-      { error: "El horario seleccionado se superpone con un turno ya reservado" },
-      { status: 409 }
-    );
+    const message =
+      result.conflict === "duplicate_day"
+        ? "Ya tenés un turno reservado para ese día"
+        : "El horario seleccionado se superpone con un turno ya reservado";
+    return NextResponse.json({ error: message }, { status: 409 });
   }
 
   sendPushToServiceProvider(profile.serviceProviderId, {
