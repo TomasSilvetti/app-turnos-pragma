@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { sendWhatsAppTemplate } from "@/lib/twilio";
+import { inngest } from "@/lib/inngest";
 
 
 export async function PATCH(
@@ -41,11 +42,29 @@ export async function PATCH(
     prisma.booking.delete({ where: { id } }),
     prisma.appointment.update({
       where: { id: booking.appointmentId },
-      data: { isActive: false },
+      data: { isActive: true },
     }),
   ]);
 
   emitNewBooking();
+
+  // Notificar lista de espera si hay candidatos para este slot
+  const tieneListaEspera = await prisma.listaEspera.findFirst({
+    where: {
+      serviceProviderId: booking.appointment.serviceProviderId,
+      estado: "activa",
+    },
+    select: { id: true },
+  });
+  if (tieneListaEspera) {
+    await inngest.send({
+      name: "waitlist/vacancy.created",
+      data: {
+        appointmentId: booking.appointmentId,
+        serviceProviderId: booking.appointment.serviceProviderId,
+      },
+    });
+  }
 
   const phoneToNotify = booking.cliente?.telefono ?? booking.clientPhone;
   const templateSid = process.env.TWILIO_CANCEL_TEMPLATE_SID;
