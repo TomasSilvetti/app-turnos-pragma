@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { BookingStatus } from "@prisma/client";
 
 
 function timeToMinutes(time: string): number {
@@ -188,8 +189,8 @@ export async function POST(
     }
 
     const duplicateDayWhere = clientSession
-      ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as const }, appointment: { date } }
-      : { clientPhone, status: { in: ["pending", "confirmed"] as const }, appointment: { date } };
+      ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date } }
+      : { clientPhone, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date } };
 
     const existingOnDate = await tx.booking.findFirst({ where: duplicateDayWhere });
     if (existingOnDate) {
