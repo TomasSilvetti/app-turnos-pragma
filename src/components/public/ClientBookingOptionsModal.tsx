@@ -22,7 +22,7 @@ type Props = {
   onReschedule: (booking: ClientBookingInfo) => void;
 };
 
-type View = "main" | "confirm-cancel";
+type View = "main" | "warn-respaldo" | "confirm-cancel";
 
 function isWithinMinAdvance(date: string, time: string, minAdvanceHours: number): boolean {
   if (minAdvanceHours === 0) return false;
@@ -40,6 +40,8 @@ export default function ClientBookingOptionsModal({
   const [view, setView] = useState<View>("main");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingRespaldo, setCheckingRespaldo] = useState(false);
+  const [profesionalRespaldo, setProfesionalRespaldo] = useState<string | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const blocked = isWithinMinAdvance(booking.date, booking.time, booking.minAdvanceHours);
@@ -56,6 +58,26 @@ export default function ClientBookingOptionsModal({
 
   function handleOverlayClick(e: React.MouseEvent) {
     if (e.target === overlayRef.current) onClose();
+  }
+
+  async function handleClickCancelar() {
+    setCheckingRespaldo(true);
+    try {
+      const res = await fetch(`/api/lista-espera/check-respaldo?bookingId=${encodeURIComponent(booking.bookingId)}`);
+      if (res.ok) {
+        const data = await res.json() as { esRespaldo: boolean; profesionalNombre: string | null };
+        if (data.esRespaldo) {
+          setProfesionalRespaldo(data.profesionalNombre);
+          setView("warn-respaldo");
+          return;
+        }
+      }
+    } catch {
+      // Si el endpoint no está disponible aún, continuar sin warning
+    } finally {
+      setCheckingRespaldo(false);
+    }
+    setView("confirm-cancel");
   }
 
   async function handleConfirmCancel() {
@@ -150,7 +172,38 @@ export default function ClientBookingOptionsModal({
           </div>
         )}
 
-        {view === "main" ? (
+        {view === "warn-respaldo" ? (
+          <div className="flex flex-col gap-4">
+            <div
+              role="alert"
+              className="flex items-start gap-2 rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-3"
+            >
+              <AlertCircle size={16} className="text-amber-500 shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="font-body text-sm text-amber-700 dark:text-amber-400">
+                Si cancelás este turno también saldrás de la lista de espera
+                {profesionalRespaldo ? ` de ${profesionalRespaldo}` : ""}.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setView("main")}
+                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                disabled={isLoading}
+                className="flex-1 font-body text-sm text-white bg-[#ef4444] rounded-md py-2.5 hover:bg-[#dc2626] transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {isLoading && <Loader2 size={14} className="animate-spin" />}
+                {isLoading ? "Cancelando..." : "Confirmar cancelación"}
+              </button>
+            </div>
+          </div>
+        ) : view === "main" ? (
           <div className="flex flex-col gap-2">
             <button
               type="button"
@@ -162,11 +215,11 @@ export default function ClientBookingOptionsModal({
             </button>
             <button
               type="button"
-              onClick={() => setView("confirm-cancel")}
-              disabled={blocked}
+              onClick={handleClickCancelar}
+              disabled={blocked || checkingRespaldo}
               className="w-full font-body text-sm text-[#ef4444] border border-[#ef4444]/30 rounded-md py-2.5 hover:bg-[#ef4444]/5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <Trash2 size={14} aria-hidden="true" />
+              {checkingRespaldo ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} aria-hidden="true" />}
               Cancelar turno
             </button>
           </div>

@@ -57,12 +57,30 @@ export async function DELETE(
     }
   }
 
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: "cancelled" },
+  // Verificar si el booking es respaldo de una lista de espera activa
+  const listaEsperaEntry = await prisma.listaEspera.findFirst({
+    where: {
+      bookingIdRespaldo: bookingId,
+      estado: { in: ["activa", "notificada"] },
+    },
+    select: { id: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.update({
+      where: { id: bookingId },
+      data: { status: "cancelled" },
+    });
+
+    if (listaEsperaEntry) {
+      await tx.listaEspera.delete({ where: { id: listaEsperaEntry.id } });
+    }
   });
 
   emitNewBooking();
 
-  return NextResponse.json({ success: true }, { status: 200 });
+  return NextResponse.json(
+    { success: true, eliminadoDeLista: !!listaEsperaEntry },
+    { status: 200 }
+  );
 }

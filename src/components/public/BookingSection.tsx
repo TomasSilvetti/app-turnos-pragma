@@ -11,6 +11,11 @@ import ClientRescheduleModal from "./ClientRescheduleModal";
 import ClientReschedulePorTipoModal from "./ClientReschedulePorTipoModal";
 import DayScheduleColumn, { type ScheduledAppointment, type PreviewAppointment } from "./DayScheduleColumn";
 import DayScheduleBookingForm, { type ServiceTypeOption } from "./DayScheduleBookingForm";
+import NotificacionesToggle from "./NotificacionesToggle";
+import NotificacionesWaitlistModal from "./NotificacionesWaitlistModal";
+import WaitlistInfoModal from "./WaitlistInfoModal";
+import WaitlistAvailabilityModal, { type DisponibilidadItem } from "./WaitlistAvailabilityModal";
+import { useNotificacionesPush } from "@/hooks/useNotificacionesPush";
 
 type Slot = {
   id: string;
@@ -97,6 +102,72 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
   const [clientRescheduleTarget, setClientRescheduleTarget] = useState<ClientBooking | null>(null);
   const [porTipoRescheduleTarget, setPorTipoRescheduleTarget] = useState<ClientBooking | null>(null);
 
+  const {
+    notificacionesActivadas,
+    loading: notificacionesLoading,
+    toggle: toggleNotificaciones,
+  } = useNotificacionesPush(!!clientSession);
+
+  const [waitlistModalOpen, setWaitlistModalOpen] = useState(false);
+  const [pendingWaitlistAction, setPendingWaitlistAction] = useState<(() => void) | null>(null);
+
+  // Waitlist info modal (turno ocupado clickeable)
+  const [waitlistInfoOpen, setWaitlistInfoOpen] = useState(false);
+  const [waitlistInfoLoading, setWaitlistInfoLoading] = useState(false);
+  const [waitlistInfoTieneRespaldo, setWaitlistInfoTieneRespaldo] = useState<boolean | null>(null);
+  const [waitlistInfoAppointmentId, setWaitlistInfoAppointmentId] = useState<string | null>(null);
+
+  // Waitlist availability modal (configuración de disponibilidad)
+  const [waitlistAvailOpen, setWaitlistAvailOpen] = useState(false);
+
+  // Estado de lista de espera del empleado seleccionado
+  const [yaEnLista, setYaEnLista] = useState(false);
+  const [waitlistCurrentConfig, setWaitlistCurrentConfig] = useState<{ cualquierVacante: boolean; disponibilidades: DisponibilidadItem[] } | null>(null);
+  const [waitlistJoinSuccess, setWaitlistJoinSuccess] = useState(false);
+  const [waitlistSaliendoLista, setWaitlistSaliendoLista] = useState(false);
+
+  const handleUnirseListaEspera = useCallback((joinAction: () => void) => {
+    if (!clientSession || notificacionesActivadas) {
+      joinAction();
+      return;
+    }
+    setPendingWaitlistAction(() => joinAction);
+    setWaitlistModalOpen(true);
+  }, [clientSession, notificacionesActivadas]);
+
+  const handleWaitlistModalActivar = useCallback(async () => {
+    await toggleNotificaciones();
+    setWaitlistModalOpen(false);
+    pendingWaitlistAction?.();
+    setPendingWaitlistAction(null);
+  }, [toggleNotificaciones, pendingWaitlistAction]);
+
+  const handleWaitlistModalClose = useCallback(() => {
+    setWaitlistModalOpen(false);
+    pendingWaitlistAction?.();
+    setPendingWaitlistAction(null);
+  }, [pendingWaitlistAction]);
+
+  const handleOccupiedAppointmentSelect = useCallback(async (appointment: { id: string }) => {
+    setWaitlistInfoAppointmentId(appointment.id);
+    setWaitlistInfoTieneRespaldo(null);
+    setWaitlistInfoLoading(true);
+    setWaitlistInfoOpen(true);
+    try {
+      const res = await fetch(`/api/lista-espera/check?appointmentId=${encodeURIComponent(appointment.id)}`);
+      if (res.ok) {
+        const data = await res.json() as { ocupado: boolean; tieneRespaldo: boolean; yaEnLista: boolean };
+        setWaitlistInfoTieneRespaldo(data.tieneRespaldo);
+      } else {
+        setWaitlistInfoTieneRespaldo(false);
+      }
+    } catch {
+      setWaitlistInfoTieneRespaldo(false);
+    } finally {
+      setWaitlistInfoLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetch(`/api/public/business/${slug}/payment-methods`)
       .then((r) => r.json())
@@ -164,6 +235,27 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       .catch(() => setEmployees([]))
       .finally(() => setEmpleadosLoading(false));
   }, [slug, selectedSucursalId]);
+
+  // Consultar estado de lista de espera al cambiar empleado
+  useEffect(() => {
+    if (!selectedEmployeeId || !clientSession) {
+      setYaEnLista(false);
+      setWaitlistCurrentConfig(null);
+      return;
+    }
+    fetch(`/api/lista-espera?serviceProviderId=${encodeURIComponent(selectedEmployeeId)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { yaEnLista: boolean; cualquierVacante?: boolean; disponibilidades?: DisponibilidadItem[] } | null) => {
+        if (data?.yaEnLista) {
+          setYaEnLista(true);
+          setWaitlistCurrentConfig({ cualquierVacante: data.cualquierVacante ?? true, disponibilidades: data.disponibilidades ?? [] });
+        } else {
+          setYaEnLista(false);
+          setWaitlistCurrentConfig(null);
+        }
+      })
+      .catch(() => {});
+  }, [selectedEmployeeId, clientSession]);
 
   // Cargar días de semana configurados para empleados POR_TIPO
   useEffect(() => {
@@ -498,29 +590,36 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
     <>
       {/* Banner de cliente autenticado */}
       {clientSession && (
-        <div className="rounded-lg bg-white border border-[#E0E0DB] px-4 py-3 flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-[var(--brand-color)]/10 flex items-center justify-center shrink-0">
-            <span className="font-body text-xs font-semibold text-[var(--brand-color)] uppercase">
-              {clientSession.nombre.charAt(0)}
-            </span>
+        <div className="rounded-lg bg-white border border-[#E0E0DB] px-4 py-3 flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-[var(--brand-color)]/10 flex items-center justify-center shrink-0">
+              <span className="font-body text-xs font-semibold text-[var(--brand-color)] uppercase">
+                {clientSession.nombre.charAt(0)}
+              </span>
+            </div>
+            <p className="font-body text-sm text-[#2A2829] flex-1">
+              Reservando como{" "}
+              <span className="font-medium">
+                {clientSession.nombre} {clientSession.apellido}
+              </span>
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                await fetch("/api/clientes/logout", { method: "POST" });
+                window.location.reload();
+              }}
+              className="font-body text-xs text-[#2A2829]/50 hover:text-[#ef4444] transition-colors shrink-0"
+              aria-label="Cerrar sesión"
+            >
+              Cerrar sesión
+            </button>
           </div>
-          <p className="font-body text-sm text-[#2A2829] flex-1">
-            Reservando como{" "}
-            <span className="font-medium">
-              {clientSession.nombre} {clientSession.apellido}
-            </span>
-          </p>
-          <button
-            type="button"
-            onClick={async () => {
-              await fetch("/api/clientes/logout", { method: "POST" });
-              window.location.reload();
-            }}
-            className="font-body text-xs text-[#2A2829]/50 hover:text-[#ef4444] transition-colors shrink-0"
-            aria-label="Cerrar sesión"
-          >
-            Cerrar sesión
-          </button>
+          <NotificacionesToggle
+            enabled={notificacionesActivadas}
+            loading={notificacionesLoading}
+            onChange={toggleNotificaciones}
+          />
         </div>
       )}
 
@@ -647,6 +746,76 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             clientBookingDates={clientBookingDates}
           />
 
+          {/* Subsección lista de espera (siempre visible cuando hay empleado seleccionado) */}
+          {!isPorTipo && (
+            yaEnLista ? (
+              <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex flex-col gap-3">
+                <div className="flex flex-col gap-0.5">
+                  <p className="font-body text-sm font-medium text-[#2A2829]">Ya estás en la lista de espera</p>
+                  <p className="font-body text-xs text-[#2A2829]/60">
+                    {waitlistCurrentConfig?.cualquierVacante
+                      ? "Te avisamos ante cualquier vacante."
+                      : `Te avisamos en tus horarios configurados.`}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setWaitlistAvailOpen(true)}
+                    className="rounded-lg border border-[var(--brand-color)] px-3 py-1.5 font-body text-xs font-medium text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                  >
+                    Editar disponibilidad
+                  </button>
+                  <button
+                    type="button"
+                    disabled={waitlistSaliendoLista}
+                    onClick={async () => {
+                      if (!selectedEmployeeId) return;
+                      setWaitlistSaliendoLista(true);
+                      try {
+                        await fetch(`/api/lista-espera?serviceProviderId=${encodeURIComponent(selectedEmployeeId)}`, { method: "DELETE" });
+                        setYaEnLista(false);
+                        setWaitlistCurrentConfig(null);
+                      } catch {
+                        // silencioso
+                      } finally {
+                        setWaitlistSaliendoLista(false);
+                      }
+                    }}
+                    className="rounded-lg border border-[#E0E0DB] px-3 py-1.5 font-body text-xs font-medium text-[#2A2829]/60 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                  >
+                    {waitlistSaliendoLista ? "Saliendo..." : "Salir de la lista"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex items-center justify-between gap-3">
+                <p className="font-body text-sm text-[#2A2829]/70 leading-snug flex-1">
+                  ¿El turno que querés está ocupado? Entrá a la lista de espera. Te avisamos si se libera un turno antes del que ya tenés reservado.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tieneRespaldoLocal = selectedEmployeeId
+                      ? clientBookings.some((b) => b.employeeId === selectedEmployeeId)
+                      : false;
+                    if (tieneRespaldoLocal) {
+                      handleUnirseListaEspera(() => setWaitlistAvailOpen(true));
+                    } else {
+                      setWaitlistInfoTieneRespaldo(false);
+                      setWaitlistInfoLoading(false);
+                      setWaitlistInfoAppointmentId(null);
+                      setWaitlistInfoOpen(true);
+                    }
+                  }}
+                  className="shrink-0 rounded-lg bg-[var(--brand-color)] px-3 py-2 font-body text-xs font-medium text-white hover:bg-[var(--brand-color-dark,#1c2a40)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                >
+                  Entrar a la lista
+                </button>
+              </div>
+            )
+          )}
+
           {isPorTipo ? (
             /* Flujo POR_TIPO: columna temporal + formulario */
             selectedDate && (
@@ -717,6 +886,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
               <AppointmentSlots
                 appointments={appointmentsForDate}
                 onSelect={handleAppointmentSelect}
+                onOccupiedSelect={handleOccupiedAppointmentSelect}
                 clientBookingTimes={clientBookingTimesForDate}
               />
             )
@@ -781,6 +951,77 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           onClose={() => setPorTipoRescheduleTarget(null)}
         />
       )}
+
+      <NotificacionesWaitlistModal
+        isOpen={waitlistModalOpen}
+        onActivate={handleWaitlistModalActivar}
+        onClose={handleWaitlistModalClose}
+      />
+
+      <WaitlistInfoModal
+        isOpen={waitlistInfoOpen}
+        loading={waitlistInfoLoading}
+        tieneRespaldo={waitlistInfoTieneRespaldo}
+        onEntrar={() => {
+          setWaitlistInfoOpen(false);
+          handleUnirseListaEspera(() => {
+            setWaitlistAvailOpen(true);
+          });
+        }}
+        onClose={() => setWaitlistInfoOpen(false)}
+      />
+
+      {waitlistJoinSuccess && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4" aria-hidden="true">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setWaitlistJoinSuccess(false)} aria-hidden="true" />
+          <div className="relative z-10 w-full max-w-sm rounded-xl bg-white border border-[#E0E0DB] p-6 shadow-lg flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="font-heading text-base text-[#2A2829]">¡Entraste a la lista de espera!</h2>
+              <p className="font-body text-sm text-[#2A2829]/70 leading-relaxed">
+                Te avisaremos por notificación cuando se libere un turno que coincida con tu disponibilidad.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWaitlistJoinSuccess(false)}
+              className="w-full rounded-lg bg-[var(--brand-color)] px-4 py-2.5 font-body text-sm font-medium text-white hover:bg-[var(--brand-color-dark,#1c2a40)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+            >
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
+      <WaitlistAvailabilityModal
+        isOpen={waitlistAvailOpen}
+        initialConfig={waitlistCurrentConfig}
+        onConfirm={async (cualquierVacante: boolean, disponibilidades: DisponibilidadItem[]) => {
+          if (!selectedEmployeeId) return;
+          const respaldoBooking = clientBookings.find((b) => b.employeeId === selectedEmployeeId);
+          try {
+            const res = await fetch("/api/lista-espera", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                serviceProviderId: selectedEmployeeId,
+                bookingIdRespaldo: respaldoBooking?.bookingId ?? null,
+                cualquierVacante,
+                disponibilidades,
+              }),
+            });
+            if (res.ok) {
+              setYaEnLista(true);
+              setWaitlistCurrentConfig({ cualquierVacante, disponibilidades });
+              if (!yaEnLista) setWaitlistJoinSuccess(true);
+            }
+          } catch {
+            // error silencioso
+          }
+          setWaitlistAvailOpen(false);
+          void waitlistInfoAppointmentId;
+        }}
+        onClose={() => setWaitlistAvailOpen(false)}
+      />
     </>
   );
 }
