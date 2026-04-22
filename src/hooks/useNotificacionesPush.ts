@@ -41,22 +41,21 @@ export function useNotificacionesPush(autenticado: boolean): UseNotificacionesPu
       const registration = await navigator.serviceWorker.ready;
       console.log("[Push] serviceWorker ready, state:", registration.active?.state);
 
-      let subscription = await registration.pushManager.getSubscription();
-      console.log("[Push] suscripción existente:", !!subscription);
+      const existing = await registration.pushManager.getSubscription();
+      console.log("[Push] suscripción existente:", !!existing);
+      if (existing) await existing.unsubscribe();
 
-      if (!subscription) {
-        const permission = await Notification.requestPermission();
-        console.log("[Push] permiso:", permission);
-        if (permission !== "granted") {
-          setNotificacionesActivadas(false);
-          return;
-        }
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
-        });
-        console.log("[Push] suscripción creada:", subscription.endpoint.slice(0, 60));
+      const permission = await Notification.requestPermission();
+      console.log("[Push] permiso:", permission);
+      if (permission !== "granted") {
+        setNotificacionesActivadas(false);
+        return;
       }
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
+      });
+      console.log("[Push] suscripción creada:", subscription.endpoint.slice(0, 60));
 
       const json = subscription.toJSON();
       const res = await fetch("/api/client/push-subscriptions", {
