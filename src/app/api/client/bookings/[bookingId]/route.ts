@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { inngest } from "@/lib/inngest";
 
 
 export async function DELETE(
@@ -18,10 +19,12 @@ export async function DELETE(
     select: {
       id: true,
       status: true,
+      appointmentId: true,
       appointment: {
         select: {
           date: true,
           time: true,
+          serviceProviderId: true,
           scheduleConfig: { select: { minAdvanceHours: true } },
         },
       },
@@ -67,9 +70,11 @@ export async function DELETE(
   });
 
   await prisma.$transaction(async (tx) => {
-    await tx.booking.update({
-      where: { id: bookingId },
-      data: { status: "cancelled" },
+    await tx.booking.delete({ where: { id: bookingId } });
+
+    await tx.appointment.update({
+      where: { id: booking.appointmentId },
+      data: { isActive: true },
     });
 
     if (listaEsperaEntry) {
@@ -78,6 +83,20 @@ export async function DELETE(
   });
 
   emitNewBooking();
+
+  const tieneListaEspera = await prisma.listaEspera.findFirst({
+    where: { serviceProviderId: booking.appointment.serviceProviderId, estado: "activa" },
+    select: { id: true },
+  });
+  if (tieneListaEspera) {
+    await inngest.send({
+      name: "waitlist/vacancy.created",
+      data: {
+        appointmentId: booking.appointmentId,
+        serviceProviderId: booking.appointment.serviceProviderId,
+      },
+    });
+  }
 
   return NextResponse.json(
     { success: true, eliminadoDeLista: !!listaEsperaEntry },

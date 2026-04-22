@@ -55,24 +55,35 @@ export const procesarVacante = inngest.createFunction(
 
 async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: string): Promise<boolean> {
   const ahora = new Date();
+  console.log(`[lista-espera] notificarSiguiente - serviceProviderId=${serviceProviderId} vacanteTurnoId=${vacanteTurnoId}`);
 
   const turno = await prisma.appointment.findUnique({
     where: { id: vacanteTurnoId },
     select: { date: true, time: true, serviceType: { select: { title: true } } },
   });
-  if (!turno) return false;
+  if (!turno) {
+    console.log(`[lista-espera] turno no encontrado`);
+    return false;
+  }
+  console.log(`[lista-espera] turno encontrado: ${turno.date} ${turno.time}`);
 
   // Verificar que el slot sigue libre
   const bookingExistente = await prisma.booking.findFirst({
     where: { appointmentId: vacanteTurnoId },
   });
-  if (bookingExistente) return false;
+  if (bookingExistente) {
+    console.log(`[lista-espera] slot ocupado por booking ${bookingExistente.id}`);
+    return false;
+  }
 
   // Verificar que no haya alguien ya notificado para este turno
   const yaNotificado = await prisma.listaEspera.findFirst({
     where: { serviceProviderId, vacanteTurnoId, estado: "notificada" },
   });
-  if (yaNotificado) return true;
+  if (yaNotificado) {
+    console.log(`[lista-espera] ya hay alguien notificado`);
+    return true;
+  }
 
   const candidatos = await prisma.listaEspera.findMany({
     where: { serviceProviderId, estado: "activa" },
@@ -85,6 +96,7 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
       bookingIdRespaldo: true,
     },
   });
+  console.log(`[lista-espera] candidatos activos: ${candidatos.length}`);
 
   let elegible: (typeof candidatos)[number] | null = null;
 
@@ -95,6 +107,7 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
         select: { appointment: { select: { date: true } } },
       });
       const fechaRespaldo = respaldo?.appointment?.date;
+      console.log(`[lista-espera] candidato ${candidato.id} - fechaRespaldo=${fechaRespaldo} turno.date=${turno.date} skip=${!!(fechaRespaldo && turno.date >= fechaRespaldo)}`);
       if (fechaRespaldo && turno.date >= fechaRespaldo) continue;
     }
 
@@ -110,6 +123,7 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
         return hora >= hInicio && hora < hFin;
       });
 
+      console.log(`[lista-espera] candidato ${candidato.id} - disponibilidad encaja=${encaja} diaSemana=${diaSemana} hora=${hora}`);
       if (!encaja) continue;
     }
 
@@ -117,7 +131,11 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
     break;
   }
 
-  if (!elegible) return false;
+  if (!elegible) {
+    console.log(`[lista-espera] no hay candidato elegible`);
+    return false;
+  }
+  console.log(`[lista-espera] candidato elegible: ${elegible.id}`);
 
   const token = crypto.randomBytes(32).toString("hex");
   const tokenExp = new Date(ahora.getTime() + VENTANA_MINUTOS * 60 * 1000);
