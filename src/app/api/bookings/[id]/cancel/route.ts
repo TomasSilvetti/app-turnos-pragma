@@ -57,6 +57,7 @@ export async function PATCH(
     select: { id: true },
   });
   if (tieneListaEspera) {
+    console.log(`[cancel] enviando vacancy.created appointmentId=${booking.appointmentId} serviceProviderId=${booking.appointment.serviceProviderId}`);
     await inngest.send({
       name: "waitlist/vacancy.created",
       data: {
@@ -64,6 +65,8 @@ export async function PATCH(
         serviceProviderId: booking.appointment.serviceProviderId,
       },
     });
+  } else {
+    console.log(`[cancel] no hay lista de espera activa para serviceProviderId=${booking.appointment.serviceProviderId}`);
   }
 
   const phoneToNotify = booking.cliente?.telefono ?? booking.clientPhone;
