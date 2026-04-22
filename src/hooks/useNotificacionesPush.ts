@@ -72,6 +72,7 @@ export function useNotificacionesPush(autenticado: boolean): UseNotificacionesPu
       setNotificacionesActivadas(true);
     } catch (err) {
       console.error("[Push] Error en activar:", err);
+      alert("[Push] Error: " + String(err));
     }
   }, []);
 
