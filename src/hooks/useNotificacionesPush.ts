@@ -64,6 +64,11 @@ export function useNotificacionesPush(autenticado: boolean): UseNotificacionesPu
 
   const desactivar = useCallback(async () => {
     await fetch("/api/client/push-subscriptions", { method: "DELETE" });
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) await subscription.unsubscribe();
+    }
     setNotificacionesActivadas(false);
   }, []);
 

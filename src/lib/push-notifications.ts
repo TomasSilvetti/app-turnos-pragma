@@ -42,7 +42,7 @@ export async function sendPushToCliente(
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;
         console.error("[PushCliente] Error enviando notificación:", err);
-        if (status === 410) {
+        if (status === 410 || status === 403) {
           await prisma.clientePushSubscription.delete({ where: { id: sub.id } }).catch(() => {});
         }
       }
@@ -87,7 +87,7 @@ export async function sendPushToServiceProvider(
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;
         console.error("[Push] Error enviando notificación:", err);
-        if (status === 410) {
+        if (status === 410 || status === 403) {
           await prisma.pushSubscription.delete({ where: { endpoint: sub.endpoint } }).catch(() => {});
         }
       }
