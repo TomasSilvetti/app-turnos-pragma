@@ -32,34 +32,47 @@ export function useNotificacionesPush(autenticado: boolean): UseNotificacionesPu
   }, [autenticado]);
 
   const activar = useCallback(async () => {
-    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
-
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        setNotificacionesActivadas(false);
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        console.warn("[Push] serviceWorker o PushManager no disponible");
         return;
       }
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
+
+      const registration = await navigator.serviceWorker.ready;
+      console.log("[Push] serviceWorker ready, state:", registration.active?.state);
+
+      let subscription = await registration.pushManager.getSubscription();
+      console.log("[Push] suscripción existente:", !!subscription);
+
+      if (!subscription) {
+        const permission = await Notification.requestPermission();
+        console.log("[Push] permiso:", permission);
+        if (permission !== "granted") {
+          setNotificacionesActivadas(false);
+          return;
+        }
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
+        });
+        console.log("[Push] suscripción creada:", subscription.endpoint.slice(0, 60));
+      }
+
+      const json = subscription.toJSON();
+      const res = await fetch("/api/client/push-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          endpoint: json.endpoint,
+          keys: { p256dh: json.keys?.p256dh, auth: json.keys?.auth },
+        }),
       });
+      console.log("[Push] POST push-subscriptions:", res.status);
+
+      setNotificacionesActivadas(true);
+    } catch (err) {
+      console.error("[Push] Error en activar:", err);
     }
-
-    const json = subscription.toJSON();
-    await fetch("/api/client/push-subscriptions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        endpoint: json.endpoint,
-        keys: { p256dh: json.keys?.p256dh, auth: json.keys?.auth },
-      }),
-    });
-
-    setNotificacionesActivadas(true);
   }, []);
 
   const desactivar = useCallback(async () => {
