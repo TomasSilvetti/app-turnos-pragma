@@ -26,6 +26,7 @@ export async function DELETE(
           time: true,
           serviceProviderId: true,
           scheduleConfig: { select: { minAdvanceHours: true } },
+          serviceType: { select: { title: true } },
         },
       },
     },
@@ -94,6 +95,9 @@ export async function DELETE(
       data: {
         appointmentId: booking.appointmentId,
         serviceProviderId: booking.appointment.serviceProviderId,
+        date: booking.appointment.date,
+        time: booking.appointment.time,
+        serviceTypeTitle: booking.appointment.serviceType?.title ?? null,
       },
     });
   }

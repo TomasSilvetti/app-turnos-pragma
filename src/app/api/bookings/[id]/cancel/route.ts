@@ -21,7 +21,7 @@ export async function PATCH(
   const booking = await prisma.booking.findUnique({
     where: { id },
     include: {
-      appointment: { select: { serviceProviderId: true, date: true, time: true } },
+      appointment: { select: { serviceProviderId: true, date: true, time: true, serviceType: { select: { title: true } } } },
       cliente: { select: { telefono: true } },
     },
   });
@@ -63,6 +63,9 @@ export async function PATCH(
       data: {
         appointmentId: booking.appointmentId,
         serviceProviderId: booking.appointment.serviceProviderId,
+        date: booking.appointment.date,
+        time: booking.appointment.time,
+        serviceTypeTitle: booking.appointment.serviceType?.title ?? null,
       },
     });
   } else {

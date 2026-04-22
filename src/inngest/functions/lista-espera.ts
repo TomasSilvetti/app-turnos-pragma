@@ -9,14 +9,17 @@ const MAX_CANDIDATOS = 20;
 export const procesarVacante = inngest.createFunction(
   { id: "waitlist-procesar-vacante", triggers: [{ event: "waitlist/vacancy.created" }] },
   async ({ event, step }) => {
-    const { appointmentId, serviceProviderId } = event.data as {
+    const { appointmentId, serviceProviderId, date, time, serviceTypeTitle } = event.data as {
       appointmentId: string;
       serviceProviderId: string;
+      date: string;
+      time: string;
+      serviceTypeTitle: string | null;
     };
 
     for (let intento = 0; intento < MAX_CANDIDATOS; intento++) {
       const notificado = await step.run(`notificar-candidato-${intento}`, async () => {
-        return await notificarSiguiente(serviceProviderId, appointmentId);
+        return await notificarSiguiente(serviceProviderId, appointmentId, date, time, serviceTypeTitle);
       });
 
       if (!notificado) break;
@@ -53,19 +56,16 @@ export const procesarVacante = inngest.createFunction(
   }
 );
 
-async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: string): Promise<boolean> {
+async function notificarSiguiente(
+  serviceProviderId: string,
+  vacanteTurnoId: string,
+  date: string,
+  time: string,
+  serviceTypeTitle: string | null,
+): Promise<boolean> {
   const ahora = new Date();
-  console.log(`[lista-espera] notificarSiguiente - serviceProviderId=${serviceProviderId} vacanteTurnoId=${vacanteTurnoId}`);
-
-  const turno = await prisma.appointment.findUnique({
-    where: { id: vacanteTurnoId },
-    select: { date: true, time: true, serviceType: { select: { title: true } } },
-  });
-  if (!turno) {
-    console.log(`[lista-espera] turno no encontrado`);
-    return false;
-  }
-  console.log(`[lista-espera] turno encontrado: ${turno.date} ${turno.time}`);
+  const turno = { date, time, serviceType: serviceTypeTitle ? { title: serviceTypeTitle } : null };
+  console.log(`[lista-espera] notificarSiguiente - serviceProviderId=${serviceProviderId} vacanteTurnoId=${vacanteTurnoId} date=${date} time=${time}`);
 
   // Verificar que el slot sigue libre
   const bookingExistente = await prisma.booking.findFirst({
@@ -116,7 +116,7 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
       const diaSemana = (fecha.getDay() + 6) % 7; // 0=Lunes
       const [hora] = turno.time.split(":").map(Number);
 
-      const encaja = candidato.disponibilidades.some((d) => {
+      const encaja = candidato.disponibilidades.some((d: { diaSemana: number; horaInicio: string; horaFin: string }) => {
         if (d.diaSemana !== diaSemana) return false;
         const [hInicio] = d.horaInicio.split(":").map(Number);
         const [hFin] = d.horaFin.split(":").map(Number);
