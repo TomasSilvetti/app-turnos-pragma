@@ -76,7 +76,7 @@ export default function DayScheduleColumn({
       </h2>
 
       {/* Columna temporal */}
-      <div className="relative w-full" style={{ height: `${totalMin * 0.5}px` }}>
+      <div className="relative w-full" style={{ height: `${totalMin * 1}px` }}>
         {/* Filas horarias */}
         {hourRows.map((min) => {
           const offsetPct = ((min - startMin) / totalMin) * 100;
@@ -141,6 +141,7 @@ export default function DayScheduleColumn({
               style={{
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
+                minHeight: "36px",
                 backgroundColor: "color-mix(in srgb, #22c55e 18%, transparent)",
                 borderLeft: "3px solid #22c55e",
               }}
@@ -175,6 +176,7 @@ export default function DayScheduleColumn({
               style={{
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
+                minHeight: "36px",
                 backgroundColor: "color-mix(in srgb, var(--brand-color) 20%, transparent)",
                 borderLeft: "3px solid var(--brand-color)",
               }}
@@ -206,6 +208,7 @@ export default function DayScheduleColumn({
               style={{
                 top: `${topPct}%`,
                 height: `${heightPct}%`,
+                minHeight: "35px",
                 backgroundColor: clientBg,
                 borderLeft: `3px solid ${clientColor}`,
               }}
