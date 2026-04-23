@@ -83,7 +83,7 @@ export function ResetPasswordForm({ token }: Props) {
     );
   }
 
-  if (tokenError && (tokenError.includes("inválido") || tokenError.includes("expiró"))) {
+  if (tokenError) {
     return (
       <div className="flex flex-col items-center gap-4 py-4 text-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">

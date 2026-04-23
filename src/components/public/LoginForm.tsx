@@ -177,6 +177,15 @@ export default function LoginForm({ slug, employeeId }: Props) {
       >
         {isLoading ? "Ingresando..." : "Ingresar"}
       </button>
+
+      <div className="text-center">
+        <a
+          href={`/turnos/${slug}/recuperar-contrasena`}
+          className="font-body text-xs text-[#2A2829]/50 hover:text-[var(--brand-color)] transition-colors"
+        >
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
     </form>
   );
 }

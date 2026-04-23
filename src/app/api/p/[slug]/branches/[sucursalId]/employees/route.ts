@@ -24,7 +24,7 @@ export async function GET(
         businessProfileId: true,
         empleados: {
           select: {
-            serviceProvider: { select: { id: true, name: true, modoTurno: true } },
+            serviceProvider: { select: { id: true, name: true, modoTurno: true, isActive: true, attendsAppointments: true } },
           },
         },
       },
@@ -39,11 +39,13 @@ export async function GET(
     return NextResponse.json({ error: "Sucursal no encontrada" }, { status: 404 });
   }
 
-  const employees = sucursal.empleados.map((e) => ({
-    id: e.serviceProvider.id,
-    name: e.serviceProvider.name,
-    modoTurno: e.serviceProvider.modoTurno,
-  }));
+  const employees = sucursal.empleados
+    .filter((e) => e.serviceProvider.isActive && e.serviceProvider.attendsAppointments)
+    .map((e) => ({
+      id: e.serviceProvider.id,
+      name: e.serviceProvider.name,
+      modoTurno: e.serviceProvider.modoTurno,
+    }));
 
   // Incluir al propietario si está activo, atiende turnos y no está ya en la lista
   const propietario = profile.serviceProvider;
