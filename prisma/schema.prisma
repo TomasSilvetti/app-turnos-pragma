@@ -24,7 +24,9 @@ model ServiceProvider {
   sucursales          EmpleadoSucursal[]
   expenses            Expense[]
   pushSubscriptions   PushSubscription[]
+  passwordResetTokens PasswordResetToken[]
   scheduleConfigs     ScheduleConfig[]
+  listaEspera         ListaEspera[]
   tutorialCompleted   Boolean            @default(false)
   modoTurno           ModoTurno          @default(FIJO)
 
@@ -170,23 +172,28 @@ model Booking {
   appointment            Appointment         @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
   cliente                Cliente?            @relation(fields: [clienteId], references: [id])
   rescheduleRequests     RescheduleRequest[]
+  listaEspera            ListaEspera[]
 
   @@map("bookings")
 }
 
 model Cliente {
-  id                  String               @id @default(cuid())
-  nombre              String
-  apellido            String
-  email               String               @unique
-  hashedPassword      String
-  sexo                String?
-  edad                Int?
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  telefono            String?
-  bookings            Booking[]
-  rescheduleRequests  RescheduleRequest[]
+  id                      String                    @id @default(cuid())
+  nombre                  String
+  apellido                String
+  email                   String                    @unique
+  hashedPassword          String
+  sexo                    String?
+  edad                    Int?
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime                  @updatedAt
+  telefono                String?
+  notificacionesActivadas Boolean                   @default(false)
+  bookings                Booking[]
+  rescheduleRequests      RescheduleRequest[]
+  pushSubscriptions       ClientePushSubscription[]
+  listaEspera             ListaEspera[]
+  passwordResetTokens     ClientePasswordResetToken[]
 
   @@map("clientes")
 }
@@ -228,6 +235,20 @@ model EmpleadoSucursal {
   @@map("empleado_sucursales")
 }
 
+model ClientePushSubscription {
+  id        String   @id @default(cuid())
+  clienteId String
+  endpoint  String
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@unique([clienteId, endpoint])
+  @@map("cliente_push_subscriptions")
+}
+
 model PushSubscription {
   id                String          @id @default(cuid())
   endpoint          String          @unique
@@ -262,4 +283,68 @@ enum RescheduleRequestStatus {
   pending
   approved
   rejected
+}
+
+enum EstadoListaEspera {
+  activa
+  notificada
+  expirada
+}
+
+model ListaEspera {
+  id                   String                     @id @default(cuid())
+  clienteId            String
+  serviceProviderId    String
+  posicion             Int
+  estado               EstadoListaEspera          @default(activa)
+  bookingIdRespaldo    String?
+  cualquierVacante     Boolean                    @default(false)
+  notificadaAt         DateTime?
+  notificacionToken    String?                    @unique
+  notificacionTokenExp DateTime?
+  vacanteTurnoId       String?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
+  cliente              Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  serviceProvider      ServiceProvider            @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+  bookingRespaldo      Booking?                   @relation(fields: [bookingIdRespaldo], references: [id])
+  disponibilidades     DisponibilidadListaEspera[]
+
+  @@unique([clienteId, serviceProviderId])
+  @@map("lista_espera")
+}
+
+model ClientePasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  clienteId String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+
+  @@map("cliente_password_reset_tokens")
+}
+
+model PasswordResetToken {
+  id                String          @id @default(cuid())
+  token             String          @unique
+  serviceProviderId String
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime        @default(now())
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model DisponibilidadListaEspera {
+  id            String      @id @default(cuid())
+  listaEsperaId String
+  diaSemana     Int
+  horaInicio    String
+  horaFin       String
+  listaEspera   ListaEspera @relation(fields: [listaEsperaId], references: [id], onDelete: Cascade)
+
+  @@map("disponibilidad_lista_espera")
 }

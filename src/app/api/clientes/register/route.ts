@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { setClientSession } from "@/lib/cliente-auth";
+import { validatePassword } from "@/lib/password-validation";
 
 
 export async function POST(request: NextRequest) {
@@ -56,6 +57,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: "La contraseña debe tener al menos 8 caracteres" },
       { status: 400 }
+    );
+  }
+
+  if (!validatePassword(password).isValid) {
+    return NextResponse.json(
+      { error: "La contraseña debe tener al menos una mayúscula y un carácter especial" },
+      { status: 422 }
     );
   }
 

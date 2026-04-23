@@ -1,4 +1,4 @@
-// v2
+// v3
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -14,6 +14,7 @@ self.addEventListener("push", (event) => {
     body: payload.body ?? "",
     icon: "/icon-192.png",
     badge: "/icon-192.png",
+    data: { url: payload.url ?? "/" },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -21,5 +22,6 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow("/dashboard/turnos-reservados"));
+  const url = event.notification.data?.url ?? "/";
+  event.waitUntil(clients.openWindow(url));
 });

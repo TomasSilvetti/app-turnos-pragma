@@ -111,6 +111,15 @@ export function LoginForm() {
         </p>
       )}
 
+      <div className="flex justify-end -mt-2">
+        <a
+          href="/olvide-mi-contrasena"
+          className="text-sm text-[#253551] hover:text-[#1c2a40] transition-colors"
+        >
+          ¿Olvidaste tu contraseña?
+        </a>
+      </div>
+
       <Button
         type="submit"
         size="lg"

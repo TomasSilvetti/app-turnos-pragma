@@ -14,10 +14,11 @@ export type Appointment = {
 type Props = {
   appointments: Appointment[];
   onSelect: (appointment: Appointment) => void;
+  onOccupiedSelect?: (appointment: Appointment) => void;
   clientBookingTimes?: string[]; // HH:MM — horarios con turno propio del cliente
 };
 
-export default function AppointmentSlots({ appointments, onSelect, clientBookingTimes }: Props) {
+export default function AppointmentSlots({ appointments, onSelect, onOccupiedSelect, clientBookingTimes }: Props) {
   const clientBookingSet = new Set(clientBookingTimes ?? []);
   if (appointments.length === 0) {
     return (
@@ -42,16 +43,23 @@ export default function AppointmentSlots({ appointments, onSelect, clientBooking
         {appointments.map((appointment) => {
           const unavailable = appointment.booked || appointment.disabled;
           const isClientBooking = clientBookingSet.has(appointment.time);
+          const isOccupied = appointment.booked && !isClientBooking;
           return (
             <button
               key={appointment.id}
-              onClick={() => (isClientBooking || !unavailable) && onSelect(appointment)}
-              disabled={unavailable && !isClientBooking}
+              onClick={() => {
+                if (isClientBooking || !unavailable) {
+                  onSelect(appointment);
+                } else if (isOccupied && onOccupiedSelect) {
+                  onOccupiedSelect(appointment);
+                }
+              }}
+              disabled={appointment.disabled && !appointment.booked && !isClientBooking}
               aria-label={
                 isClientBooking
                   ? `Tu turno a las ${appointment.time}`
                   : appointment.booked
-                  ? `Turno a las ${appointment.time} — Reservado`
+                  ? `Turno a las ${appointment.time} — Ocupado, unirse a lista de espera`
                   : appointment.disabled
                   ? `Turno a las ${appointment.time} — No disponible`
                   : `Seleccionar turno a las ${appointment.time}`
@@ -59,7 +67,9 @@ export default function AppointmentSlots({ appointments, onSelect, clientBooking
               className={
                 isClientBooking
                   ? "group flex items-center justify-between rounded-lg border border-[var(--brand-color)]/40 bg-[var(--brand-color)]/10 px-4 py-3 text-left cursor-pointer hover:bg-[var(--brand-color)]/20 transition-all duration-200"
-                  : unavailable
+                  : isOccupied
+                  ? "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-gray-100 dark:bg-[#1a2438] px-4 py-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-[#212d42] transition-all duration-200 text-left"
+                  : appointment.disabled
                   ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
                   : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
               }
@@ -70,7 +80,9 @@ export default function AppointmentSlots({ appointments, onSelect, clientBooking
                   className={
                     isClientBooking
                       ? "text-[var(--brand-color)]"
-                      : unavailable
+                      : isOccupied
+                      ? "text-gray-400 dark:text-[#64748b]"
+                      : appointment.disabled
                       ? "text-gray-300 dark:text-[#475569]"
                       : "text-[var(--brand-color)] group-hover:text-white transition-colors"
                   }
@@ -79,7 +91,9 @@ export default function AppointmentSlots({ appointments, onSelect, clientBooking
                   className={
                     isClientBooking
                       ? "font-heading text-sm text-[var(--brand-color)] dark:text-[#93c5fd] font-semibold"
-                      : unavailable
+                      : isOccupied
+                      ? "font-heading text-sm text-gray-500 dark:text-[#64748b]"
+                      : appointment.disabled
                       ? "font-heading text-sm text-gray-400 dark:text-[#475569]"
                       : "font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] group-hover:text-white transition-colors"
                   }

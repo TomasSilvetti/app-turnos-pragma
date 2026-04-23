@@ -58,7 +58,6 @@ export function AttendanceToggle() {
 
   if (!state) return null;
 
-  const isBlocked = !state.attendsAppointments === false && state.hasActiveSchedule;
   const canToggleOff = state.attendsAppointments && state.hasActiveSchedule;
 
   return (
@@ -89,12 +88,10 @@ export function AttendanceToggle() {
 
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
-            {state.attendsAppointments
-              ? "Visible para los clientes"
-              : "No visible para los clientes"}
+            Visible para clientes
           </span>
           <p className="text-xs text-[#6b7280] dark:text-[#94a3b8]">
-            Desactivá esta opción si sos admin y solo gestionás empleados sin atender turnos directamente.
+            Si desactivás esta opción, los clientes no podrán reservar turnos con vos.
           </p>
         </div>
       </div>

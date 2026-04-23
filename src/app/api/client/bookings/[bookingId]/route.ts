@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
+import { inngest } from "@/lib/inngest";
 
 
 export async function DELETE(
@@ -18,11 +19,14 @@ export async function DELETE(
     select: {
       id: true,
       status: true,
+      appointmentId: true,
       appointment: {
         select: {
           date: true,
           time: true,
+          serviceProviderId: true,
           scheduleConfig: { select: { minAdvanceHours: true } },
+          serviceType: { select: { title: true } },
         },
       },
     },
@@ -57,12 +61,49 @@ export async function DELETE(
     }
   }
 
-  await prisma.booking.update({
-    where: { id: bookingId },
-    data: { status: "cancelled" },
+  // Verificar si el booking es respaldo de una lista de espera activa
+  const listaEsperaEntry = await prisma.listaEspera.findFirst({
+    where: {
+      bookingIdRespaldo: bookingId,
+      estado: { in: ["activa", "notificada"] },
+    },
+    select: { id: true },
+  });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.booking.delete({ where: { id: bookingId } });
+
+    await tx.appointment.update({
+      where: { id: booking.appointmentId },
+      data: { isActive: true },
+    });
+
+    if (listaEsperaEntry) {
+      await tx.listaEspera.delete({ where: { id: listaEsperaEntry.id } });
+    }
   });
 
   emitNewBooking();
 
-  return NextResponse.json({ success: true }, { status: 200 });
+  const tieneListaEspera = await prisma.listaEspera.findFirst({
+    where: { serviceProviderId: booking.appointment.serviceProviderId, estado: "activa" },
+    select: { id: true },
+  });
+  if (tieneListaEspera) {
+    await inngest.send({
+      name: "waitlist/vacancy.created",
+      data: {
+        appointmentId: booking.appointmentId,
+        serviceProviderId: booking.appointment.serviceProviderId,
+        date: booking.appointment.date,
+        time: booking.appointment.time,
+        serviceTypeTitle: booking.appointment.serviceType?.title ?? null,
+      },
+    });
+  }
+
+  return NextResponse.json(
+    { success: true, eliminadoDeLista: !!listaEsperaEntry },
+    { status: 200 }
+  );
 }

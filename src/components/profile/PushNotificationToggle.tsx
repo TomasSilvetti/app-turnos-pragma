@@ -49,12 +49,10 @@ export function PushNotificationToggle() {
         const registration = await navigator.serviceWorker.ready;
         const sub = await registration.pushManager.getSubscription();
         if (sub) {
-          const endpoint = sub.endpoint;
-          await sub.unsubscribe();
           await fetch("/api/push-subscriptions", {
             method: "DELETE",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ endpoint }),
+            body: JSON.stringify({ endpoint: sub.endpoint }),
           });
         }
         localStorage.setItem("push_notifications_disabled", "true");
@@ -75,35 +73,45 @@ export function PushNotificationToggle() {
         }
 
         const registration = await navigator.serviceWorker.ready;
-
-        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-        if (!vapidPublicKey) throw new Error("VAPID_KEY_MISSING");
-
         const existingSub = await registration.pushManager.getSubscription();
-        if (existingSub) await existingSub.unsubscribe();
 
-        let subscription: PushSubscription;
-        try {
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        if (existingSub) {
+          const { endpoint, keys } = existingSub.toJSON() as {
+            endpoint: string;
+            keys: { p256dh: string; auth: string };
+          };
+          const res = await fetch("/api/push-subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint, keys }),
           });
-        } catch (subErr) {
-          throw new Error(`SUBSCRIBE_FAILED: ${subErr instanceof Error ? subErr.message : subErr}`);
+          if (!res.ok) throw new Error("API_FAILED");
+        } else {
+          const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+          if (!vapidPublicKey) throw new Error("VAPID_KEY_MISSING");
+
+          let subscription: PushSubscription;
+          try {
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+          } catch (subErr) {
+            throw new Error(`SUBSCRIBE_FAILED: ${subErr instanceof Error ? subErr.message : subErr}`);
+          }
+
+          const { endpoint, keys } = subscription.toJSON() as {
+            endpoint: string;
+            keys: { p256dh: string; auth: string };
+          };
+          const res = await fetch("/api/push-subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ endpoint, keys }),
+          });
+          if (!res.ok) throw new Error("API_FAILED");
         }
 
-        const { endpoint, keys } = subscription.toJSON() as {
-          endpoint: string;
-          keys: { p256dh: string; auth: string };
-        };
-
-        const res = await fetch("/api/push-subscriptions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint, keys }),
-        });
-
-        if (!res.ok) throw new Error(`API_FAILED: ${res.status}`);
         localStorage.removeItem("push_notifications_disabled");
         setActive(true);
       }

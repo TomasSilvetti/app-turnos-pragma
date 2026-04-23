@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/CustomSelect";
+import { validatePassword } from "@/lib/password-validation";
 
 type Props = {
   slug: string;
@@ -46,8 +47,36 @@ function validate(data: FormData): Record<string, string> {
     errors.password = "La contraseña es obligatoria";
   } else if (data.password.length < 8) {
     errors.password = "La contraseña debe tener al menos 8 caracteres";
+  } else if (!validatePassword(data.password).isValid) {
+    errors.password = "La contraseña debe tener al menos una mayúscula y un carácter especial";
   }
   return errors;
+}
+
+function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span
+        className={`inline-flex items-center justify-center w-4 h-4 rounded-full flex-shrink-0 ${
+          met ? "bg-[#22c55e]/15 text-[#22c55e]" : "bg-[#E0E0DB] text-[#2A2829]/40"
+        }`}
+        aria-hidden="true"
+      >
+        {met ? (
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
+          </svg>
+        ) : (
+          <svg className="w-2 h-2" fill="none" viewBox="0 0 12 12" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 2v8M2 6h8" />
+          </svg>
+        )}
+      </span>
+      <span className={`font-body text-xs ${met ? "text-[#22c55e]" : "text-[#2A2829]/50"}`}>
+        {label}
+      </span>
+    </div>
+  );
 }
 
 const inputClass = (hasError: boolean) =>
@@ -292,7 +321,17 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
           placeholder="Mínimo 8 caracteres"
           className={inputClass(!!showError("password"))}
         />
-        {showError("password") && (
+        {formData.password.length > 0 && (() => {
+          const v = validatePassword(formData.password);
+          return (
+            <div className="flex flex-col gap-1 mt-0.5">
+              <PasswordRequirement met={formData.password.length >= 8} label="Al menos 8 caracteres" />
+              <PasswordRequirement met={v.hasUppercase} label="Al menos una mayúscula" />
+              <PasswordRequirement met={v.hasSpecial} label="Al menos un carácter especial (!@#$%...)" />
+            </div>
+          );
+        })()}
+        {showError("password") && !formData.password.length && (
           <p className="font-body text-xs text-[#ef4444]">{showError("password")}</p>
         )}
       </div>

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev -p 3001",
-    "build": "prisma generate && next build",
+    "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
     "lint": "eslint"
   },
@@ -15,6 +15,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "inngest": "^4.2.4",
     "lucide-react": "^1.8.0",
     "material-symbols": "^0.44.1",
     "next": "16.2.3",
@@ -24,6 +25,7 @@
     "react-dom": "19.2.4",
     "react-hook-form": "^7.72.1",
     "recharts": "^3.8.1",
+    "resend": "^6.12.2",
     "shadcn": "^4.2.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",

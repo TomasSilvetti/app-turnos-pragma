@@ -56,6 +56,18 @@ export async function POST(
         throw { code: 409, message: "Este turno ya fue reservado" };
       }
 
+      const existingBookingOnDate = await tx.booking.findFirst({
+        where: {
+          clientPhone,
+          status: { in: ["pending", "confirmed"] },
+          appointment: { date: appointment.date },
+        },
+      });
+
+      if (existingBookingOnDate) {
+        throw { code: 409, message: "Ya tenés un turno reservado para ese día" };
+      }
+
       const newBooking = await tx.booking.create({
         data: {
           appointmentId,

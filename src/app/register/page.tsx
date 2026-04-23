@@ -31,7 +31,7 @@ export default function RegisterPage() {
                 return {};
               }
               const json = await res.json();
-              if (res.status === 400 && json.error?.includes("Ya existe")) {
+              if (res.status === 409) {
                 return { emailDuplicated: true };
               }
               return {};

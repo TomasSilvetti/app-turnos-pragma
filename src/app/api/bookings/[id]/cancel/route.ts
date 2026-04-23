@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { sendWhatsAppTemplate } from "@/lib/twilio";
+import { inngest } from "@/lib/inngest";
 
 
 export async function PATCH(
@@ -20,7 +21,7 @@ export async function PATCH(
   const booking = await prisma.booking.findUnique({
     where: { id },
     include: {
-      appointment: { select: { serviceProviderId: true, date: true, time: true } },
+      appointment: { select: { serviceProviderId: true, date: true, time: true, serviceType: { select: { title: true } } } },
       cliente: { select: { telefono: true } },
     },
   });
@@ -41,11 +42,35 @@ export async function PATCH(
     prisma.booking.delete({ where: { id } }),
     prisma.appointment.update({
       where: { id: booking.appointmentId },
-      data: { isActive: false },
+      data: { isActive: true },
     }),
   ]);
 
   emitNewBooking();
+
+  // Notificar lista de espera si hay candidatos para este slot
+  const tieneListaEspera = await prisma.listaEspera.findFirst({
+    where: {
+      serviceProviderId: booking.appointment.serviceProviderId,
+      estado: "activa",
+    },
+    select: { id: true },
+  });
+  if (tieneListaEspera) {
+    console.log(`[cancel] enviando vacancy.created appointmentId=${booking.appointmentId} serviceProviderId=${booking.appointment.serviceProviderId}`);
+    await inngest.send({
+      name: "waitlist/vacancy.created",
+      data: {
+        appointmentId: booking.appointmentId,
+        serviceProviderId: booking.appointment.serviceProviderId,
+        date: booking.appointment.date,
+        time: booking.appointment.time,
+        serviceTypeTitle: booking.appointment.serviceType?.title ?? null,
+      },
+    });
+  } else {
+    console.log(`[cancel] no hay lista de espera activa para serviceProviderId=${booking.appointment.serviceProviderId}`);
+  }
 
   const phoneToNotify = booking.cliente?.telefono ?? booking.clientPhone;
   const templateSid = process.env.TWILIO_CANCEL_TEMPLATE_SID;
