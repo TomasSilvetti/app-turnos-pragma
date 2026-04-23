@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     },
   });
 
-  const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3001";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app-turnos.vercel.app";
   const resetLink = `${appUrl}/restablecer-contrasena?token=${token}`;
 
   const resendKey = process.env.RESEND_API_KEY;

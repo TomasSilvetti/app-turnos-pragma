@@ -193,6 +193,15 @@ export default function VacanteClient() {
                 No me interesa
               </button>
             </div>
+
+            <p className="font-body text-xs text-[#2A2829]/50 text-center">
+              El turno disponible es el{" "}
+              <span className="font-medium text-[#2A2829]/70 capitalize">
+                {format(parseISO(estado.data.fecha), "EEEE d 'de' MMMM", { locale: es })}
+              </span>{" "}
+              a las <span className="font-medium text-[#2A2829]/70">{estado.data.hora} hs</span>.
+              Buscá esa fecha en el calendario para reservarlo.
+            </p>
           </div>
         )}
 

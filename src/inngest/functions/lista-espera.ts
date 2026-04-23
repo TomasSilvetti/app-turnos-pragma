@@ -154,9 +154,13 @@ async function notificarSiguiente(
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app-turnos.vercel.app";
   const deeplink = `${baseUrl}/lista-espera/vacante?token=${token}`;
 
+  const [anio, mes, dia] = turno.date.split("-");
+  const fechaFormateada = `${dia}/${mes}/${anio}`;
+
   await sendPushToCliente(elegible.clienteId, {
     title: "¡Se liberó un turno!",
-    body: `Hay una vacante el ${turno.date} a las ${turno.time}${turno.serviceType ? ` — ${turno.serviceType.title}` : ""}. Tenés ${VENTANA_MINUTOS} minutos para tomarlo. Tocá para reservar: ${deeplink}`,
+    body: `¡Se liberó un turno el ${fechaFormateada} a las ${turno.time} hs${turno.serviceType ? ` — ${turno.serviceType.title}` : ""}! Tocá la notificación para ir a reservarlo.`,
+    url: deeplink,
   }).catch(() => {});
 
   return true;

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     data: { token, clienteId: cliente.id, expiresAt },
   });
 
-  const appUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3001";
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app-turnos.vercel.app";
   const resetLink = `${appUrl}/turnos/${slug.trim()}/restablecer-contrasena?token=${token}`;
 
   const resendKey = process.env.RESEND_API_KEY;

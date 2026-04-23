@@ -181,6 +181,7 @@ export default function HorariosPage() {
       </div>
 
       <ScheduleConfigModal
+        key={editingConfig ? editingConfig.id : "new"}
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         onSubmit={handleSubmit}

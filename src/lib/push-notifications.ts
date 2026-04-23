@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 interface NotificationPayload {
   title: string;
   body: string;
+  url?: string;
 }
 
 export async function sendPushToCliente(
