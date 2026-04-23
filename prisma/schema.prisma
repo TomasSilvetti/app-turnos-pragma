@@ -24,6 +24,7 @@ model ServiceProvider {
   sucursales          EmpleadoSucursal[]
   expenses            Expense[]
   pushSubscriptions   PushSubscription[]
+  passwordResetTokens PasswordResetToken[]
   scheduleConfigs     ScheduleConfig[]
   listaEspera         ListaEspera[]
   tutorialCompleted   Boolean            @default(false)
@@ -310,6 +311,18 @@ model ListaEspera {
 
   @@unique([clienteId, serviceProviderId])
   @@map("lista_espera")
+}
+
+model PasswordResetToken {
+  id                String          @id @default(cuid())
+  token             String          @unique
+  serviceProviderId String
+  expiresAt         DateTime
+  usedAt            DateTime?
+  createdAt         DateTime        @default(now())
+  serviceProvider   ServiceProvider @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
 }
 
 model DisponibilidadListaEspera {

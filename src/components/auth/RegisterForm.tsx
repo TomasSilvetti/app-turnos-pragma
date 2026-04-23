@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type RegisterFormValues = {
@@ -28,7 +28,11 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
   } = useForm<RegisterFormValues>({ mode: "onBlur" });
 
   const values = watch();
-  const allFilled = !!(values.name && values.email && values.password);
+  const password = values.password ?? "";
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+  const passwordValid = hasUppercase && hasSpecial;
+  const allFilled = !!(values.name && values.email && password && passwordValid);
 
   async function handleFormSubmit(data: RegisterFormValues) {
     setEmailDuplicated(false);
@@ -142,6 +146,12 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             {errors.password.message}
           </p>
         )}
+        {password.length > 0 && (
+          <div className="flex flex-col gap-1 mt-1">
+            <PasswordRequirement met={hasUppercase} label="Al menos una mayúscula" />
+            <PasswordRequirement met={hasSpecial} label="Al menos un carácter especial" />
+          </div>
+        )}
       </div>
 
       <Button
@@ -153,5 +163,18 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
         {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
       </Button>
     </form>
+  );
+}
+
+function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {met ? (
+        <Check size={12} className="text-green-600 shrink-0" />
+      ) : (
+        <X size={12} className="text-slate-400 shrink-0" />
+      )}
+      <span className={cn("text-xs", met ? "text-green-600" : "text-slate-400")}>{label}</span>
+    </div>
   );
 }
