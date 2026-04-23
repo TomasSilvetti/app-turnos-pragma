@@ -747,8 +747,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
           />
 
           {/* Subsección lista de espera (siempre visible cuando hay empleado seleccionado) */}
-          {!isPorTipo && (
-            yaEnLista ? (
+          {yaEnLista ? (
               <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex flex-col gap-3">
                 <div className="flex flex-col gap-0.5">
                   <p className="font-body text-sm font-medium text-[#2A2829]">Ya estás en la lista de espera</p>
@@ -813,8 +812,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                   Entrar a la lista
                 </button>
               </div>
-            )
-          )}
+            )}
 
           {isPorTipo ? (
             /* Flujo POR_TIPO: columna temporal + formulario */
