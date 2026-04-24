@@ -163,7 +163,7 @@ export function PushNotificationToggle() {
           aria-label="Activar o desactivar notificaciones push"
           disabled={saving}
           onClick={handleToggle}
-          className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] ${
+          className={`relative mt-0.5 h-5 w-9 shrink-0 rounded-full transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] touch-manipulation p-3 -m-3 ${
             active ? "bg-[var(--brand-color)]" : "bg-[#cbd5e1] dark:bg-[#475569]"
           } ${saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
         >
