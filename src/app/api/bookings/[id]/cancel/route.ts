@@ -4,6 +4,7 @@ import { auth } from "@/../auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { sendWhatsAppTemplate } from "@/lib/twilio";
 import { inngest } from "@/lib/inngest";
+import { sendPushToCliente, sendEmailToCliente } from "@/lib/push-notifications";
 
 
 export async function PATCH(
@@ -89,6 +90,31 @@ export async function PATCH(
     } catch (err) {
       console.error("[cancel] Error al enviar WhatsApp:", err);
     }
+  }
+
+  // Notificar al cliente por push y email si tiene cuenta
+  if (booking.clienteId) {
+    const businessProfile = await prisma.businessProfile.findFirst({
+      where: {
+        OR: [
+          { serviceProviderId: booking.appointment.serviceProviderId },
+          { empleados: { some: { serviceProviderId: booking.appointment.serviceProviderId } } },
+        ],
+      },
+      select: { name: true, address: true },
+    });
+
+    const negocio = businessProfile?.name ?? "el negocio";
+    const serviceInfo = booking.appointment.serviceType?.title
+      ? ` · ${booking.appointment.serviceType.title}`
+      : "";
+    const dateStr = booking.appointment.date.split("-").reverse().join("/");
+
+    const title = "Turno cancelado";
+    const body = `Tu turno en ${negocio} del ${dateStr} a las ${booking.appointment.time} hs${serviceInfo} fue cancelado por el negocio.`;
+
+    sendPushToCliente(booking.clienteId, { title, body }).catch(() => {});
+    sendEmailToCliente(booking.clienteId, { title, body }).catch(() => {});
   }
 
   return NextResponse.json({ id }, { status: 200 });

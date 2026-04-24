@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { inngest } from "@/lib/inngest";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 
 
 export async function DELETE(
@@ -18,6 +19,7 @@ export async function DELETE(
     where: { id: bookingId, clienteId: session.clienteId },
     select: {
       id: true,
+      clientName: true,
       status: true,
       appointmentId: true,
       appointment: {
@@ -101,6 +103,17 @@ export async function DELETE(
       },
     });
   }
+
+  // Notificar al empleado
+  const dateStr = booking.appointment.date.split("-").reverse().join("/");
+  const serviceInfo = booking.appointment.serviceType?.title
+    ? ` · ${booking.appointment.serviceType.title}`
+    : "";
+  const title = "Turno cancelado";
+  const body = `${booking.clientName} canceló su turno del ${dateStr} a las ${booking.appointment.time} hs${serviceInfo}.`;
+
+  sendPushToServiceProvider(booking.appointment.serviceProviderId, { title, body }).catch(() => {});
+  sendEmailToServiceProvider(booking.appointment.serviceProviderId, { title, body }).catch(() => {});
 
   return NextResponse.json(
     { success: true, eliminadoDeLista: !!listaEsperaEntry },
