@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
-import { sendPushToServiceProvider } from "@/lib/push-notifications";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { BookingStatus } from "@prisma/client";
 
@@ -186,10 +186,16 @@ export async function POST(request: NextRequest) {
   });
 
   if (appointmentFull) {
-    await sendPushToServiceProvider(appointmentFull.serviceProviderId, {
+    const notifPayload = {
       title: "Nuevo turno reservado",
       body: `${booking.clientName} el ${appointmentFull.date.split("-").reverse().join("/")} a las ${appointmentFull.time}`,
-    }).catch((err) => console.error("[Push] Error enviando notificación:", err));
+    };
+    sendPushToServiceProvider(appointmentFull.serviceProviderId, notifPayload).catch((err) =>
+      console.error("[Push] Error enviando notificación:", err)
+    );
+    sendEmailToServiceProvider(appointmentFull.serviceProviderId, notifPayload).catch((err) =>
+      console.error("[Email] Error enviando notificación:", err)
+    );
   }
 
   emitNewBooking();
