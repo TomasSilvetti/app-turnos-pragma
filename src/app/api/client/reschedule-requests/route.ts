@@ -8,14 +8,14 @@ export async function POST(request: NextRequest) {
   const session = await getClientSession(request);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  let body: Record<string, unknown>;
+  let requestBody: Record<string, unknown>;
   try {
-    body = await request.json();
+    requestBody = await request.json();
   } catch {
     return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  const { bookingId, requestedDate, requestedTime } = body as {
+  const { bookingId, requestedDate, requestedTime } = requestBody as {
     bookingId?: string;
     requestedDate?: string;
     requestedTime?: string;
