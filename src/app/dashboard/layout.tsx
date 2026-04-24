@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
@@ -32,6 +32,8 @@ const DEFAULT_BRAND_COLOR = "#253551";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTutorial = searchParams.get("fromTutorial") !== null;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
@@ -242,7 +244,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <TutorialBanner />
       </Suspense>
 
-      <main className="px-6 py-8 min-h-screen overflow-y-auto">
+      <main className={cn("px-6 py-8 min-h-screen overflow-y-auto", hasTutorial && "pb-40")}>
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
