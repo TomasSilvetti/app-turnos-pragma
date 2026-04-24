@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export function PushNotificationPrompt() {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (
@@ -32,6 +33,7 @@ export function PushNotificationPrompt() {
 
   async function handleActivar() {
     setLoading(true);
+    setErrorMsg(null);
     try {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
@@ -53,15 +55,20 @@ export function PushNotificationPrompt() {
         keys: { p256dh: string; auth: string };
       };
 
-      await fetch("/api/push-subscriptions", {
+      const res = await fetch("/api/push-subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ endpoint, keys }),
       });
 
+      if (!res.ok) {
+        throw new Error(`Error del servidor: ${res.status}`);
+      }
+
       setVisible(false);
-    } catch {
-      setVisible(false);
+    } catch (err) {
+      console.error("[PushPrompt] Error activando:", err);
+      setErrorMsg("No se pudo activar. Recargá la página e intentá de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -111,6 +118,9 @@ export function PushNotificationPrompt() {
               Ahora no
             </button>
           </div>
+          {errorMsg && (
+            <p className="text-xs text-[#ef4444]">{errorMsg}</p>
+          )}
         </div>
       </div>
     </div>
