@@ -86,8 +86,8 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
       className="flex flex-col gap-5"
     >
       {pendingSetup && (
-        <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
-          <p className="text-sm text-amber-800">
+        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
+          <p className="text-sm text-green-800">
             Tu cuenta está lista. Solo falta configurar tu empresa para acceder al dashboard.
           </p>
         </div>

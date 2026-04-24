@@ -73,9 +73,12 @@ export function PushNotificationToggle() {
         }
 
         const registration = await navigator.serviceWorker.ready;
+        console.log("[Push] SW ready, buscando suscripción existente...");
         const existingSub = await registration.pushManager.getSubscription();
+        console.log("[Push] existingSub:", existingSub ? existingSub.endpoint : "ninguna");
 
         if (existingSub) {
+          console.log("[Push] Reutilizando suscripción existente, registrando en DB...");
           const { endpoint, keys } = existingSub.toJSON() as {
             endpoint: string;
             keys: { p256dh: string; auth: string };
@@ -85,18 +88,23 @@ export function PushNotificationToggle() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ endpoint, keys }),
           });
+          console.log("[Push] POST /api/push-subscriptions status:", res.status);
           if (!res.ok) throw new Error("API_FAILED");
         } else {
           const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+          console.log("[Push] Sin suscripción previa. VAPID key presente:", !!vapidPublicKey);
           if (!vapidPublicKey) throw new Error("VAPID_KEY_MISSING");
 
           let subscription: PushSubscription;
           try {
+            console.log("[Push] Creando nueva suscripción con pushManager.subscribe()...");
             subscription = await registration.pushManager.subscribe({
               userVisibleOnly: true,
               applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
             });
+            console.log("[Push] Nueva suscripción creada:", subscription.endpoint);
           } catch (subErr) {
+            console.error("[Push] pushManager.subscribe() falló:", subErr);
             throw new Error(`SUBSCRIBE_FAILED: ${subErr instanceof Error ? subErr.message : subErr}`);
           }
 
@@ -109,6 +117,7 @@ export function PushNotificationToggle() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ endpoint, keys }),
           });
+          console.log("[Push] POST /api/push-subscriptions status:", res.status);
           if (!res.ok) throw new Error("API_FAILED");
         }
 
