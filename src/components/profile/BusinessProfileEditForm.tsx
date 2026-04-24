@@ -390,7 +390,12 @@ export function BusinessProfileEditForm() {
             "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
             errors.telefono ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
           )}
-          {...register("telefono", { required: "El teléfono es obligatorio" })}
+          placeholder="Ej: +54 9 11 1234-5678"
+          {...register("telefono", {
+            required: "El teléfono es obligatorio",
+            validate: (v) =>
+              /^\+\d+/.test(v.trim()) || "El teléfono debe incluir el código de país (ej: +54)",
+          })}
         />
         {errors.telefono && (
           <p role="alert" className="text-xs text-red-500">

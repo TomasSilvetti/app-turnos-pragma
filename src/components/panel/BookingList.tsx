@@ -457,7 +457,7 @@ export default function BookingList() {
 
           {selectedEmployee && (
             <p className="font-small text-xs text-[var(--brand-color)] dark:text-[#93c5fd]">
-              Modo lectura — turnos de {selectedEmployee.nombre}
+              {isAdmin ? `Turnos de ${selectedEmployee.nombre} — podés marcar pagos` : `Modo lectura — turnos de ${selectedEmployee.nombre}`}
             </p>
           )}
         </div>
@@ -525,7 +525,19 @@ export default function BookingList() {
                 key={item.bookingId}
                 item={item}
                 actions={
-                  selectedEmployee ? null : (
+                  selectedEmployee ? (
+                    isAdmin ? (
+                      <button
+                        onClick={() => !item.isMock && handleConfirmPayment(item.bookingId)}
+                        disabled={loadingId === item.bookingId}
+                        className="flex items-center gap-1.5 font-body text-sm text-white bg-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[#1c2a40] transition-colors disabled:opacity-50"
+                        aria-label="Marcar como pagado"
+                      >
+                        <CheckCircle size={15} />
+                        Pago
+                      </button>
+                    ) : null
+                  ) : (
                     <>
                       <button
                         onClick={() => !item.isMock && handleConfirmPayment(item.bookingId)}
