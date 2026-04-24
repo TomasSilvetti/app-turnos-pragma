@@ -81,7 +81,7 @@ export async function POST(
   // Verificar negocio
   const profile = await prisma.businessProfile.findUnique({
     where: { slug },
-    select: { id: true },
+    select: { id: true, serviceProviderId: true, empleados: { select: { serviceProviderId: true } } },
   });
 
   if (!profile) {
@@ -188,9 +188,13 @@ export async function POST(
       return { conflict: "overlap" as const };
     }
 
+    const businessServiceProviderIds = [
+      profile.serviceProviderId,
+      ...profile.empleados.map((e) => e.serviceProviderId),
+    ];
     const duplicateDayWhere = clientSession
-      ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date } }
-      : { clientPhone, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date } };
+      ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date, serviceProviderId: { in: businessServiceProviderIds } } }
+      : { clientPhone, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date, serviceProviderId: { in: businessServiceProviderIds } } };
 
     const existingOnDate = await tx.booking.findFirst({ where: duplicateDayWhere });
     if (existingOnDate) {

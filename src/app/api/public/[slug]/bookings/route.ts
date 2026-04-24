@@ -80,6 +80,7 @@ export async function POST(
     select: {
       serviceProviderId: true,
       serviceProvider: { select: { modoTurno: true } },
+      empleados: { select: { serviceProviderId: true } },
     },
   });
 
@@ -171,11 +172,15 @@ export async function POST(
       return { conflict: "overlap" as const };
     }
 
+    const businessServiceProviderIds = [
+      profile.serviceProviderId,
+      ...profile.empleados.map((e) => e.serviceProviderId),
+    ];
     const existingBookingOnDate = await tx.booking.findFirst({
       where: {
         clientPhone,
         status: { in: ["pending", "confirmed"] },
-        appointment: { date },
+        appointment: { date, serviceProviderId: { in: businessServiceProviderIds } },
       },
     });
 

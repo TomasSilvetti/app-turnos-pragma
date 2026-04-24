@@ -56,16 +56,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "El turno ya fue reservado" }, { status: 409 });
   }
 
-  const duplicateDayWhere = isAuthenticatedFlow
-    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } }
-    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } };
-
-  const existingOnDate = await prisma.booking.findFirst({ where: duplicateDayWhere });
-  if (existingOnDate) {
-    return NextResponse.json({ error: "Ya tenés un turno reservado para ese día" }, { status: 409 });
-  }
-
-  // Validar y resolver paymentMethod
   const businessForPayment = await prisma.businessProfile.findFirst({
     where: {
       OR: [
@@ -73,8 +63,21 @@ export async function POST(request: NextRequest) {
         { empleados: { some: { serviceProviderId: appointment.serviceProviderId } } },
       ],
     },
-    select: { cashEnabled: true, transferEnabled: true },
+    select: { cashEnabled: true, transferEnabled: true, serviceProviderId: true, empleados: { select: { serviceProviderId: true } } },
   });
+
+  const businessServiceProviderIds = businessForPayment
+    ? [businessForPayment.serviceProviderId, ...businessForPayment.empleados.map((e) => e.serviceProviderId)]
+    : [appointment.serviceProviderId];
+
+  const duplicateDayWhere = isAuthenticatedFlow
+    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date, serviceProviderId: { in: businessServiceProviderIds } } }
+    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date, serviceProviderId: { in: businessServiceProviderIds } } };
+
+  const existingOnDate = await prisma.booking.findFirst({ where: duplicateDayWhere });
+  if (existingOnDate) {
+    return NextResponse.json({ error: "Ya tenés un turno reservado para ese día" }, { status: 409 });
+  }
 
   let resolvedPaymentMethod: string | null = null;
   if (businessForPayment) {
