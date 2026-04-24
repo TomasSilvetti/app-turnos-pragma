@@ -21,8 +21,7 @@ function getCurrentHourBuenosAires(): number {
 
 // Corre diariamente a las 10:00 (hora Argentina) — recordatorio día anterior
 export const recordatorioDiaAnterior = inngest.createFunction(
-  { id: "recordatorio-dia-anterior" },
-  { cron: "TZ=America/Argentina/Buenos_Aires 0 10 * * *" },
+  { id: "recordatorio-dia-anterior", cron: "TZ=America/Argentina/Buenos_Aires 0 10 * * *" },
   async ({ step }) => {
     const tomorrow = getDateStringBuenosAires(1);
 
@@ -106,8 +105,7 @@ export const recordatorioDiaAnterior = inngest.createFunction(
 
 // Corre cada hora — recordatorio 3hs antes del turno (solo clientes registrados)
 export const recordatorio3HsAntes = inngest.createFunction(
-  { id: "recordatorio-3hs-antes" },
-  { cron: "TZ=America/Argentina/Buenos_Aires 0 * * * *" },
+  { id: "recordatorio-3hs-antes", cron: "TZ=America/Argentina/Buenos_Aires 0 * * * *" },
   async ({ step }) => {
     const today = getDateStringBuenosAires();
     const currentHour = getCurrentHourBuenosAires();
