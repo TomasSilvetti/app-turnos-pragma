@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendPushToCliente } from "@/lib/push-notifications";
+import { sendPushToCliente, sendEmailToCliente } from "@/lib/push-notifications";
 import crypto from "crypto";
 
 const VENTANA_MINUTOS = 10;
@@ -153,8 +153,11 @@ async function notificarSiguiente(serviceProviderId: string, vacanteTurnoId: str
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://app-turnos.vercel.app";
   const deeplink = `${baseUrl}/lista-espera/vacante?token=${token}`;
 
-  await sendPushToCliente(elegible.clienteId, {
+  const notifPayload = {
     title: "¡Se liberó un turno!",
-    body: `Hay una vacante el ${turno.date} a las ${turno.time}${turno.serviceType ? ` — ${turno.serviceType.title}` : ""}. Tenés ${VENTANA_MINUTOS} minutos para tomarlo. Tocá para reservar: ${deeplink}`,
-  }).catch(() => {});
+    body: `Hay una vacante el ${turno.date} a las ${turno.time}${turno.serviceType ? ` — ${turno.serviceType.title}` : ""}. Tenés ${VENTANA_MINUTOS} minutos para tomarlo.`,
+    url: deeplink,
+  };
+  await sendPushToCliente(elegible.clienteId, notifPayload).catch(() => {});
+  await sendEmailToCliente(elegible.clienteId, notifPayload).catch(() => {});
 }

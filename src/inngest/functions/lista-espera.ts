@@ -1,6 +1,6 @@
 import { inngest } from "@/lib/inngest";
 import { prisma } from "@/lib/prisma";
-import { sendPushToCliente } from "@/lib/push-notifications";
+import { sendPushToCliente, sendEmailToCliente } from "@/lib/push-notifications";
 import crypto from "crypto";
 
 const VENTANA_MINUTOS = 10;
@@ -157,11 +157,13 @@ async function notificarSiguiente(
   const [anio, mes, dia] = turno.date.split("-");
   const fechaFormateada = `${dia}/${mes}/${anio}`;
 
-  await sendPushToCliente(elegible.clienteId, {
+  const notifPayload = {
     title: "¡Se liberó un turno!",
     body: `¡Se liberó un turno el ${fechaFormateada} a las ${turno.time} hs${turno.serviceType ? ` — ${turno.serviceType.title}` : ""}! Tocá la notificación para ir a reservarlo.`,
     url: deeplink,
-  }).catch(() => {});
+  };
+  await sendPushToCliente(elegible.clienteId, notifPayload).catch(() => {});
+  await sendEmailToCliente(elegible.clienteId, notifPayload).catch(() => {});
 
   return true;
 }

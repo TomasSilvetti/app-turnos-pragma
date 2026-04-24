@@ -7,6 +7,43 @@ interface NotificationPayload {
   url?: string;
 }
 
+export async function sendEmailToCliente(
+  clienteId: string,
+  payload: NotificationPayload
+): Promise<void> {
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) return;
+
+  const cliente = await prisma.cliente.findUnique({
+    where: { id: clienteId },
+    select: { email: true, nombre: true, apellido: true },
+  });
+  if (!cliente) return;
+
+  const resend = new Resend(resendKey);
+  await resend.emails.send({
+    from: "Turnos App <noreply@pragmastudio.net>",
+    to: cliente.email,
+    subject: payload.title,
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+            <tr>
+              <td style="width: 40px; height: 40px; background: #253551; border-radius: 12px; text-align: center; vertical-align: middle;">
+                <span style="color: white; font-weight: bold; font-size: 18px; line-height: 40px;">T</span>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <h1 style="font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 8px;">${payload.title}</h1>
+        <p style="color: #475569; font-size: 14px; margin-bottom: 24px;">Hola ${cliente.nombre}, ${payload.body}</p>
+        ${payload.url ? `<a href="${payload.url}" style="display: inline-block; background: #253551; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500;">Reservar turno</a>` : ""}
+      </div>
+    `,
+  }).catch((err) => console.error("[Email] Error enviando a cliente:", err));
+}
+
 export async function sendEmailToServiceProvider(
   serviceProviderId: string,
   payload: NotificationPayload
