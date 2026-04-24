@@ -37,7 +37,8 @@ export async function sendPushToCliente(
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payloadStr
+          payloadStr,
+          { TTL: 86400, urgency: "high" }
         );
         console.log(`[PushCliente] enviado OK endpoint=${sub.endpoint.slice(0, 50)}`);
       } catch (err: unknown) {
@@ -83,7 +84,8 @@ export async function sendPushToServiceProvider(
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-          payloadStr
+          payloadStr,
+          { TTL: 86400, urgency: "high" }
         );
       } catch (err: unknown) {
         const status = (err as { statusCode?: number }).statusCode;

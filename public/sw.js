@@ -15,6 +15,9 @@ self.addEventListener("push", (event) => {
     icon: "/icon-192.png",
     badge: "/icon-192.png",
     data: { url: payload.url ?? "/" },
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    tag: payload.tag ?? "turno",
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
