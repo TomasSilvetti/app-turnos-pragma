@@ -746,76 +746,8 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             clientBookingDates={clientBookingDates}
           />
 
-          {/* Subsección lista de espera (siempre visible cuando hay empleado seleccionado) */}
-          {yaEnLista ? (
-              <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex flex-col gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <p className="font-body text-sm font-medium text-[#2A2829]">Ya estás en la lista de espera</p>
-                  <p className="font-body text-xs text-[#2A2829]/60">
-                    {waitlistCurrentConfig?.cualquierVacante
-                      ? "Te avisamos ante cualquier vacante."
-                      : `Te avisamos en tus horarios configurados.`}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setWaitlistAvailOpen(true)}
-                    className="rounded-lg border border-[var(--brand-color)] px-3 py-1.5 font-body text-xs font-medium text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
-                  >
-                    Editar disponibilidad
-                  </button>
-                  <button
-                    type="button"
-                    disabled={waitlistSaliendoLista}
-                    onClick={async () => {
-                      if (!selectedEmployeeId) return;
-                      setWaitlistSaliendoLista(true);
-                      try {
-                        await fetch(`/api/lista-espera?serviceProviderId=${encodeURIComponent(selectedEmployeeId)}`, { method: "DELETE" });
-                        setYaEnLista(false);
-                        setWaitlistCurrentConfig(null);
-                      } catch {
-                        // silencioso
-                      } finally {
-                        setWaitlistSaliendoLista(false);
-                      }
-                    }}
-                    className="rounded-lg border border-[#E0E0DB] px-3 py-1.5 font-body text-xs font-medium text-[#2A2829]/60 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
-                  >
-                    {waitlistSaliendoLista ? "Saliendo..." : "Salir de la lista"}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex items-center justify-between gap-3">
-                <p className="font-body text-sm text-[#2A2829]/70 leading-snug flex-1">
-                  ¿El turno que querés está ocupado? Entrá a la lista de espera. Te avisamos si se libera un turno antes del que ya tenés reservado.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const tieneRespaldoLocal = selectedEmployeeId
-                      ? clientBookings.some((b) => b.employeeId === selectedEmployeeId)
-                      : false;
-                    if (tieneRespaldoLocal) {
-                      handleUnirseListaEspera(() => setWaitlistAvailOpen(true));
-                    } else {
-                      setWaitlistInfoTieneRespaldo(false);
-                      setWaitlistInfoLoading(false);
-                      setWaitlistInfoAppointmentId(null);
-                      setWaitlistInfoOpen(true);
-                    }
-                  }}
-                  className="shrink-0 rounded-lg bg-[var(--brand-color)] px-3 py-2 font-body text-xs font-medium text-white hover:bg-[var(--brand-color-dark,#1c2a40)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
-                >
-                  Entrar a la lista
-                </button>
-              </div>
-            )}
-
           {isPorTipo ? (
-            /* Flujo POR_TIPO: columna temporal + formulario */
+            /* Flujo POR_TIPO: turnos del día primero, luego lista de espera y formulario */
             selectedDate && (
               isLoadingDaySchedule ? (
                 <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
@@ -823,16 +755,6 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                 </div>
               ) : daySchedule ? (
                 <>
-                  <DayScheduleBookingForm
-                    startTime={daySchedule.startTime}
-                    endTime={daySchedule.endTime}
-                    gaps={daySchedule.gaps}
-                    serviceTypes={daySchedule.serviceTypes}
-                    appointments={daySchedule.appointments}
-                    paymentMethods={paymentMethods}
-                    onConfirm={handlePorTipoConfirm}
-                    onPreviewChange={setPorTipoPreview}
-                  />
                   <DayScheduleColumn
                     startTime={daySchedule.startTime}
                     endTime={daySchedule.endTime}
@@ -855,6 +777,82 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                       };
                     })()}
                   />
+                  {yaEnLista ? (
+                    <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex flex-col gap-3">
+                      <div className="flex flex-col gap-0.5">
+                        <p className="font-body text-sm font-medium text-[#2A2829]">Ya estás en la lista de espera</p>
+                        <p className="font-body text-xs text-[#2A2829]/60">
+                          {waitlistCurrentConfig?.cualquierVacante
+                            ? "Te avisamos ante cualquier vacante."
+                            : `Te avisamos en tus horarios configurados.`}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setWaitlistAvailOpen(true)}
+                          className="rounded-lg border border-[var(--brand-color)] px-3 py-1.5 font-body text-xs font-medium text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                        >
+                          Editar disponibilidad
+                        </button>
+                        <button
+                          type="button"
+                          disabled={waitlistSaliendoLista}
+                          onClick={async () => {
+                            if (!selectedEmployeeId) return;
+                            setWaitlistSaliendoLista(true);
+                            try {
+                              await fetch(`/api/lista-espera?serviceProviderId=${encodeURIComponent(selectedEmployeeId)}`, { method: "DELETE" });
+                              setYaEnLista(false);
+                              setWaitlistCurrentConfig(null);
+                            } catch {
+                              // silencioso
+                            } finally {
+                              setWaitlistSaliendoLista(false);
+                            }
+                          }}
+                          className="rounded-lg border border-[#E0E0DB] px-3 py-1.5 font-body text-xs font-medium text-[#2A2829]/60 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                        >
+                          {waitlistSaliendoLista ? "Saliendo..." : "Salir de la lista"}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex items-center justify-between gap-3">
+                      <p className="font-body text-sm text-[#2A2829]/70 leading-snug flex-1">
+                        ¿El turno que querés está ocupado? Entrá a la lista de espera. Te avisamos si se libera un turno antes del que ya tenés reservado.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tieneRespaldoLocal = selectedEmployeeId
+                            ? clientBookings.some((b) => b.employeeId === selectedEmployeeId)
+                            : false;
+                          if (tieneRespaldoLocal) {
+                            handleUnirseListaEspera(() => setWaitlistAvailOpen(true));
+                          } else {
+                            setWaitlistInfoTieneRespaldo(false);
+                            setWaitlistInfoLoading(false);
+                            setWaitlistInfoAppointmentId(null);
+                            setWaitlistInfoOpen(true);
+                          }
+                        }}
+                        className="shrink-0 rounded-lg bg-[var(--brand-color)] px-3 py-2 font-body text-xs font-medium text-white hover:bg-[var(--brand-color-dark,#1c2a40)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                      >
+                        Entrar a la lista
+                      </button>
+                    </div>
+                  )}
+                  <DayScheduleBookingForm
+                    startTime={daySchedule.startTime}
+                    endTime={daySchedule.endTime}
+                    gaps={daySchedule.gaps}
+                    serviceTypes={daySchedule.serviceTypes}
+                    appointments={daySchedule.appointments}
+                    paymentMethods={paymentMethods}
+                    onConfirm={handlePorTipoConfirm}
+                    onPreviewChange={setPorTipoPreview}
+                  />
                   {porTipoBookingError && (
                     <p role="alert" className="font-body text-sm text-red-500 dark:text-red-400 px-1">
                       {porTipoBookingError}
@@ -875,19 +873,87 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
               )
             )
           ) : (
-            /* Flujo FIJO: grilla de slots */
-            isLoadingSlots ? (
-              <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
-                <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
-              </div>
-            ) : (
-              <AppointmentSlots
-                appointments={appointmentsForDate}
-                onSelect={handleAppointmentSelect}
-                onOccupiedSelect={handleOccupiedAppointmentSelect}
-                clientBookingTimes={clientBookingTimesForDate}
-              />
-            )
+            /* Flujo FIJO: lista de espera + grilla de slots */
+            <>
+              {yaEnLista ? (
+                <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex flex-col gap-3">
+                  <div className="flex flex-col gap-0.5">
+                    <p className="font-body text-sm font-medium text-[#2A2829]">Ya estás en la lista de espera</p>
+                    <p className="font-body text-xs text-[#2A2829]/60">
+                      {waitlistCurrentConfig?.cualquierVacante
+                        ? "Te avisamos ante cualquier vacante."
+                        : `Te avisamos en tus horarios configurados.`}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setWaitlistAvailOpen(true)}
+                      className="rounded-lg border border-[var(--brand-color)] px-3 py-1.5 font-body text-xs font-medium text-[var(--brand-color)] hover:bg-[var(--brand-color)]/5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                    >
+                      Editar disponibilidad
+                    </button>
+                    <button
+                      type="button"
+                      disabled={waitlistSaliendoLista}
+                      onClick={async () => {
+                        if (!selectedEmployeeId) return;
+                        setWaitlistSaliendoLista(true);
+                        try {
+                          await fetch(`/api/lista-espera?serviceProviderId=${encodeURIComponent(selectedEmployeeId)}`, { method: "DELETE" });
+                          setYaEnLista(false);
+                          setWaitlistCurrentConfig(null);
+                        } catch {
+                          // silencioso
+                        } finally {
+                          setWaitlistSaliendoLista(false);
+                        }
+                      }}
+                      className="rounded-lg border border-[#E0E0DB] px-3 py-1.5 font-body text-xs font-medium text-[#2A2829]/60 hover:border-red-300 hover:text-red-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:ring-offset-2"
+                    >
+                      {waitlistSaliendoLista ? "Saliendo..." : "Salir de la lista"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-xl bg-[#F4F5F7] border border-[#E0E0DB] px-4 py-3 flex items-center justify-between gap-3">
+                  <p className="font-body text-sm text-[#2A2829]/70 leading-snug flex-1">
+                    ¿El turno que querés está ocupado? Entrá a la lista de espera. Te avisamos si se libera un turno antes del que ya tenés reservado.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tieneRespaldoLocal = selectedEmployeeId
+                        ? clientBookings.some((b) => b.employeeId === selectedEmployeeId)
+                        : false;
+                      if (tieneRespaldoLocal) {
+                        handleUnirseListaEspera(() => setWaitlistAvailOpen(true));
+                      } else {
+                        setWaitlistInfoTieneRespaldo(false);
+                        setWaitlistInfoLoading(false);
+                        setWaitlistInfoAppointmentId(null);
+                        setWaitlistInfoOpen(true);
+                      }
+                    }}
+                    className="shrink-0 rounded-lg bg-[var(--brand-color)] px-3 py-2 font-body text-xs font-medium text-white hover:bg-[var(--brand-color-dark,#1c2a40)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2"
+                  >
+                    Entrar a la lista
+                  </button>
+                </div>
+              )}
+              {isLoadingSlots ? (
+                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+                  <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
+                </div>
+              ) : (
+                <AppointmentSlots
+                  appointments={appointmentsForDate}
+                  onSelect={handleAppointmentSelect}
+                  onOccupiedSelect={handleOccupiedAppointmentSelect}
+                  clientBookingTimes={clientBookingTimesForDate}
+                />
+              )}
+            </>
           )}
         </>
       )}
