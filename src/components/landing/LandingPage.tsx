@@ -26,7 +26,7 @@ export function LandingPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/login"
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-300 transition-colors duration-200 hover:bg-white/5 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-slate-300 transition-colors duration-200 hover:bg-white/5 hover:text-white hover:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
             >
               Iniciar sesión
             </Link>
@@ -34,7 +34,7 @@ export function LandingPage() {
               href="/register"
               className="rounded-lg bg-[#253551] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#2e4166] focus:outline-none focus:ring-2 focus:ring-[#253551]/50 cursor-pointer"
             >
-              Registrarme como empresa
+              Registrarme
             </Link>
           </div>
         </div>
@@ -62,7 +62,7 @@ export function LandingPage() {
               href="/register"
               className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-[#0f1623] transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
             >
-              Registrarme como empresa
+              Registrarme
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -259,7 +259,7 @@ export function LandingPage() {
             href="/register"
             className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-[#0f1623] transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
           >
-            Registrarme como empresa
+            Registrarme
             <ArrowRight className="h-4 w-4" />
           </Link>
           <p className="mt-4 text-sm text-slate-600">

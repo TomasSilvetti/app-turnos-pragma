@@ -419,7 +419,7 @@ export default function BookingList() {
               onClick={() => setEmployeeDropdownOpen((prev) => !prev)}
               className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-xl px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors w-full sm:w-auto"
             >
-              <Users size={15} className="text-[var(--brand-color)] shrink-0" />
+              <Users size={15} className="text-[var(--brand-color)] dark:text-white shrink-0" />
               <span className="truncate">
                 {selectedEmployee ? selectedEmployee.nombre : "Ver turnos de empleado"}
               </span>
@@ -470,7 +470,7 @@ export default function BookingList() {
             onClick={() => setCalendarOpen((prev) => !prev)}
             className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-lg px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
           >
-            <CalendarCheck size={15} className="text-[var(--brand-color)]" />
+            <CalendarCheck size={15} className="text-[var(--brand-color)] dark:text-white" />
             {calendarOpen ? "Ocultar calendario" : "Mostrar calendario"}
             {calendarOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
