@@ -36,13 +36,18 @@ export function HeroSection() {
 
   return (
     <section className="flex min-h-[calc(100vh-57px)] items-center overflow-hidden">
-      <div className="mx-auto w-full max-w-6xl px-6 py-24">
+      <div className="mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           {/* Left */}
           <div>
             <HeroCarousel index={index} onGoTo={goTo} />
 
-            <h1 className="mt-8 text-[40px] font-medium leading-[1.1] tracking-[-0.03em] text-white md:text-[44px]">
+            {/* Cards — mobile only, between carousel and title */}
+            <div className="relative mt-8 h-[370px] lg:hidden">
+              <HeroCards swapTrigger={index} mobileSize />
+            </div>
+
+            <h1 className="mt-8 text-[36px] font-medium leading-[1.1] tracking-[-0.03em] text-white sm:text-[40px] md:text-[44px]">
               Tu agenda siempre llena,
               <br />
               sin perseguir a nadie.
@@ -69,7 +74,7 @@ export function HeroSection() {
             </div>
           </div>
 
-          {/* Right — CardSwap */}
+          {/* Right — CardSwap, desktop only */}
           <div className="relative hidden h-[560px] lg:block">
             <HeroCards swapTrigger={index} />
           </div>

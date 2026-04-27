@@ -9,6 +9,7 @@ const Card = CardBase as React.ComponentType<
 
 interface Props {
   swapTrigger: number;
+  mobileSize?: boolean;
 }
 
 // Card order matches question order:
@@ -16,13 +17,17 @@ interface Props {
 // 1 → "¿Esperas entre turnos?"        → Agenda del día
 // 2 → "¿Cancelaciones a último momento?" → Recordatorio automático
 
-export function HeroCards({ swapTrigger }: Props) {
+export function HeroCards({ swapTrigger, mobileSize }: Props) {
+  const width = mobileSize ? 300 : 380;
+  const height = mobileSize ? 270 : 260;
+
   return (
     <CardSwap
-      width={380}
-      height={260}
-      cardDistance={50}
-      verticalDistance={60}
+      width={width}
+      height={height}
+      cardDistance={mobileSize ? 35 : 50}
+      verticalDistance={mobileSize ? 40 : 60}
+      containerClassName={mobileSize ? "card-swap-container--mobile" : undefined}
       pauseOnHover
       skewAmount={4}
       easing="elastic"

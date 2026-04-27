@@ -52,6 +52,7 @@ const CardSwap = ({
   skewAmount = 6,
   easing = "elastic",
   swapTrigger,
+  containerClassName,
   children,
 }) => {
   const controlled = swapTrigger !== undefined;
@@ -162,7 +163,7 @@ const CardSwap = ({
   );
 
   return (
-    <div ref={container} className="card-swap-container" style={{ width, height }}>
+    <div ref={container} className={`card-swap-container${containerClassName ? ` ${containerClassName}` : ""}`} style={{ width, height }}>
       {rendered}
     </div>
   );

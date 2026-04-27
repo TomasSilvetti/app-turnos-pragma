@@ -88,6 +88,35 @@ export function ParaQuienEsSection() {
             </div>
           ))}
         </div>
+
+        <div className="mt-4 flex flex-col items-center gap-5 rounded-2xl border border-white/10 bg-white/[0.04] px-8 py-8 text-center">
+          <p className="text-sm font-medium text-slate-300">
+            La lista es mucho más larga. Si tu trabajo gira alrededor de los turnos, Pragma es para vos.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {[
+              "Nutricionista",
+              "Entrenador personal",
+              "Abogado",
+              "Contador",
+              "Dentista",
+              "Veterinario",
+              "Tatuador",
+              "Masajista",
+              "Fonoaudiólogo",
+              "Coach",
+              "Podólogo",
+              "Esteticista",
+            ].map((prof) => (
+              <span
+                key={prof}
+                className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs text-slate-400"
+              >
+                {prof}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

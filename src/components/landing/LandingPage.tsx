@@ -44,7 +44,7 @@ export function LandingPage() {
               { value: "0 filas", label: "de espera para tus clientes" },
               { value: "24/7", label: "disponibilidad para reservar" },
               { value: "-40%", label: "de ausencias con recordatorios" },
-              { value: "7mmit min", label: "para tener tu agenda lista" },
+              { value: "7 min", label: "para tener tu agenda lista" },
             ].map(({ value, label }) => (
               <div key={label}>
                 <p className="text-3xl font-bold text-white">{value}</p>
