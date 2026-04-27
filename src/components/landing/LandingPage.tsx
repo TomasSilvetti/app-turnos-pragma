@@ -1,12 +1,4 @@
 import Link from "next/link";
-import {
-  Clock,
-  CheckCircle,
-  ArrowRight,
-  Bell,
-  BarChart3,
-  Shield,
-} from "lucide-react";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
 import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
@@ -14,6 +6,7 @@ import { FuncionalidadesSection } from "@/components/landing/FuncionalidadesSect
 import { ParaQuienEsSection } from "@/components/landing/ParaQuienEsSection";
 import { TestimoniosSection } from "@/components/landing/TestimoniosSection";
 import { PreciosSection } from "@/components/landing/PreciosSection";
+import { FAQSection } from "@/components/landing/FAQSection";
 
 export function LandingPage() {
   return (
@@ -67,132 +60,7 @@ export function LandingPage() {
 
       <PreciosSection />
 
-      {/* Beneficios */}
-      <section className="border-t border-white/10 bg-white/[0.02]">
-        <div className="mx-auto max-w-6xl px-6 py-24">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold text-white md:text-4xl">
-              Por qué elegir Turnos
-            </h2>
-            <p className="mt-3 text-slate-400">
-              Todo lo que necesitás para gestionar tu agenda sin fricción
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                icon: Clock,
-                title: "Agenda en tiempo real",
-                description:
-                  "Los turnos disponibles se actualizan al instante. Sin doble reservas, sin confusiones.",
-              },
-              {
-                icon: Bell,
-                title: "Recordatorios automáticos",
-                description:
-                  "Reducí las ausencias con notificaciones automáticas antes del turno.",
-              },
-              {
-                icon: BarChart3,
-                title: "Panel de estadísticas",
-                description:
-                  "Seguí la ocupación de tu agenda, los servicios más demandados y las tendencias.",
-              },
-              {
-                icon: Shield,
-                title: "Seguro y confiable",
-                description:
-                  "Los datos de tu empresa y tus clientes están protegidos con los estándares más altos.",
-              },
-            ].map(({ icon: Icon, title, description }) => (
-              <div
-                key={title}
-                className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.07] cursor-default"
-              >
-                <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-[#1c2a40]">
-                  <Icon className="h-5 w-5 text-slate-300" />
-                </div>
-                <h3 className="mb-2 text-sm font-semibold text-white">
-                  {title}
-                </h3>
-                <p className="text-xs leading-relaxed text-slate-500">
-                  {description}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Checklist section */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04]">
-          <div className="grid gap-12 p-10 md:grid-cols-2 md:items-center">
-            <div>
-              <h2 className="mb-4 text-3xl font-bold text-white">
-                Todo lo que necesitás,
-                <br />
-                nada de lo que no usás
-              </h2>
-              <p className="mb-8 text-slate-400">
-                Una plataforma pensada para que cualquier empresa pueda
-                digitalizar su agenda sin necesitar conocimientos técnicos ni
-                contratar desarrolladores.
-              </p>
-              <Link
-                href="/register"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#253551] px-5 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-[#2e4166] focus:outline-none focus:ring-2 focus:ring-[#253551]/50 cursor-pointer"
-              >
-                Empezar ahora
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <ul className="space-y-4">
-              {[
-                "Configuración en menos de 5 minutos",
-                "Link de reserva único por empresa",
-                "Panel de administración centralizado",
-                "Gestión de múltiples servicios y profesionales",
-                "Historial completo de turnos",
-                "Sin contratos ni costos ocultos",
-              ].map((item) => (
-                <li key={item} className="flex items-start gap-3">
-                  <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
-                  <span className="text-sm text-slate-300">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA final */}
-      <section className="border-t border-white/10">
-        <div className="mx-auto max-w-6xl px-6 py-24 text-center">
-          <h2 className="mb-4 text-4xl font-bold text-white md:text-5xl">
-            Empezá hoy, gratis.
-          </h2>
-          <p className="mb-10 text-lg text-slate-400">
-            Registrá tu empresa en minutos y empezá a recibir reservas.
-          </p>
-          <Link
-            href="/register"
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-[#0f1623] transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
-          >
-            Registrarme
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-          <p className="mt-4 text-sm text-slate-600">
-            ¿Ya tenés cuenta?{" "}
-            <Link
-              href="/login"
-              className="text-slate-400 underline-offset-4 transition-colors hover:text-white hover:underline"
-            >
-              Iniciá sesión
-            </Link>
-          </p>
-        </div>
-      </section>
+      <FAQSection />
 
       {/* Footer */}
       <footer className="border-t border-white/10">

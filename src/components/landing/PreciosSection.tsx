@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   Bell,
   ListOrdered,
@@ -53,8 +54,29 @@ function formatARS(n: number) {
 }
 
 export function PreciosSection() {
+  const [vacantes, setVacantes] = useState(3);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("pragma_vacantes");
+    if (stored === "2") {
+      setVacantes(2);
+      return;
+    }
+    const timer = setTimeout(() => {
+      setVacantes(2);
+      localStorage.setItem("pragma_vacantes", "2");
+    }, 2.5 * 60 * 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section className="border-t border-white/10" id="precios">
+      <style>{`
+        @keyframes shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+      `}</style>
       <div className="mx-auto max-w-6xl px-6 py-24">
 
         {/* Anchor de valor */}
@@ -76,13 +98,29 @@ export function PreciosSection() {
         </div>
 
         {/* Vacantes limitadas */}
-        <div className="mb-10 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-6 md:p-8">
+        <div
+          className="mb-10 rounded-2xl p-6 md:p-8"
+          style={{
+            background: "linear-gradient(145deg, rgba(34,24,10,0.95) 0%, rgba(25,18,8,0.98) 100%)",
+            border: "1px solid rgba(245,158,11,0.25)",
+            boxShadow: "0 0 22px 4px rgba(245,158,11,0.14)",
+          }}
+        >
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:gap-8">
             <div className="flex-1">
               <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-amber-500/80">
                 Acceso exclusivo - 4 vacantes
               </p>
-              <h3 className="text-lg font-bold text-white">
+              <h3
+                className="text-lg font-bold"
+                style={{
+                  background: "linear-gradient(90deg, #fbbf24, #fde68a, #fbbf24)",
+                  backgroundSize: "200% auto",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  animation: "shimmer 3s linear infinite",
+                }}
+              >
                 Estamos arrancando y queremos desarrollar la mejor experiencia para vos
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-400">
@@ -91,8 +129,14 @@ export function PreciosSection() {
               </p>
             </div>
             <div className="shrink-0 text-center">
-              <div className="inline-flex flex-col items-center rounded-xl border border-amber-500/30 bg-amber-500/10 px-8 py-5">
-                <span className="text-5xl font-bold text-amber-400">2</span>
+              <div
+                className="inline-flex flex-col items-center rounded-xl px-8 py-5"
+                style={{
+                  background: "rgba(245,158,11,0.10)",
+                  border: "1px solid rgba(245,158,11,0.30)",
+                }}
+              >
+                <span className="text-5xl font-bold text-amber-400">{vacantes}</span>
                 <span className="mt-1 text-xs font-medium text-amber-500/80">
                   vacantes restantes
                 </span>
@@ -170,7 +214,8 @@ export function PreciosSection() {
         {/* Plan único + Garantía */}
         <div className="mt-10 grid gap-6 md:grid-cols-2 md:items-start">
           {/* Plan */}
-          <div className="relative overflow-hidden rounded-2xl border border-white/20 bg-white/[0.05] p-8 shadow-2xl">
+          <div className="relative p-[2px] rounded-2xl" style={{background: "linear-gradient(135deg, #c0c0c0 0%, #e8d5b7 15%, #b87333 28%, #e8e8e8 40%, #9b9b9b 50%, #d4af37 62%, #c0c0c0 72%, #f0e68c 82%, #b8b8b8 90%, #e0d0a0 100%)"}}>
+          <div className="relative overflow-hidden rounded-[14px] bg-[#0d1420] p-8 shadow-2xl">
             <div className="absolute right-5 top-5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
               Primera semana gratis
             </div>
@@ -209,21 +254,35 @@ export function PreciosSection() {
 
             <Link
               href="/register"
-              className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-[#0f1623] transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, #d4d4d4 0%, #f5e6c8 12%, #c8a882 22%, #e8e8e8 32%, #a8a8a8 42%, #f0d060 52%, #d4d4d4 62%, #f5f0d0 72%, #b8b8b8 82%, #e8deb0 92%, #d0d0d0 100%)",
+                color: "#1a1a1a",
+              }}
             >
-              Empezar gratis una semana
-              <ArrowRight className="h-4 w-4" />
+              <span className="relative z-10 flex items-center gap-2">
+                Empezar gratis una semana
+                <ArrowRight className="h-4 w-4" />
+              </span>
             </Link>
             <p className="mt-3 text-center text-xs text-slate-600">
               Sin tarjeta de crédito · Cancelá cuando quieras
             </p>
           </div>
+          </div>
 
           {/* Garantía */}
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/[0.06]">
+          <div
+            className="rounded-2xl p-6 text-center"
+            style={{
+              background: "linear-gradient(145deg, rgba(17,34,24,0.95) 0%, rgba(10,25,18,0.98) 100%)",
+              border: "1px solid rgba(34,197,94,0.25)",
+              boxShadow: "0 0 22px 4px rgba(34,197,94,0.14)",
+            }}
+          >
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10" style={{border: "1px solid rgba(34,197,94,0.3)"}}>
               <svg
-                className="h-6 w-6 text-slate-300"
+                className="h-6 w-6 text-emerald-400"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={1.5}
@@ -237,17 +296,28 @@ export function PreciosSection() {
                 />
               </svg>
             </div>
-            <h3 className="text-base font-bold text-white">
+            <h3
+              className="text-base font-bold"
+              style={{
+                background: "linear-gradient(90deg, #4ade80, #86efac, #4ade80)",
+                backgroundSize: "200% auto",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                animation: "shimmer 3s linear infinite",
+              }}
+            >
               Garantía de recupero en 2 meses
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-slate-400">
               Si usás la lista de espera y en los primeros{" "}
-              <span className="text-white font-medium">2 meses</span> no recuperás
+              <span className="font-medium text-emerald-300">2 meses</span> no recuperás
               lo que pagaste, te devolvemos cada peso. Sin preguntas, sin vueltas.
             </p>
-            <p className="mt-4 text-xs text-slate-600">
-              Confiamos en la herramienta. El riesgo es nuestro.
-            </p>
+            <div className="mt-5 rounded-lg px-4 py-2" style={{background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)"}}>
+              <p className="text-xs font-medium text-emerald-400">
+                Confiamos en la herramienta. Nosotros asumimos el riesgo.
+              </p>
+            </div>
           </div>
         </div>
 
