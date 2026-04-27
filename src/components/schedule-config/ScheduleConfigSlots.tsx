@@ -100,7 +100,7 @@ export function ScheduleConfigSlots({
     return (
       <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
         <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2d3548] flex items-center justify-center">
-          <Clock size={22} className="text-gray-300" aria-hidden="true" />
+          <Clock size={22} className="text-white" aria-hidden="true" />
         </div>
         <p className="text-sm text-gray-400 dark:text-slate-500 text-center">
           Seleccioná un día del calendario para ver los turnos disponibles.
@@ -256,7 +256,7 @@ export function ScheduleConfigSlots({
                             <div className="flex items-center gap-2">
                               <Clock
                                 size={14}
-                                className={disabled ? "text-gray-300 dark:text-slate-600" : "text-[var(--brand-color)]"}
+                                className={disabled ? "text-gray-300 dark:text-slate-600" : "text-[var(--brand-color)] dark:text-white"}
                               />
                               <span className={cn(
                                 "font-heading text-sm",

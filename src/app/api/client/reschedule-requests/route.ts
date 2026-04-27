@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 
 
 export async function POST(request: NextRequest) {
   const session = await getClientSession(request);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  let body: Record<string, unknown>;
+  let requestBody: Record<string, unknown>;
   try {
-    body = await request.json();
+    requestBody = await request.json();
   } catch {
     return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
   }
 
-  const { bookingId, requestedDate, requestedTime } = body as {
+  const { bookingId, requestedDate, requestedTime } = requestBody as {
     bookingId?: string;
     requestedDate?: string;
     requestedTime?: string;
@@ -55,12 +56,15 @@ export async function POST(request: NextRequest) {
     where: { id: bookingId, clienteId: session.clienteId },
     select: {
       id: true,
+      clientName: true,
       status: true,
       appointment: {
         select: {
           date: true,
           time: true,
+          serviceProviderId: true,
           scheduleConfig: { select: { minAdvanceHours: true } },
+          serviceType: { select: { title: true } },
         },
       },
     },
@@ -114,6 +118,18 @@ export async function POST(request: NextRequest) {
       status: "pending",
     },
   });
+
+  // Notificar al empleado
+  const currentDateStr = booking.appointment.date.split("-").reverse().join("/");
+  const requestedDateStr = requestedDate.split("-").reverse().join("/");
+  const serviceInfo = booking.appointment.serviceType?.title
+    ? ` · ${booking.appointment.serviceType.title}`
+    : "";
+  const title = "Solicitud de reprogramación";
+  const body = `${booking.clientName} solicitó reprogramar su turno del ${currentDateStr} a las ${booking.appointment.time} hs${serviceInfo} al ${requestedDateStr} a las ${requestedTime} hs.`;
+
+  sendPushToServiceProvider(booking.appointment.serviceProviderId, { title, body }).catch(() => {});
+  sendEmailToServiceProvider(booking.appointment.serviceProviderId, { title, body }).catch(() => {});
 
   return NextResponse.json({ id: rescheduleRequest.id }, { status: 201 });
 }

@@ -15,17 +15,37 @@ export async function PATCH(
 
   const { id } = await params;
   const serviceProviderId = session.user.id;
+  const businessProfileId = (session.user as { businessProfileId?: string | null }).businessProfileId;
 
   const booking = await prisma.booking.findUnique({
     where: { id },
-    include: { appointment: { select: { serviceProviderId: true } } },
+    include: {
+      appointment: {
+        select: {
+          serviceProviderId: true,
+          serviceProvider: {
+            select: {
+              businessProfile: { select: { id: true } },
+              empresas: { select: { businessProfileId: true } },
+            },
+          },
+        },
+      },
+    },
   });
 
   if (!booking) {
     return NextResponse.json({ error: "Turno no encontrado" }, { status: 404 });
   }
 
-  if (booking.appointment.serviceProviderId !== serviceProviderId) {
+  const bookingOwnerId = booking.appointment.serviceProviderId;
+  const sp = booking.appointment.serviceProvider;
+  const bookingBusinessId =
+    sp.businessProfile?.id ?? sp.empresas[0]?.businessProfileId ?? null;
+  const isOwner = bookingOwnerId === serviceProviderId;
+  const isAdminOfBusiness = !!businessProfileId && bookingBusinessId === businessProfileId;
+
+  if (!isOwner && !isAdminOfBusiness) {
     return NextResponse.json({ error: "No tenés permiso para modificar este turno" }, { status: 403 });
   }
 

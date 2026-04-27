@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendPushToServiceProvider } from "@/lib/push-notifications";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 
 
 export async function POST(
@@ -87,10 +87,12 @@ export async function POST(
       };
     });
 
-    sendPushToServiceProvider(profile.serviceProviderId, {
+    const notifPayload = {
       title: "Nuevo turno reservado",
       body: `${clientName} reservó un turno para el ${booking.date} a las ${booking.time}`,
-    }).catch(() => {});
+    };
+    sendPushToServiceProvider(profile.serviceProviderId, notifPayload).catch(() => {});
+    sendEmailToServiceProvider(profile.serviceProviderId, notifPayload).catch(() => {});
 
     return NextResponse.json(booking, { status: 201 });
   } catch (err: unknown) {

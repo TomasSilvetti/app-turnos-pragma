@@ -219,6 +219,119 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
   );
 }
 
+type ApproveWhatsappData = {
+  clientPhone: string;
+  whatsappMessage: string;
+  clientDisplayName: string;
+  requestedDate: string;
+  requestedTime: string;
+};
+
+type ApproveModalProps = {
+  data: ApproveWhatsappData;
+  onClose: () => void;
+};
+
+function ApproveModal({ data, onClose }: ApproveModalProps) {
+  const [messageText, setMessageText] = useState(data.whatsappMessage);
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  function buildWhatsAppUrl() {
+    const phone = data.clientPhone.replace(/\D/g, "");
+    return `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+  }
+
+  function handleOverlayClick(e: React.MouseEvent) {
+    if (e.target === overlayRef.current) onClose();
+  }
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  const newDate = format(parseISO(data.requestedDate), "dd/MM/yyyy");
+
+  return (
+    <div
+      ref={overlayRef}
+      onClick={handleOverlayClick}
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="approve-modal-title"
+    >
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5">
+        <div className="flex items-start justify-between gap-2">
+          <h2
+            id="approve-modal-title"
+            className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]"
+          >
+            Solicitud aprobada
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            aria-label="Cerrar"
+          >
+            <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
+          </button>
+        </div>
+
+        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-1.5 text-xs font-body">
+          <p className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{data.clientDisplayName}</p>
+          <div className="flex gap-2 text-[#22c55e]">
+            <span>Nuevo turno:</span>
+            <span>{newDate} · {data.requestedTime} hs</span>
+          </div>
+        </div>
+
+        <p className="font-body text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">
+          ¿Querés notificar al cliente por WhatsApp?
+        </p>
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="approve-whatsapp-msg"
+            className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide"
+          >
+            Mensaje (editable)
+          </label>
+          <textarea
+            id="approve-whatsapp-msg"
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            rows={5}
+            className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#0f172a] resize-none"
+          />
+        </div>
+
+        <a
+          href={buildWhatsAppUrl()}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={onClose}
+          className="flex items-center justify-center gap-2 w-full font-body text-sm text-white bg-[#25D366] hover:bg-[#1ebe5d] rounded-md py-2.5 transition-colors"
+        >
+          <MessageCircle size={16} aria-hidden="true" />
+          Notificar por WhatsApp
+        </a>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+        >
+          Omitir
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function RescheduleList() {
   const [items, setItems] = useState<RescheduleItem[]>([]);
   const [clientItems, setClientItems] = useState<ClientRescheduleItem[]>([]);
@@ -227,6 +340,7 @@ export default function RescheduleList() {
   const [rejectTarget, setRejectTarget] = useState<ClientRescheduleItem | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [approveError, setApproveError] = useState<string | null>(null);
+  const [approveWhatsappData, setApproveWhatsappData] = useState<ApproveWhatsappData | null>(null);
 
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
@@ -269,7 +383,13 @@ export default function RescheduleList() {
         const json = await res.json().catch(() => ({}));
         throw new Error(json.error ?? "No se pudo aprobar la solicitud");
       }
+      const data = await res.json();
       setClientItems((prev) => prev.filter((i) => i.id !== item.id));
+      setApproveWhatsappData({
+        ...data,
+        requestedDate: item.requestedDate,
+        requestedTime: item.requestedTime,
+      });
     } catch (err) {
       setApproveError(err instanceof Error ? err.message : "Error al aprobar");
     } finally {
@@ -428,6 +548,13 @@ export default function RescheduleList() {
           item={rejectTarget}
           onClose={() => setRejectTarget(null)}
           onRejected={(id) => setClientItems((prev) => prev.filter((i) => i.id !== id))}
+        />
+      )}
+
+      {approveWhatsappData && (
+        <ApproveModal
+          data={approveWhatsappData}
+          onClose={() => setApproveWhatsappData(null)}
         />
       )}
     </>

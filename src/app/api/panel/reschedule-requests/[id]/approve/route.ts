@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
+import { sendEmailToCliente, sendPushToCliente } from "@/lib/push-notifications";
 
 
 function timeToMinutes(time: string): number {
@@ -83,9 +86,14 @@ export async function PATCH(
             select: {
               serviceProviderId: true,
               serviceTypeId: true,
+              date: true,
+              time: true,
             },
           },
         },
+      },
+      cliente: {
+        select: { nombre: true, apellido: true, telefono: true },
       },
     },
   });
@@ -244,5 +252,34 @@ export async function PATCH(
     });
   }
 
-  return NextResponse.json({ success: true }, { status: 200 });
+  const clienteId = rescheduleRequest.booking.clienteId;
+  const newDateFormatted = format(parseISO(rescheduleRequest.requestedDate), "d 'de' MMMM 'de' yyyy", { locale: es });
+  const clientFirstName = rescheduleRequest.cliente?.nombre ?? rescheduleRequest.booking.clientName;
+  const clientDisplayName = rescheduleRequest.cliente
+    ? `${rescheduleRequest.cliente.nombre} ${rescheduleRequest.cliente.apellido}`
+    : rescheduleRequest.booking.clientName;
+  const clientPhone = rescheduleRequest.cliente?.telefono ?? rescheduleRequest.booking.clientPhone;
+
+  const notificationPayload = {
+    title: "Reprogramación aprobada",
+    body: `Tu turno fue reprogramado para el ${newDateFormatted} a las ${rescheduleRequest.requestedTime} hs.`,
+    url: "/mis-turnos",
+  };
+
+  if (clienteId) {
+    await Promise.all([
+      sendPushToCliente(clienteId, notificationPayload),
+      sendEmailToCliente(clienteId, notificationPayload),
+    ]);
+  }
+
+  const whatsappMessage = [
+    `Hola ${clientFirstName}, tu solicitud de reprogramación fue aprobada.`,
+    "",
+    `Tu nuevo turno es el ${newDateFormatted} a las ${rescheduleRequest.requestedTime} hs.`,
+    "",
+    "¡Te esperamos!",
+  ].join("\n");
+
+  return NextResponse.json({ clientPhone, whatsappMessage, clientDisplayName }, { status: 200 });
 }

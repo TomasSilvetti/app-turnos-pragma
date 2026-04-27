@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
 import { cn } from "@/lib/utils";
 import { useSession, signOut } from "next-auth/react";
 import { PushNotificationPrompt } from "@/components/profile/PushNotificationPrompt";
-import { Suspense } from "react";
 import { TutorialBanner } from "@/components/tutorial/TutorialBanner";
 
 type NavItem = {
@@ -29,9 +28,11 @@ const navItems: NavItem[] = [
 
 const DEFAULT_BRAND_COLOR = "#253551";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const hasTutorial = searchParams.get("fromTutorial") !== null;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rescheduleCount, setRescheduleCount] = useState(0);
   const [brandColor, setBrandColor] = useState(DEFAULT_BRAND_COLOR);
@@ -242,7 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <TutorialBanner />
       </Suspense>
 
-      <main className="px-6 py-8 min-h-screen overflow-y-auto">
+      <main className={cn("px-6 py-8 min-h-screen overflow-y-auto", hasTutorial && "pb-40")}>
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
@@ -255,5 +256,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+    </Suspense>
   );
 }

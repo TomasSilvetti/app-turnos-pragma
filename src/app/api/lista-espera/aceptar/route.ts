@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
 import { emitNewBooking } from "@/lib/booking-emitter";
-import { sendPushToCliente } from "@/lib/push-notifications";
+import { sendPushToCliente, sendEmailToCliente } from "@/lib/push-notifications";
 
 export async function POST(request: NextRequest) {
   const session = await getClientSession(request);
@@ -109,10 +109,12 @@ export async function POST(request: NextRequest) {
 
   // Notificar a otros clientes en estado "notificada" que el turno fue tomado
   for (const otro of otrosNotificados) {
-    sendPushToCliente(otro.clienteId, {
+    const notifPayload = {
       title: "Turno tomado",
       body: "El turno ya fue tomado por otro cliente. Seguís en la lista para la próxima vacante.",
-    }).catch(() => {});
+    };
+    sendPushToCliente(otro.clienteId, notifPayload).catch(() => {});
+    sendEmailToCliente(otro.clienteId, notifPayload).catch(() => {});
   }
 
   return NextResponse.json({ success: true, bookingId: nuevoBooking.id }, { status: 201 });

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/../auth";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { sendEmailToCliente, sendPushToCliente } from "@/lib/push-notifications";
 
 
 async function resolveProviderIds(serviceProviderId: string): Promise<string[]> {
@@ -60,6 +61,7 @@ export async function PATCH(
         select: {
           clientName: true,
           clientPhone: true,
+          clienteId: true,
           appointment: { select: { date: true, time: true } },
         },
       },
@@ -79,6 +81,27 @@ export async function PATCH(
     where: { id },
     data: { status: "rejected" },
   });
+
+  const clienteId = rescheduleRequest.booking.clienteId ?? null;
+  if (clienteId) {
+    const originalDateFormatted2 = format(
+      parseISO(rescheduleRequest.booking.appointment.date),
+      "d 'de' MMMM 'de' yyyy",
+      { locale: es }
+    );
+    await Promise.all([
+      sendPushToCliente(clienteId, {
+        title: "Solicitud de reprogramación rechazada",
+        body: `Tu turno del ${originalDateFormatted2} a las ${rescheduleRequest.booking.appointment.time} hs permanece sin cambios.`,
+        url: "/mis-turnos",
+      }),
+      sendEmailToCliente(clienteId, {
+        title: "Solicitud de reprogramación rechazada",
+        body: `Tu solicitud de reprogramación fue rechazada. Tu turno del ${originalDateFormatted2} a las ${rescheduleRequest.booking.appointment.time} hs permanece sin cambios.`,
+        url: "/mis-turnos",
+      }),
+    ]);
+  }
 
   const clientDisplayName = rescheduleRequest.cliente
     ? `${rescheduleRequest.cliente.nombre} ${rescheduleRequest.cliente.apellido}`

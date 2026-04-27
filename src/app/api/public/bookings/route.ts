@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getClientSession } from "@/lib/cliente-auth";
-import { sendPushToServiceProvider } from "@/lib/push-notifications";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 import { emitNewBooking } from "@/lib/booking-emitter";
 import { BookingStatus } from "@prisma/client";
 
@@ -56,16 +56,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "El turno ya fue reservado" }, { status: 409 });
   }
 
-  const duplicateDayWhere = isAuthenticatedFlow
-    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } }
-    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date } };
-
-  const existingOnDate = await prisma.booking.findFirst({ where: duplicateDayWhere });
-  if (existingOnDate) {
-    return NextResponse.json({ error: "Ya tenés un turno reservado para ese día" }, { status: 409 });
-  }
-
-  // Validar y resolver paymentMethod
   const businessForPayment = await prisma.businessProfile.findFirst({
     where: {
       OR: [
@@ -73,8 +63,21 @@ export async function POST(request: NextRequest) {
         { empleados: { some: { serviceProviderId: appointment.serviceProviderId } } },
       ],
     },
-    select: { cashEnabled: true, transferEnabled: true },
+    select: { cashEnabled: true, transferEnabled: true, serviceProviderId: true, empleados: { select: { serviceProviderId: true } } },
   });
+
+  const businessServiceProviderIds = businessForPayment
+    ? [businessForPayment.serviceProviderId, ...businessForPayment.empleados.map((e) => e.serviceProviderId)]
+    : [appointment.serviceProviderId];
+
+  const duplicateDayWhere = isAuthenticatedFlow
+    ? { clienteId: clientSession.clienteId, status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date, serviceProviderId: { in: businessServiceProviderIds } } }
+    : { clientPhone: clientPhone.trim(), status: { in: ["pending", "confirmed"] as BookingStatus[] }, appointment: { date: appointment.date, serviceProviderId: { in: businessServiceProviderIds } } };
+
+  const existingOnDate = await prisma.booking.findFirst({ where: duplicateDayWhere });
+  if (existingOnDate) {
+    return NextResponse.json({ error: "Ya tenés un turno reservado para ese día" }, { status: 409 });
+  }
 
   let resolvedPaymentMethod: string | null = null;
   if (businessForPayment) {
@@ -186,10 +189,16 @@ export async function POST(request: NextRequest) {
   });
 
   if (appointmentFull) {
-    await sendPushToServiceProvider(appointmentFull.serviceProviderId, {
+    const notifPayload = {
       title: "Nuevo turno reservado",
       body: `${booking.clientName} el ${appointmentFull.date.split("-").reverse().join("/")} a las ${appointmentFull.time}`,
-    }).catch((err) => console.error("[Push] Error enviando notificación:", err));
+    };
+    sendPushToServiceProvider(appointmentFull.serviceProviderId, notifPayload).catch((err) =>
+      console.error("[Push] Error enviando notificación:", err)
+    );
+    sendEmailToServiceProvider(appointmentFull.serviceProviderId, notifPayload).catch((err) =>
+      console.error("[Email] Error enviando notificación:", err)
+    );
   }
 
   emitNewBooking();

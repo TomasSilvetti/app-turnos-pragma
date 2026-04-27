@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendPushToServiceProvider } from "@/lib/push-notifications";
+import { sendPushToServiceProvider, sendEmailToServiceProvider } from "@/lib/push-notifications";
 
 
 function timeToMinutes(time: string): number {
@@ -80,6 +80,7 @@ export async function POST(
     select: {
       serviceProviderId: true,
       serviceProvider: { select: { modoTurno: true } },
+      empleados: { select: { serviceProviderId: true } },
     },
   });
 
@@ -171,11 +172,15 @@ export async function POST(
       return { conflict: "overlap" as const };
     }
 
+    const businessServiceProviderIds = [
+      profile.serviceProviderId,
+      ...profile.empleados.map((e) => e.serviceProviderId),
+    ];
     const existingBookingOnDate = await tx.booking.findFirst({
       where: {
         clientPhone,
         status: { in: ["pending", "confirmed"] },
-        appointment: { date },
+        appointment: { date, serviceProviderId: { in: businessServiceProviderIds } },
       },
     });
 
@@ -215,10 +220,12 @@ export async function POST(
     return NextResponse.json({ error: message }, { status: 409 });
   }
 
-  sendPushToServiceProvider(profile.serviceProviderId, {
+  const notifPayload = {
     title: "Nuevo turno reservado",
     body: `${clientName} reservó un turno para el ${date} a las ${startTime}`,
-  }).catch(() => {});
+  };
+  sendPushToServiceProvider(profile.serviceProviderId, notifPayload).catch(() => {});
+  sendEmailToServiceProvider(profile.serviceProviderId, notifPayload).catch(() => {});
 
   return NextResponse.json(
     {

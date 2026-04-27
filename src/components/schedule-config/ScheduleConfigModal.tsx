@@ -515,8 +515,8 @@ export function ScheduleConfigModal({
                       className={cn(
                         "flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
                         checked
-                          ? "border-[var(--brand-color)] bg-[#eef1f6] dark:bg-[#1e3a5f]/30 text-[var(--brand-color)]"
-                          : "border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829] dark:text-[#e2e8f0]"
+                          ? "border-[var(--brand-color)] bg-[#eef1f6] dark:bg-[#1e3a5f]/40 text-[var(--brand-color)] dark:text-[#93c5fd]"
+                          : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] text-[#2A2829] dark:text-[#e2e8f0]"
                       )}
                     >
                       {/* Checkbox */}
