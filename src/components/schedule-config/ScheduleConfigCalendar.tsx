@@ -58,7 +58,7 @@ export function ScheduleConfigCalendar({
   const monthLabel = format(today, "MMMM yyyy", { locale: es });
 
   return (
-    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+    <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-5">
       {/* Encabezado del mes */}
       <p className="font-heading text-sm font-semibold text-[#2A2829] dark:text-[#e2e8f0] mb-5 capitalize tracking-wide">
         {monthLabel}
@@ -76,7 +76,7 @@ export function ScheduleConfigCalendar({
           </div>
         ))}
       </div>
-      <div className="border-t border-gray-50 dark:border-[#2d3548] mb-2" />
+      <div className="border-t border-gray-50 dark:border-[#1a2840] mb-2" />
 
       {/* Grilla de días */}
       <div
@@ -126,7 +126,7 @@ export function ScheduleConfigCalendar({
           Día habilitado
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="inline-block h-3 w-3 rounded-full bg-gray-100 dark:bg-[#2d3548]" aria-hidden="true" />
+          <span className="inline-block h-3 w-3 rounded-full bg-gray-100 dark:bg-[#1a2840]" aria-hidden="true" />
           Sin cobertura
         </span>
       </div>

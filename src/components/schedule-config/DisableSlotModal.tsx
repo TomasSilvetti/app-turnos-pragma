@@ -58,7 +58,7 @@ export function DisableSlotModal({
       />
 
       {/* Panel */}
-      <div className="relative w-full sm:max-w-sm bg-white dark:bg-[#1e293b] rounded-t-2xl sm:rounded-2xl shadow-xl p-6 flex flex-col gap-5 mx-auto">
+      <div className="relative w-full sm:max-w-sm bg-white dark:bg-[#0c1220] rounded-t-2xl sm:rounded-2xl shadow-xl p-6 flex flex-col gap-5 mx-auto">
         {/* Encabezado */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -76,14 +76,14 @@ export function DisableSlotModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-[#2d3548] transition-colors"
+            className="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-[#1a2840] transition-colors"
             aria-label="Cerrar"
           >
             <X size={16} />
           </button>
         </div>
 
-        <div className="h-px bg-gray-100 dark:bg-[#2d3548]" />
+        <div className="h-px bg-gray-100 dark:bg-[#1a2840]" />
 
         <p className="text-sm text-gray-500 dark:text-slate-400">
           {isDisabled

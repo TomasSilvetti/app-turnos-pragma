@@ -15,7 +15,7 @@ export function RescheduleNoticeDialog({ onClose }: Props) {
       aria-modal="true"
       aria-labelledby="reschedule-notice-title"
     >
-      <div className="w-full max-w-sm rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
+      <div className="w-full max-w-sm rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg">
         <div className="mb-4 flex items-start gap-3">
           <CheckCircle
             size={20}

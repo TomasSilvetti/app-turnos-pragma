@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { validatePassword } from "@/lib/password-validation";
+import { Plasma } from "@/components/landing/Plasma";
 
 type Props = {
   slug: string;
@@ -72,27 +73,36 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
 
   return (
     <main
-      className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12"
+      className="auth-page relative min-h-screen overflow-hidden flex flex-col items-center px-4 py-12"
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
-      <div className="w-full max-w-md flex flex-col gap-6">
+      <Plasma
+        speed={0.5}
+        color1="#080c14"
+        color2="#0d1f3c"
+        color3="#1a3a6b"
+        color4="#0f2a50"
+      />
+      <div className="absolute inset-0 bg-[#080c14]/50" />
+
+      <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
         {/* Header */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-[var(--brand-color)]/10 flex items-center justify-center mb-1">
+        <div className="rounded-lg bg-[#080c14] border border-white/10 px-8 py-7 flex flex-col items-center gap-2 shadow-sm">
+          <div className="h-10 w-10 rounded-lg bg-[var(--brand-color)]/20 flex items-center justify-center mb-1">
             <span className="font-heading text-lg text-[var(--brand-color)] font-semibold uppercase">
               {businessName.charAt(0)}
             </span>
           </div>
-          <h1 className="font-heading text-xl text-[#2A2829] text-center leading-tight">
+          <h1 className="font-heading text-xl text-white text-center leading-tight">
             {businessName}
           </h1>
-          <p className="font-body text-sm text-[#2A2829]/50 text-center">
+          <p className="font-body text-sm text-white/50 text-center">
             Restablecer contraseña
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] p-6">
+        <div className="rounded-lg bg-[#080c14] border border-white/10 p-6 shadow-sm">
           {isTokenError ? (
             <div className="flex flex-col items-center gap-4 text-center py-2">
               <div className="h-12 w-12 rounded-full bg-[#ef4444]/10 flex items-center justify-center">
@@ -100,7 +110,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <p className="font-body text-sm text-[#2A2829]">
+              <p className="font-body text-sm text-white/80">
                 {estado === "tokenExpirado"
                   ? "El link expiró. Solicitá uno nuevo para restablecer tu contraseña."
                   : "El link no es válido o ya fue utilizado."}
@@ -118,7 +128,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="reset-password"
-                  className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
+                  className="font-body text-xs text-white/70 font-medium uppercase tracking-wide"
                 >
                   Nueva contraseña <span aria-hidden="true" className="text-[#ef4444]">*</span>
                 </label>
@@ -130,12 +140,12 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="new-password"
                     placeholder="Tu nueva contraseña"
-                    className="w-full font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30"
+                    className="w-full font-body text-sm text-white border border-white/15 rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-white/5 placeholder:text-white/20"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/40 hover:text-[#2A2829] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
                     aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -155,7 +165,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="reset-confirm"
-                  className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
+                  className="font-body text-xs text-white/70 font-medium uppercase tracking-wide"
                 >
                   Confirmar contraseña <span aria-hidden="true" className="text-[#ef4444]">*</span>
                 </label>
@@ -167,14 +177,14 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
                     placeholder="Repetí tu nueva contraseña"
-                    className={`w-full font-body text-sm text-[#2A2829] border rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30 ${
-                      confirmPassword.length > 0 && !passwordsMatch ? "border-[#ef4444]" : "border-[#E0E0DB]"
+                    className={`w-full font-body text-sm text-white border rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-white/5 placeholder:text-white/20 ${
+                      confirmPassword.length > 0 && !passwordsMatch ? "border-[#ef4444]" : "border-white/15"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/40 hover:text-[#2A2829] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors"
                     aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {showConfirm ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -214,7 +224,7 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
     <div className="flex items-center gap-1.5">
       <span
         className={`inline-flex items-center justify-center w-4 h-4 rounded-full flex-shrink-0 ${
-          met ? "bg-[#22c55e]/15 text-[#22c55e]" : "bg-[#E0E0DB] text-[#2A2829]/40"
+          met ? "bg-[#22c55e]/15 text-[#22c55e]" : "bg-white/10 text-white/30"
         }`}
         aria-hidden="true"
       >
@@ -228,7 +238,7 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
           </svg>
         )}
       </span>
-      <span className={`font-body text-xs ${met ? "text-[#22c55e]" : "text-[#2A2829]/50"}`}>
+      <span className={`font-body text-xs ${met ? "text-[#22c55e]" : "text-white/40"}`}>
         {label}
       </span>
     </div>

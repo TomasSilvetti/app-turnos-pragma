@@ -64,7 +64,7 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
   }
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden transition-shadow hover:shadow-sm">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] overflow-hidden transition-shadow hover:shadow-sm">
       <button
         onClick={toggleExpand}
         className="w-full flex items-center justify-between px-5 py-4 text-left cursor-pointer"
@@ -99,7 +99,7 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
       {expanded && (
         <div
           id={`historial-${cliente.id}`}
-          className="border-t border-[#E0E0DB] dark:border-[#2d3548] px-5 py-4"
+          className="border-t border-[#E0E0DB] dark:border-[#1a2840] px-5 py-4"
         >
           {loadingHistorial && (
             <div className="flex items-center gap-2 text-sm text-[#6b7280] dark:text-[#94a3b8] animate-pulse">
@@ -131,7 +131,7 @@ export function ClienteCard({ cliente }: { cliente: ClienteResumen }) {
                 {historial.visitas.map((visita, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between py-2 border-b border-[#F4F5F7] dark:border-[#2d3548] last:border-0"
+                    className="flex items-center justify-between py-2 border-b border-[#F4F5F7] dark:border-[#1a2840] last:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-small text-[11px] text-[#6b7280] dark:text-[#94a3b8] w-20 shrink-0">

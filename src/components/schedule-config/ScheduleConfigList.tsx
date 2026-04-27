@@ -62,7 +62,7 @@ function Toggle({
       className={cn(
         "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border-2 border-transparent transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-2",
         disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer",
-        checked ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#2d3548]"
+        checked ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#1a2840]"
       )}
     >
       <span
@@ -86,7 +86,7 @@ export function ScheduleConfigList({
 }: ScheduleConfigListProps) {
   if (configs.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] px-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] px-6 py-16 text-center">
         <CalendarDays size={40} className="text-[#E0E0DB]" aria-hidden="true" />
         <div>
           <p className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">
@@ -113,8 +113,8 @@ export function ScheduleConfigList({
         <div
           key={config.id}
           className={cn(
-            "rounded-lg border bg-white dark:bg-[#1e293b] p-4 transition-colors",
-            config.isActive ? "border-[#E0E0DB] dark:border-[#2d3548]" : "border-[#E0E0DB] dark:border-[#2d3548] opacity-60"
+            "rounded-lg border bg-white dark:bg-[#0c1220] p-4 transition-colors",
+            config.isActive ? "border-[#E0E0DB] dark:border-[#1a2840]" : "border-[#E0E0DB] dark:border-[#1a2840] opacity-60"
           )}
         >
           {/* Header */}
@@ -171,7 +171,7 @@ export function ScheduleConfigList({
           onClick={onAdd}
           disabled={isAddDisabled}
           variant="outline"
-          className="w-full border-dashed border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[var(--brand-color)] hover:border-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full border-dashed border-[#E0E0DB] dark:border-[#1a2840] text-[#2A2829]/60 dark:text-[#94a3b8] hover:text-[var(--brand-color)] hover:border-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           + Agregar horario
         </Button>

@@ -87,7 +87,7 @@ export function PushNotificationPrompt() {
       aria-live="polite"
       className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-sm"
     >
-      <div className="flex items-start gap-3 rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] px-4 py-3 shadow-lg">
+      <div className="flex items-start gap-3 rounded-xl border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] px-4 py-3 shadow-lg">
         <span
           className="material-symbols-outlined mt-0.5 shrink-0 text-[var(--brand-color)]"
           style={{ fontSize: "20px" }}

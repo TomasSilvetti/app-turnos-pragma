@@ -70,7 +70,7 @@ export default function DayScheduleColumn({
   }
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
       <h2 className="font-heading text-xs text-gray-400 dark:text-[#64748b] mb-4 uppercase tracking-widest">
         Turnos del día
       </h2>
@@ -95,7 +95,7 @@ export default function DayScheduleColumn({
                 className={`flex-1 border-t ${
                   isStart || isEnd
                     ? "border-gray-300 dark:border-[#334155]"
-                    : "border-dashed border-gray-200 dark:border-[#2d3548]"
+                    : "border-dashed border-gray-200 dark:border-[#1a2840]"
                 }`}
               />
             </div>

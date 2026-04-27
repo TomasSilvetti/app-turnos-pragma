@@ -57,7 +57,7 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
       aria-modal="true"
       aria-labelledby="form-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
+      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg">
         <div className="mb-5 flex items-center justify-between">
           <h2 id="form-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             {initialValues ? "Editar tipo de turno" : "Nuevo tipo de turno"}
@@ -83,9 +83,9 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
               placeholder="Ej: Consulta general"
               aria-invalid={!!errors.titulo}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.titulo ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.titulo ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("titulo", { required: "El título es obligatorio" })}
             />
@@ -105,9 +105,9 @@ export function TipoDeTurnoForm({ initialValues, onSave, onCancel }: TipoDeTurno
               placeholder="Ej: Atención médica de primer nivel"
               aria-invalid={!!errors.descripcion}
               className={cn(
-                "rounded-lg border bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors resize-none",
+                "rounded-lg border bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors resize-none",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.descripcion ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.descripcion ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("descripcion", { required: "La descripción es obligatoria" })}
             />

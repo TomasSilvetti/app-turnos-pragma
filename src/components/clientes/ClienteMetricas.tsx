@@ -72,8 +72,8 @@ function EmptyBlock() {
 function SkeletonBlock() {
   return (
     <div className="animate-pulse">
-      <div className="h-4 w-28 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-4" />
-      <div className="h-32 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+      <div className="h-4 w-28 bg-[#E0E0DB] dark:bg-[#1a2840] rounded mb-4" />
+      <div className="h-32 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
     </div>
   );
 }
@@ -86,7 +86,7 @@ function MetricCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
       <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8] mb-3">
         {title}
       </p>

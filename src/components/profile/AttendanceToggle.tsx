@@ -50,8 +50,8 @@ export function AttendanceToggle() {
   if (loading) {
     return (
       <div className="animate-pulse">
-        <div className="h-4 w-48 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-2" />
-        <div className="h-4 w-64 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-4 w-48 bg-[#E0E0DB] dark:bg-[#1a2840] rounded mb-2" />
+        <div className="h-4 w-64 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
       </div>
     );
   }

@@ -160,7 +160,7 @@ export default function DayScheduleBookingForm({
   }));
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-5">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex flex-col gap-5">
       <h2 className="font-heading text-xs text-gray-400 dark:text-[#64748b] uppercase tracking-widest">
         Elegir turno
       </h2>
@@ -201,7 +201,7 @@ export default function DayScheduleBookingForm({
         />
         {/* Detalle del servicio seleccionado */}
         {selectedService && (
-          <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-3 flex flex-col gap-1">
+          <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] px-4 py-3 flex flex-col gap-1">
             <div className="flex items-center justify-between gap-2">
               <span className="font-body text-xs text-gray-500 dark:text-[#94a3b8] uppercase tracking-wider">
                 Duración
@@ -248,7 +248,7 @@ export default function DayScheduleBookingForm({
 
       {/* Horario de fin calculado */}
       {validation?.endTime && (
-        <div className="flex items-center gap-2 rounded-lg bg-surface dark:bg-[#253045] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-2.5">
+        <div className="flex items-center gap-2 rounded-lg bg-surface dark:bg-[#253045] border border-[#E0E0DB] dark:border-[#1a2840] px-4 py-2.5">
           <span className="font-body text-sm text-gray-500 dark:text-[#94a3b8]">
             Fin estimado:
           </span>

@@ -60,7 +60,7 @@ function TutorialContent() {
       </div>
 
       {/* Barra de progreso */}
-      <div className="w-full h-1.5 bg-[#E0E0DB] dark:bg-[#2d3548] rounded-full overflow-hidden">
+      <div className="w-full h-1.5 bg-[#E0E0DB] dark:bg-[#1a2840] rounded-full overflow-hidden">
         <div
           className="h-full bg-[var(--brand-color)] transition-all duration-300 rounded-full"
           style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
@@ -69,9 +69,9 @@ function TutorialContent() {
       </div>
 
       {/* Tarjeta del paso */}
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex flex-col gap-6">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-8 flex flex-col gap-6">
         <div className="flex items-start gap-4">
-          <div className="shrink-0 w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#0f172a] flex items-center justify-center">
+          <div className="shrink-0 w-12 h-12 rounded-full bg-[#F4F5F7] dark:bg-[#080c14] flex items-center justify-center">
             <span
               className="material-symbols-outlined text-[var(--brand-color)] dark:text-white"
               style={{ fontSize: "24px" }}
@@ -89,7 +89,7 @@ function TutorialContent() {
         {step.moduleHref && (
           <Link
             href={`${step.moduleHref}?fromTutorial=${currentStep}`}
-            className="self-start flex items-center gap-2 rounded-md px-4 py-2 text-sm border border-[var(--brand-color)] text-[var(--brand-color)] dark:border-white dark:text-white hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors"
+            className="self-start flex items-center gap-2 rounded-md px-4 py-2 text-sm border border-[var(--brand-color)] text-[var(--brand-color)] dark:border-white dark:text-white hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors"
           >
             <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">arrow_forward</span>
             {step.moduleLabel}
@@ -119,10 +119,10 @@ function TutorialContent() {
                 i === currentStep
                   ? "bg-[var(--brand-color)] text-white"
                   : i < currentStep
-                  ? "bg-[#E0E0DB] dark:bg-[#2d3548] text-[#6b7280] dark:text-[#94a3b8]"
+                  ? "bg-[#E0E0DB] dark:bg-[#1a2840] text-[#6b7280] dark:text-[#94a3b8]"
                   : disabled
-                  ? "bg-[#F4F5F7] dark:bg-[#1e293b] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] opacity-40 cursor-not-allowed"
-                  : "bg-[#F4F5F7] dark:bg-[#1e293b] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548]"
+                  ? "bg-[#F4F5F7] dark:bg-[#0c1220] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#1a2840] opacity-40 cursor-not-allowed"
+                  : "bg-[#F4F5F7] dark:bg-[#0c1220] text-[#6b7280] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#1a2840]"
               )}
             >
               {i + 1}
@@ -136,7 +136,7 @@ function TutorialContent() {
         <button
           onClick={() => setCurrentStep((s) => s - 1)}
           disabled={isFirst}
-          className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm border border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 rounded-md px-4 py-2 text-sm border border-[#E0E0DB] dark:border-[#1a2840] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <span className="material-symbols-outlined" style={{ fontSize: "16px" }} translate="no">arrow_back</span>
           Anterior

@@ -86,8 +86,8 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
       className="flex flex-col gap-5"
     >
       {pendingSetup && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3">
-          <p className="text-sm text-green-800">
+        <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3">
+          <p className="text-sm text-green-400">
             Tu cuenta está lista. Solo falta configurar tu empresa para acceder al dashboard.
           </p>
         </div>
@@ -95,7 +95,7 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
 
       {/* Nombre de empresa */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="empresa-name" className="text-sm font-medium text-slate-700">
+        <label htmlFor="empresa-name" className="text-sm font-medium text-white">
           Nombre de tu empresa
         </label>
         <input
@@ -120,7 +120,7 @@ export function RegistroStep2Form({ pendingSetup = false, onSuccess }: Props) {
 
       {/* Rubro */}
       <div className="flex flex-col gap-1.5">
-        <label className="text-sm font-medium text-slate-700">
+        <label className="text-sm font-medium text-white">
           Rubro
         </label>
         <Controller

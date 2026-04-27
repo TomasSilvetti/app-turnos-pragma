@@ -44,7 +44,7 @@ export function TutorialBanner() {
 
   return (
     <div
-      className="fixed bottom-6 right-6 z-50 w-80 rounded-xl bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg p-4 flex flex-col gap-3"
+      className="fixed bottom-6 right-6 z-50 w-80 rounded-xl bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg p-4 flex flex-col gap-3"
       role="complementary"
       aria-label="Guía del tutorial"
     >

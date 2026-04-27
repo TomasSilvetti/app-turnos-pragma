@@ -51,7 +51,7 @@ export default function BookingConfirmation({
   });
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col items-center gap-6 py-10 text-center">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex flex-col items-center gap-6 py-10 text-center">
       {/* Ícono de éxito */}
       <div className="h-16 w-16 rounded-full bg-[#22c55e]/10 flex items-center justify-center">
         <CheckCircle size={36} className="text-[#22c55e]" aria-hidden="true" />
@@ -77,7 +77,7 @@ export default function BookingConfirmation({
       </div>
 
       {/* Resumen */}
-      <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3 text-left">
+      <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3 text-left">
         <div className="flex flex-col gap-0.5">
           <span className="font-small text-[10px] text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide">
             Negocio
@@ -134,7 +134,7 @@ export default function BookingConfirmation({
           <p className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide text-center">
             Datos para transferencia
           </p>
-          <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+          <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3">
             {alias && (
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col gap-0.5 min-w-0">
@@ -147,7 +147,7 @@ export default function BookingConfirmation({
                 </div>
                 <button
                   onClick={() => copyToClipboard(alias, "alias")}
-                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] dark:hover:bg-[#2d3548] transition-colors"
+                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] dark:hover:bg-[#1a2840] transition-colors"
                   aria-label="Copiar alias"
                 >
                   {copiedAlias ? (
@@ -170,7 +170,7 @@ export default function BookingConfirmation({
                 </div>
                 <button
                   onClick={() => copyToClipboard(cbu, "cbu")}
-                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] dark:hover:bg-[#2d3548] transition-colors"
+                  className="shrink-0 p-1.5 rounded hover:bg-[#E0E0DB] dark:hover:bg-[#1a2840] transition-colors"
                   aria-label="Copiar CBU"
                 >
                   {copiedCbu ? (
@@ -187,7 +187,7 @@ export default function BookingConfirmation({
 
       {/* Efectivo: explicación sin botón WhatsApp */}
       {paymentMethod === "cash" && (
-        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-3">
+        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#1a2840] px-4 py-3">
           <p className="font-body text-xs text-[#2A2829]/60 dark:text-[#64748b] text-center">
             Abonás en efectivo al momento del turno.
           </p>
@@ -196,7 +196,7 @@ export default function BookingConfirmation({
 
       {/* Transferencia: explicación + CBU/alias + WhatsApp */}
       {paymentMethod === "transfer" && (
-        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-4 py-3">
+        <div className="w-full rounded-lg bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#1a2840] px-4 py-3">
           <p className="font-body text-xs text-[#2A2829]/60 dark:text-[#64748b] text-center">
             Realizá la transferencia y enviá el comprobante por WhatsApp.
           </p>

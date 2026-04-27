@@ -64,7 +64,7 @@ export function EditEmpleadoModal({
       aria-modal="true"
       aria-labelledby="edit-empleado-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <h2 id="edit-empleado-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             Editar empleado
@@ -78,7 +78,7 @@ export function EditEmpleadoModal({
           </button>
         </div>
 
-        <div className="mb-4 rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] px-3 py-2">
+        <div className="mb-4 rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] px-3 py-2">
           <p className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">{empleado.nombre}</p>
           <p className="text-xs text-[#2A2829]/60 dark:text-[#94a3b8]">{empleado.email}</p>
         </div>
@@ -126,7 +126,7 @@ export function EditEmpleadoModal({
                 name="sucursalIds"
                 control={control}
                 render={({ field }) => (
-                  <div className="flex flex-col gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] p-3">
+                  <div className="flex flex-col gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] p-3">
                     {sucursales.map((s) => (
                       <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                         <input

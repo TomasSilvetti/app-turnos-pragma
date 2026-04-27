@@ -98,8 +98,8 @@ export function ScheduleConfigSlots({
 
   if (!selectedDay) {
     return (
-      <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
-        <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2d3548] flex items-center justify-center">
+      <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
+        <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#1a2840] flex items-center justify-center">
           <Clock size={22} className="text-white" aria-hidden="true" />
         </div>
         <p className="text-sm text-gray-400 dark:text-slate-500 text-center">
@@ -169,7 +169,7 @@ export function ScheduleConfigSlots({
 
   return (
     <>
-      <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+      <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-5">
         <p className="font-heading text-xs text-gray-400 dark:text-slate-500 mb-4 capitalize uppercase tracking-widest">
           {dayLabel}
         </p>
@@ -177,7 +177,7 @@ export function ScheduleConfigSlots({
         {isLoading || loadingSlots ? (
           <div className="grid grid-cols-2 gap-2" aria-busy="true" aria-label="Cargando turnos">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-12 rounded-lg bg-gray-100 dark:bg-[#2d3548] animate-pulse" aria-hidden="true" />
+              <div key={i} className="h-12 rounded-lg bg-gray-100 dark:bg-[#1a2840] animate-pulse" aria-hidden="true" />
             ))}
           </div>
         ) : !activeConfig ? (
@@ -197,7 +197,7 @@ export function ScheduleConfigSlots({
                       <span className="text-xs text-gray-400 dark:text-slate-500 w-10 shrink-0 font-heading">
                         {time}
                       </span>
-                      <div className="flex-1 border-t border-gray-100 dark:border-[#2d3548]" />
+                      <div className="flex-1 border-t border-gray-100 dark:border-[#1a2840]" />
                     </div>
                   ))}
                   {configIdx < sortedActiveConfigs.length - 1 && gaps[configIdx] && (
@@ -206,11 +206,11 @@ export function ScheduleConfigSlots({
                         {gaps[configIdx].from}
                       </span>
                       <div className="flex-1 flex items-center gap-2">
-                        <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#2d3548]" />
+                        <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#1a2840]" />
                         <span className="text-[10px] font-medium text-gray-300 dark:text-slate-600 uppercase tracking-wide whitespace-nowrap">
                           Sin cobertura hasta {gaps[configIdx].to}
                         </span>
-                        <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#2d3548]" />
+                        <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#1a2840]" />
                       </div>
                     </div>
                   )}
@@ -226,11 +226,11 @@ export function ScheduleConfigSlots({
                 <div key={config.id}>
                   {configIdx > 0 && gaps[configIdx - 1] && (
                     <div className="flex items-center gap-2 mb-4">
-                      <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#2d3548]" />
+                      <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#1a2840]" />
                       <span className="text-[10px] font-medium text-gray-300 dark:text-slate-600 uppercase tracking-wide whitespace-nowrap">
                         Sin cobertura: {gaps[configIdx - 1].from} – {gaps[configIdx - 1].to}
                       </span>
-                      <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#2d3548]" />
+                      <div className="flex-1 border-t border-dashed border-gray-200 dark:border-[#1a2840]" />
                     </div>
                   )}
                   <ul className={cn("grid grid-cols-2 gap-2")} aria-label={`Turnos ${config.startTime}–${config.endTime}`}>
@@ -249,8 +249,8 @@ export function ScheduleConfigSlots({
                               "w-full flex items-center justify-between rounded-lg border px-4 py-3 shadow-sm transition-all text-left",
                               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] focus-visible:ring-offset-1",
                               disabled
-                                ? "border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#0f172a] opacity-60 hover:opacity-80"
-                                : "border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#0f172a] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 cursor-pointer"
+                                ? "border-gray-100 dark:border-[#1a2840] bg-gray-50 dark:bg-[#080c14] opacity-60 hover:opacity-80"
+                                : "border-gray-200 dark:border-[#1a2840] bg-white dark:bg-[#080c14] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 cursor-pointer"
                             )}
                           >
                             <div className="flex items-center gap-2">

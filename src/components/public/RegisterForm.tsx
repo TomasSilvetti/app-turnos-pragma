@@ -58,7 +58,7 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
     <div className="flex items-center gap-1.5">
       <span
         className={`inline-flex items-center justify-center w-4 h-4 rounded-full flex-shrink-0 ${
-          met ? "bg-[#22c55e]/15 text-[#22c55e]" : "bg-[#E0E0DB] text-[#2A2829]/40"
+          met ? "bg-[#22c55e]/15 text-[#22c55e]" : "bg-white/10 text-white/40"
         }`}
         aria-hidden="true"
       >
@@ -72,7 +72,7 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
           </svg>
         )}
       </span>
-      <span className={`font-body text-xs ${met ? "text-[#22c55e]" : "text-[#2A2829]/50"}`}>
+      <span className={`font-body text-xs ${met ? "text-[#22c55e]" : "text-white/50"}`}>
         {label}
       </span>
     </div>
@@ -80,12 +80,12 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
 }
 
 const inputClass = (hasError: boolean) =>
-  `w-full font-body text-sm text-[#2A2829] border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30 ${
-    hasError ? "border-[#ef4444]" : "border-[#E0E0DB]"
+  `w-full font-body text-sm text-white/90 border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-[#101827] placeholder:text-white/30 ${
+    hasError ? "border-[#ef4444]" : "border-white/10"
   }`;
 
 const labelClass =
-  "font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide";
+  "font-body text-xs text-white font-medium uppercase tracking-wide";
 
 export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Props) {
   const router = useRouter();
@@ -268,6 +268,7 @@ export default function RegisterForm({ slug, onSwitchToLogin, employeeId }: Prop
         </label>
         <CustomSelect
           id="reg-sexo"
+          isDark
           value={formData.sexo}
           onChange={(val) => handleChange("sexo", val)}
           onBlur={() => handleBlur("sexo")}

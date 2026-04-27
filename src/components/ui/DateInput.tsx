@@ -48,8 +48,8 @@ export function DateInput({ value, onChange, className }: Props) {
       placeholder="dd/mm/yyyy"
       maxLength={10}
       className={cn(
-        "rounded-md border border-[#E0E0DB] dark:border-[#2d3548]",
-        "bg-white dark:bg-[#1e293b] text-sm text-[#2A2829] dark:text-[#e2e8f0]",
+        "rounded-md border border-[#E0E0DB] dark:border-[#1a2840]",
+        "bg-white dark:bg-[#0c1220] text-sm text-[#2A2829] dark:text-[#e2e8f0]",
         "px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)]",
         "placeholder:text-[#2A2829]/40 dark:placeholder:text-[#94a3b8]",
         className

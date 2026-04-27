@@ -13,7 +13,7 @@ type EmpleadoListProps = {
 export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd }: EmpleadoListProps) {
   if (empleados.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] px-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] px-6 py-16 text-center">
         <Users size={40} className="text-[#E0E0DB]" aria-hidden="true" />
         <div>
           <p className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">
@@ -36,7 +36,7 @@ export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd
   return (
     <>
       {/* Tabla — desktop */}
-      <div className="hidden overflow-hidden rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] sm:block">
+      <div className="hidden overflow-hidden rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] sm:block">
         <table className="w-full text-sm" aria-label="Lista de empleados">
           <thead>
             <tr className="bg-[var(--brand-color)] text-white">
@@ -57,11 +57,11 @@ export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-[#1e293b]">
+          <tbody className="bg-white dark:bg-[#0c1220]">
             {empleados.map((empleado, index) => (
               <tr
                 key={empleado.id}
-                className={`border-b border-[#E0E0DB] dark:border-[#2d3548] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 ${
+                className={`border-b border-[#E0E0DB] dark:border-[#1a2840] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 ${
                   index === empleados.length - 1 ? "border-b-0" : ""
                 }`}
               >
@@ -72,7 +72,7 @@ export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd
                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                       empleado.rol === "administrador"
                         ? "bg-[var(--brand-color)]/10 text-[var(--brand-color)] dark:bg-[#1e3a5f] dark:text-[#93c5fd]"
-                        : "bg-[#F4F5F7] text-[#2A2829]/70 dark:bg-[#1e293b] dark:text-[#94a3b8]"
+                        : "bg-[#F4F5F7] text-[#2A2829]/70 dark:bg-[#0c1220] dark:text-[#94a3b8]"
                     }`}
                   >
                     {empleado.rol === "administrador" ? "Administrador" : "Empleado"}
@@ -118,7 +118,7 @@ export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd
         {empleados.map((empleado) => (
           <div
             key={empleado.id}
-            className="rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-4"
+            className="rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-4"
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <span className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{empleado.nombre}</span>
@@ -126,7 +126,7 @@ export function EmpleadoList({ empleados, currentUserId, onEdit, onDelete, onAdd
                 className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                   empleado.rol === "administrador"
                     ? "bg-[var(--brand-color)]/10 text-[var(--brand-color)] dark:bg-[#1e3a5f] dark:text-[#93c5fd]"
-                    : "bg-[#F4F5F7] text-[#2A2829]/70 dark:bg-[#2d3548] dark:text-[#94a3b8]"
+                    : "bg-[#F4F5F7] text-[#2A2829]/70 dark:bg-[#1a2840] dark:text-[#94a3b8]"
                 }`}
               >
                 {empleado.rol === "administrador" ? "Administrador" : "Empleado"}

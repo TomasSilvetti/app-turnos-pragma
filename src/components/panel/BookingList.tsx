@@ -89,14 +89,14 @@ const MOCK_BOOKINGS: BookingItem[] = [
 
 function SkeletonRow() {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] animate-pulse">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840] animate-pulse">
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-36 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
-        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3.5 w-36 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
+        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
       </div>
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-28 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
-        <div className="h-3 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3.5 w-28 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
+        <div className="h-3 w-40 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
       </div>
       <div className="flex gap-2">
         <div className="h-9 w-24 bg-[#E0E0DB] rounded-md" />
@@ -133,7 +133,7 @@ function BookingRow({
       : null;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#1e293b] transition-colors">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#111c30] transition-colors">
       <div className="flex-1 flex flex-col gap-0.5 min-w-0">
         <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium truncate">{item.clientName}</span>
         <span className="font-small text-xs text-[#2A2829] dark:text-[#94a3b8] opacity-60 dark:opacity-100">{item.clientPhone}</span>
@@ -175,7 +175,7 @@ function CancelModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+      <div className="bg-white dark:bg-[#0c1220] rounded-xl border border-[#E0E0DB] dark:border-[#1a2840] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <h3 className="font-heading text-lg text-[#ef4444]">Cancelar turno</h3>
           <p className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0]">
@@ -196,7 +196,7 @@ function CancelModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#1a2840] transition-colors"
           >
             Volver
           </button>
@@ -230,7 +230,7 @@ function SendToRescheduleModal({
   if (success) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-        <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+        <div className="bg-white dark:bg-[#0c1220] rounded-xl border border-[#E0E0DB] dark:border-[#1a2840] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="rounded-full bg-[var(--brand-color)]/10 p-3">
               <CalendarClock size={28} className="text-[var(--brand-color)]" />
@@ -254,7 +254,7 @@ function SendToRescheduleModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-      <div className="bg-white dark:bg-[#1e293b] rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
+      <div className="bg-white dark:bg-[#0c1220] rounded-xl border border-[#E0E0DB] dark:border-[#1a2840] shadow-xl w-full max-w-sm p-6 flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <h3 className="font-heading text-lg text-[#2A2829] dark:text-[#e2e8f0]">Reprogramar turno</h3>
           <p className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0]">
@@ -270,7 +270,7 @@ function SendToRescheduleModal({
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#1a2840] transition-colors"
           >
             Volver
           </button>
@@ -417,7 +417,7 @@ export default function BookingList() {
           <div className="relative">
             <button
               onClick={() => setEmployeeDropdownOpen((prev) => !prev)}
-              className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-xl px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors w-full sm:w-auto"
+              className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] rounded-xl px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#1a2840] transition-colors w-full sm:w-auto"
             >
               <Users size={15} className="text-[var(--brand-color)] dark:text-white shrink-0" />
               <span className="truncate">
@@ -427,11 +427,11 @@ export default function BookingList() {
             </button>
 
             {employeeDropdownOpen && (
-              <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] rounded-xl shadow-lg min-w-[220px] overflow-hidden">
+              <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] rounded-xl shadow-lg min-w-[220px] overflow-hidden">
                 {selectedEmployee && (
                   <button
                     onClick={() => { setSelectedEmployee(null); setEmployeeDropdownOpen(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 font-body text-sm text-[#ef4444] hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors border-b border-[#E0E0DB] dark:border-[#2d3548]"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 font-body text-sm text-[#ef4444] hover:bg-[#fef2f2] dark:hover:bg-[#ef4444]/10 transition-colors border-b border-[#E0E0DB] dark:border-[#1a2840]"
                   >
                     <XCircle size={14} />
                     Ver mis turnos
@@ -444,7 +444,7 @@ export default function BookingList() {
                     className={`w-full flex items-center gap-2 px-4 py-2.5 font-body text-sm text-left transition-colors ${
                       selectedEmployee?.id === emp.id
                         ? "bg-[var(--brand-color)]/10 text-[var(--brand-color)]"
-                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#eef1f6] dark:hover:bg-[#2d3548]"
+                        : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#eef1f6] dark:hover:bg-[#1a2840]"
                     }`}
                   >
                     <span className="flex-1 truncate">{emp.nombre}</span>
@@ -468,7 +468,7 @@ export default function BookingList() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setCalendarOpen((prev) => !prev)}
-            className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] rounded-lg px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#2d3548] transition-colors"
+            className="flex items-center gap-2 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] rounded-lg px-4 py-2 hover:bg-[#eef1f6] dark:hover:bg-[#1a2840] transition-colors"
           >
             <CalendarCheck size={15} className="text-[var(--brand-color)] dark:text-white" />
             {calendarOpen ? "Ocultar calendario" : "Mostrar calendario"}
@@ -511,7 +511,7 @@ export default function BookingList() {
             </span>
           )}
         </h2>
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] overflow-hidden">
           {isLoading ? (
             <>
               <SkeletonRow />
@@ -584,7 +584,7 @@ export default function BookingList() {
             </span>
           )}
         </h2>
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] overflow-hidden">
           {isLoading ? (
             <>
               <SkeletonRow />

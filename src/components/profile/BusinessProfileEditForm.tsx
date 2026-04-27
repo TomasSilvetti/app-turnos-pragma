@@ -251,7 +251,7 @@ export function BusinessProfileEditForm() {
       {profileData && (
         <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">Tu link público</span>
-          <div className="flex items-center gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] px-3 h-10">
+          <div className="flex items-center gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-[#F4F5F7] dark:bg-[#080c14] px-3 h-10">
             <span className="text-sm text-slate-500 dark:text-slate-400 truncate flex-1 font-small">
               /turnos/{profileData.slug}
             </span>
@@ -280,9 +280,9 @@ export function BusinessProfileEditForm() {
           type="text"
           aria-invalid={!!errors.nombre}
           className={cn(
-            "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+            "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
             "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
-            errors.nombre ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+            errors.nombre ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
           )}
           {...register("nombre", { required: "El nombre del negocio es obligatorio" })}
         />
@@ -302,7 +302,7 @@ export function BusinessProfileEditForm() {
             <img
               src={logoPreview}
               alt="Previsualización del logo del negocio"
-              className="h-28 w-28 rounded-xl object-cover border border-[#E0E0DB] dark:border-[#2d3548]"
+              className="h-28 w-28 rounded-xl object-cover border border-[#E0E0DB] dark:border-[#1a2840]"
             />
             <button
               type="button"
@@ -328,8 +328,8 @@ export function BusinessProfileEditForm() {
               isDragging
                 ? "border-[var(--brand-color)] bg-blue-50 dark:bg-blue-950"
                 : logoError
-                ? "border-red-400 bg-white dark:bg-[#0f172a]"
-                : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#0f172a] hover:border-[var(--brand-color)] hover:bg-white dark:hover:bg-[#1e293b]"
+                ? "border-red-400 bg-white dark:bg-[#080c14]"
+                : "border-[#E0E0DB] dark:border-[#1a2840] bg-[#F4F5F7] dark:bg-[#080c14] hover:border-[var(--brand-color)] hover:bg-white dark:hover:bg-[#111c30]"
             )}
           >
             <Upload size={24} className="text-slate-400" />
@@ -363,9 +363,9 @@ export function BusinessProfileEditForm() {
           type="text"
           aria-invalid={!!errors.direccion}
           className={cn(
-            "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+            "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
             "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
-            errors.direccion ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+            errors.direccion ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
           )}
           {...register("direccion", { required: "La dirección es obligatoria" })}
         />
@@ -386,9 +386,9 @@ export function BusinessProfileEditForm() {
           type="tel"
           aria-invalid={!!errors.telefono}
           className={cn(
-            "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+            "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
             "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
-            errors.telefono ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+            errors.telefono ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
           )}
           placeholder="Ej: +54 9 11 1234-5678"
           {...register("telefono", {
@@ -422,9 +422,9 @@ export function BusinessProfileEditForm() {
             inputMode="numeric"
             aria-invalid={!!errors.cbu}
             className={cn(
-              "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors font-small",
+              "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors font-small",
               "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
-              errors.cbu ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+              errors.cbu ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
             )}
             {...register("cbu", {
               required: "El CBU es obligatorio",
@@ -447,9 +447,9 @@ export function BusinessProfileEditForm() {
             type="text"
             aria-invalid={!!errors.alias}
             className={cn(
-              "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors font-small",
+              "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors font-small",
               "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
-              errors.alias ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+              errors.alias ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
             )}
             {...register("alias", { required: "El alias es obligatorio" })}
           />

@@ -50,7 +50,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
     >
       {/* Nombre */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="name" className="text-sm font-medium text-slate-700">
+        <label htmlFor="name" className="text-sm font-medium text-white">
           Nombre
         </label>
         <input
@@ -60,9 +60,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
           placeholder="Tu nombre completo"
           aria-invalid={!!errors.name}
           className={cn(
-            "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
+            "h-10 rounded-lg border bg-[#101827] px-3 text-sm text-white/90 placeholder:text-white/30 outline-none transition-colors",
             "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-            errors.name ? "border-red-400" : "border-slate-200"
+            errors.name ? "border-red-400" : "border-white/10"
           )}
           {...register("name", { required: "El nombre es obligatorio" })}
         />
@@ -75,7 +75,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
 
       {/* Email */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="text-sm font-medium text-white">
           Email
         </label>
         <input
@@ -85,9 +85,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
           placeholder="tu@email.com"
           aria-invalid={!!errors.email || emailDuplicated}
           className={cn(
-            "h-10 rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
+            "h-10 rounded-lg border bg-[#101827] px-3 text-sm text-white/90 placeholder:text-white/30 outline-none transition-colors",
             "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-            errors.email || emailDuplicated ? "border-red-400" : "border-slate-200"
+            errors.email || emailDuplicated ? "border-red-400" : "border-white/10"
           )}
           {...register("email", {
             required: "El email es obligatorio",
@@ -112,7 +112,7 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
 
       {/* Contraseña */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="password" className="text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="text-sm font-medium text-white">
           Contraseña
         </label>
         <div className="relative">
@@ -123,9 +123,9 @@ export function RegisterForm({ onSubmit }: RegisterFormProps) {
             placeholder="Mínimo 8 caracteres"
             aria-invalid={!!errors.password}
             className={cn(
-              "h-10 w-full rounded-lg border bg-white px-3 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors",
+              "h-10 w-full rounded-lg border bg-[#101827] px-3 pr-10 text-sm text-white/90 placeholder:text-white/30 outline-none transition-colors",
               "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20",
-              errors.password ? "border-red-400" : "border-slate-200"
+              errors.password ? "border-red-400" : "border-white/10"
             )}
             {...register("password", {
               required: "La contraseña es obligatoria",
@@ -174,7 +174,7 @@ function PasswordRequirement({ met, label }: { met: boolean; label: string }) {
       ) : (
         <X size={12} className="text-slate-400 shrink-0" />
       )}
-      <span className={cn("text-xs", met ? "text-green-600" : "text-slate-400")}>{label}</span>
+      <span className={cn("text-xs", met ? "text-green-400" : "text-white/50")}>{label}</span>
     </div>
   );
 }

@@ -16,7 +16,7 @@ export default function EmployeeSelector({ employees, totalProviders, selectedId
   if (totalProviders <= 1) return null;
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3">
       <p className="font-body text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
         Seleccioná un profesional
       </p>
@@ -32,7 +32,7 @@ export default function EmployeeSelector({ employees, totalProviders, selectedId
                 "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-left",
                 isSelected
                   ? "bg-[var(--brand-color)] text-white"
-                  : "bg-[#F4F5F7] dark:bg-[#0f172a] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#1e293b]",
+                  : "bg-[#F4F5F7] dark:bg-[#080c14] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#111c30]",
               ].join(" ")}
             >
               <span

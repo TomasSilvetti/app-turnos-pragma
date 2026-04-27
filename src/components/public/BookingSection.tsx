@@ -625,24 +625,24 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
 
       {/* Selector de sucursal */}
       {sucursalesLoading ? (
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 animate-pulse">
-          <div className="h-4 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-3" />
-          <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 animate-pulse">
+          <div className="h-4 w-40 bg-[#E0E0DB] dark:bg-[#1a2840] rounded mb-3" />
+          <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#1a2840] rounded-md" />
         </div>
       ) : sucursalesError ? (
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4">
           <p className="font-body text-sm text-[#ef4444]">
             No se pudieron cargar las sucursales. Por favor recargá la página.
           </p>
         </div>
       ) : sucursales.length === 0 ? (
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4">
           <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
             No hay sucursales disponibles en este momento.
           </p>
         </div>
       ) : (
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3">
           <p className="font-body text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
             Seleccioná una sucursal
           </p>
@@ -658,7 +658,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                     "flex flex-col rounded-md px-3 py-2.5 text-sm transition-colors text-left",
                     isSelected
                       ? "bg-[var(--brand-color)] text-white"
-                      : "bg-[#F4F5F7] dark:bg-[#0f172a] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#1e293b]",
+                      : "bg-[#F4F5F7] dark:bg-[#080c14] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#111c30]",
                   ].join(" ")}
                   aria-pressed={isSelected}
                 >
@@ -683,18 +683,18 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
       {/* Selector de empleado (solo cuando hay sucursal seleccionada) */}
       {selectedSucursalId && (
         empleadosLoading ? (
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 animate-pulse">
-            <div className="h-4 w-44 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-3" />
-            <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
+          <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 animate-pulse">
+            <div className="h-4 w-44 bg-[#E0E0DB] dark:bg-[#1a2840] rounded mb-3" />
+            <div className="h-10 w-full bg-[#E0E0DB] dark:bg-[#1a2840] rounded-md" />
           </div>
         ) : employees.length === 0 ? (
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4">
+          <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4">
             <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
               No hay empleados disponibles en esta sucursal.
             </p>
           </div>
         ) : (
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+          <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3">
             <p className="font-body text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
               Seleccioná un profesional
             </p>
@@ -710,7 +710,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                       "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors text-left",
                       isSelected
                         ? "bg-[var(--brand-color)] text-white"
-                        : "bg-[#F4F5F7] dark:bg-[#0f172a] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#1e293b]",
+                        : "bg-[#F4F5F7] dark:bg-[#080c14] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#E8E9EB] dark:hover:bg-[#111c30]",
                     ].join(" ")}
                     aria-pressed={isSelected}
                   >
@@ -750,7 +750,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
             /* Flujo POR_TIPO: turnos del día primero, luego lista de espera y formulario */
             selectedDate && (
               isLoadingDaySchedule ? (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex items-center justify-center py-10">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando horarios...</p>
                 </div>
               ) : daySchedule ? (
@@ -859,13 +859,13 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                     </p>
                   )}
                   {porTipoBookingLoading && (
-                    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-4 text-center">
+                    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-4 text-center">
                       <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50">Confirmando reserva...</p>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
                     No hay horario de atención configurado para este día.
                   </p>
@@ -942,7 +942,7 @@ export default function BookingSection({ slug, businessName, cbu, alias, phone, 
                 </div>
               )}
               {isLoadingSlots ? (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex items-center justify-center py-10">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex items-center justify-center py-10">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50 dark:opacity-70">Cargando turnos...</p>
                 </div>
               ) : (

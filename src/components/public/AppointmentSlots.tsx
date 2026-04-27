@@ -22,8 +22,8 @@ export default function AppointmentSlots({ appointments, onSelect, onOccupiedSel
   const clientBookingSet = new Set(clientBookingTimes ?? []);
   if (appointments.length === 0) {
     return (
-      <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
-        <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#2d3548] flex items-center justify-center">
+      <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-6 flex flex-col items-center gap-3 py-12">
+        <div className="w-12 h-12 rounded-full bg-gray-50 dark:bg-[#1a2840] flex items-center justify-center">
           <Clock size={22} className="text-gray-300 dark:text-[#475569]" aria-hidden="true" />
         </div>
         <p className="font-body text-sm text-gray-400 dark:text-[#64748b] text-center">
@@ -34,7 +34,7 @@ export default function AppointmentSlots({ appointments, onSelect, onOccupiedSel
   }
 
   return (
-    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+    <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-5">
       <h2 className="font-heading text-xs text-gray-400 dark:text-[#64748b] mb-4 uppercase tracking-widest">
         Turnos disponibles
       </h2>
@@ -68,10 +68,10 @@ export default function AppointmentSlots({ appointments, onSelect, onOccupiedSel
                 isClientBooking
                   ? "group flex items-center justify-between rounded-lg border border-[var(--brand-color)]/40 bg-[var(--brand-color)]/10 px-4 py-3 text-left cursor-pointer hover:bg-[var(--brand-color)]/20 transition-all duration-200"
                   : isOccupied
-                  ? "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-gray-100 dark:bg-[#1a2438] px-4 py-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-[#212d42] transition-all duration-200 text-left"
+                  ? "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#1a2840] bg-gray-100 dark:bg-[#1a2438] px-4 py-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-[#212d42] transition-all duration-200 text-left"
                   : appointment.disabled
-                  ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#2d3548] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
-                  : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#2d3548] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
+                  ? "group flex items-center justify-between rounded-lg border border-gray-100 dark:border-[#1a2840] bg-gray-50 dark:bg-[#151e2d] px-4 py-3 cursor-not-allowed text-left"
+                  : "group flex items-center justify-between rounded-lg border border-gray-200 dark:border-[#1a2840] bg-white dark:bg-[#253045] px-4 py-3 hover:border-[var(--brand-color)] hover:bg-[var(--brand-color)] transition-all duration-200 text-left cursor-pointer shadow-sm hover:shadow-md"
               }
             >
               <div className="flex items-center gap-2">
@@ -106,11 +106,11 @@ export default function AppointmentSlots({ appointments, onSelect, onOccupiedSel
                   Tu turno
                 </span>
               ) : appointment.booked ? (
-                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#1a2840] px-2 py-0.5 rounded-full">
                   Ocupado
                 </span>
               ) : appointment.disabled ? (
-                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#2d3548] px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-medium text-gray-400 dark:text-[#475569] bg-gray-100 dark:bg-[#1a2840] px-2 py-0.5 rounded-full">
                   No disponible
                 </span>
               ) : (

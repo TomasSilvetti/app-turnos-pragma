@@ -82,10 +82,10 @@ export function DatePickerInput({ value, onChange, className }: Props) {
         onClick={() => setOpen((v) => !v)}
         className={cn(
           "w-full flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm transition-colors text-left",
-          "bg-white dark:bg-[#1e293b]",
+          "bg-white dark:bg-[#0c1220]",
           open
             ? "border-[var(--brand-color)] ring-2 ring-[var(--brand-color)]/15"
-            : "border-[#E0E0DB] dark:border-[#2d3548] hover:border-[#c0c0ba] dark:hover:border-[#3d4a60]"
+            : "border-[#E0E0DB] dark:border-[#1a2840] hover:border-[#c0c0ba] dark:hover:border-[#3d4a60]"
         )}
       >
         <span className="material-symbols-outlined text-[16px] text-[#2A2829]/40 dark:text-[#94a3b8]">
@@ -107,8 +107,8 @@ export function DatePickerInput({ value, onChange, className }: Props) {
         <div
           className={cn(
             "absolute z-50 mt-1.5 rounded-xl border shadow-lg overflow-hidden",
-            "bg-white dark:bg-[#1e293b]",
-            "border-[#E0E0DB] dark:border-[#2d3548]",
+            "bg-white dark:bg-[#0c1220]",
+            "border-[#E0E0DB] dark:border-[#1a2840]",
             "w-64 p-4"
           )}
         >
@@ -117,7 +117,7 @@ export function DatePickerInput({ value, onChange, className }: Props) {
             <button
               type="button"
               onClick={() => setViewMonth((m) => subMonths(m, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               aria-label="Mes anterior"
             >
               <ChevronLeft size={15} className="text-[#2A2829]/50 dark:text-[#94a3b8]" />
@@ -130,7 +130,7 @@ export function DatePickerInput({ value, onChange, className }: Props) {
             <button
               type="button"
               onClick={() => setViewMonth((m) => addMonths(m, 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               aria-label="Mes siguiente"
             >
               <ChevronRight size={15} className="text-[#2A2829]/50 dark:text-[#94a3b8]" />
@@ -149,7 +149,7 @@ export function DatePickerInput({ value, onChange, className }: Props) {
             ))}
           </div>
 
-          <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] mb-2" />
+          <div className="border-t border-[#E0E0DB] dark:border-[#1a2840] mb-2" />
 
           {/* Days grid */}
           <div className="grid grid-cols-7 gap-y-0.5">

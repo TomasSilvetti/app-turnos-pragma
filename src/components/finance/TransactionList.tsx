@@ -68,7 +68,7 @@ export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }:
   ].sort((a, b) => (a.sortKey < b.sortKey ? 1 : -1));
 
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-4">
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex flex-col gap-4">
       <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8]">
         Movimientos
       </p>
@@ -76,7 +76,7 @@ export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }:
       {loading ? (
         <div className="space-y-2">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-10 bg-[#F4F5F7] dark:bg-[#2d3548] rounded animate-pulse" />
+            <div key={i} className="h-10 bg-[#F4F5F7] dark:bg-[#1a2840] rounded animate-pulse" />
           ))}
         </div>
       ) : transactions.length === 0 ? (
@@ -89,7 +89,7 @@ export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }:
               return (
                 <li
                   key={`ing-${idx}`}
-                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-0"
+                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#1a2840] last:border-0"
                 >
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0]">
@@ -114,7 +114,7 @@ export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }:
               return (
                 <li
                   key={`eg-${eg.id}`}
-                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-0"
+                  className="flex items-center justify-between py-1.5 border-b border-[#E0E0DB] dark:border-[#1a2840] last:border-0"
                 >
                   <div className="flex flex-col min-w-0">
                     <span className="text-sm text-[#2A2829] dark:text-[#e2e8f0] truncate">
@@ -143,7 +143,7 @@ export function TransactionList({ ingresos, egresos, loading, onEgresoDeleted }:
                         <button
                           onClick={() => setConfirmingId(null)}
                           disabled={isDeleting}
-                          className="text-[11px] px-2 py-0.5 rounded bg-[#E0E0DB] dark:bg-[#2d3548] text-[#6b7280] dark:text-[#94a3b8] hover:bg-[#d1d5db] dark:hover:bg-[#374151] disabled:opacity-50 transition-colors"
+                          className="text-[11px] px-2 py-0.5 rounded bg-[#E0E0DB] dark:bg-[#1a2840] text-[#6b7280] dark:text-[#94a3b8] hover:bg-[#d1d5db] dark:hover:bg-[#1f3050] disabled:opacity-50 transition-colors"
                         >
                           No
                         </button>

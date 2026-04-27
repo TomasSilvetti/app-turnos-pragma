@@ -39,7 +39,7 @@ export function EmpleadoForm({ sucursales, isSaving, error, onSave, onCancel }: 
       aria-modal="true"
       aria-labelledby="empleado-form-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg max-h-[90vh] overflow-y-auto">
         <div className="mb-5 flex items-center justify-between">
           <h2 id="empleado-form-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             Nuevo empleado
@@ -65,9 +65,9 @@ export function EmpleadoForm({ sucursales, isSaving, error, onSave, onCancel }: 
               placeholder="Ej: Juan Pérez"
               aria-invalid={!!errors.nombre}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.nombre ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.nombre ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("nombre", { required: "El nombre es obligatorio" })}
             />
@@ -87,9 +87,9 @@ export function EmpleadoForm({ sucursales, isSaving, error, onSave, onCancel }: 
               placeholder="Ej: juan@empresa.com"
               aria-invalid={!!errors.email}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.email ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.email ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("email", {
                 required: "El email es obligatorio",
@@ -112,9 +112,9 @@ export function EmpleadoForm({ sucursales, isSaving, error, onSave, onCancel }: 
               placeholder="Mínimo 6 caracteres"
               aria-invalid={!!errors.password}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.password ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.password ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("password", {
                 required: "La contraseña es obligatoria",
@@ -159,7 +159,7 @@ export function EmpleadoForm({ sucursales, isSaving, error, onSave, onCancel }: 
                 name="sucursalIds"
                 control={control}
                 render={({ field }) => (
-                  <div className="flex flex-col gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] p-3">
+                  <div className="flex flex-col gap-2 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] p-3">
                     {sucursales.map((s) => (
                       <label key={s.id} className="flex items-center gap-2 cursor-pointer">
                         <input

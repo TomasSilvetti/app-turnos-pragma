@@ -14,6 +14,7 @@ type Props = {
   placeholder?: string;
   hasError?: boolean;
   className?: string;
+  isDark?: boolean;
 };
 
 export function CustomSelect({
@@ -25,6 +26,7 @@ export function CustomSelect({
   placeholder,
   hasError,
   className,
+  isDark = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
@@ -67,16 +69,17 @@ export function CustomSelect({
         }}
         className={cn(
           "w-full flex items-center justify-between px-3 py-2 rounded-xl border text-sm transition-colors",
-          "bg-white dark:bg-[#1e293b]",
-          "text-[#2A2829] dark:text-[#e2e8f0]",
+          isDark ? "bg-[#101827] text-white/90" : "bg-white dark:bg-[#0c1220] text-[#2A2829] dark:text-[#e2e8f0]",
           hasError
             ? "border-[#ef4444]"
             : open
             ? "border-[var(--brand-color)] ring-2 ring-[var(--brand-color)]/15"
-            : "border-[#E0E0DB] dark:border-[#2d3548] hover:border-[#c0c0ba] dark:hover:border-[#3d4a60]"
+            : isDark
+            ? "border-white/10 hover:border-white/20"
+            : "border-[#E0E0DB] dark:border-[#1a2840] hover:border-[#c0c0ba] dark:hover:border-[#3d4a60]"
         )}
       >
-        <span className={cn(!selected && "text-[#2A2829]/40 dark:text-[#94a3b8]")}>
+        <span className={cn(!selected && (isDark ? "text-white/30" : "text-[#2A2829]/40 dark:text-[#94a3b8]"))}>
           {selected ? selected.label : placeholder}
         </span>
         <svg
@@ -101,8 +104,7 @@ export function CustomSelect({
             "absolute z-50 w-full rounded-xl border shadow-lg overflow-y-auto py-1",
             "max-h-52",
             openUpward ? "bottom-full mb-1.5" : "top-full mt-1.5",
-            "bg-white dark:bg-[#1e293b]",
-            "border-[#E0E0DB] dark:border-[#2d3548]"
+            isDark ? "bg-[#101827] border-white/10" : "bg-white dark:bg-[#0c1220] border-[#E0E0DB] dark:border-[#1a2840]"
           )}
         >
           {options.map((option) => (
@@ -116,9 +118,11 @@ export function CustomSelect({
                 }}
                 className={cn(
                   "w-full text-left px-3 py-2.5 text-sm transition-colors",
-                  "text-[#2A2829] dark:text-[#e2e8f0]",
+                  isDark ? "text-white/90" : "text-[#2A2829] dark:text-[#e2e8f0]",
                   value === option.value
                     ? "bg-[var(--brand-color)]/10 dark:bg-[var(--brand-color)]/20 font-medium text-[var(--brand-color)] dark:text-[var(--brand-color)]"
+                    : isDark
+                    ? "hover:bg-white/5"
                     : "hover:bg-[#f5f5f3] dark:hover:bg-[#253551]"
                 )}
               >

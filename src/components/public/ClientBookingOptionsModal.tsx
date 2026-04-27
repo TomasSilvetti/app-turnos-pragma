@@ -109,7 +109,7 @@ export default function ClientBookingOptionsModal({
       aria-modal="true"
       aria-labelledby="client-booking-modal-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg flex flex-col gap-5 p-5">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -122,7 +122,7 @@ export default function ClientBookingOptionsModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
@@ -130,7 +130,7 @@ export default function ClientBookingOptionsModal({
         </div>
 
         {/* Detalle del turno */}
-        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-2">
+        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-2">
           {booking.serviceType && (
             <p className="font-body text-sm font-semibold text-[#2A2829] dark:text-[#e2e8f0]">
               {booking.serviceType}
@@ -188,7 +188,7 @@ export default function ClientBookingOptionsModal({
               <button
                 type="button"
                 onClick={() => setView("main")}
-                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               >
                 Volver
               </button>
@@ -233,7 +233,7 @@ export default function ClientBookingOptionsModal({
                 type="button"
                 onClick={() => setView("main")}
                 disabled={isLoading}
-                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors disabled:opacity-40"
+                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors disabled:opacity-40"
               >
                 Volver
               </button>
