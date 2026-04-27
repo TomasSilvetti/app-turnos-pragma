@@ -30,7 +30,13 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@keyframes logo-loop {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 @theme inline {
+  --animate-logo-loop: logo-loop 28s linear infinite;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
