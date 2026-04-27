@@ -79,7 +79,7 @@ export default function LoginForm({ slug, employeeId }: Props) {
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="login-email"
-          className="font-body text-xs text-white font-medium uppercase tracking-wide"
+          className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
         >
           Email <span aria-hidden="true" className="text-[#ef4444]">*</span>
         </label>
@@ -95,8 +95,8 @@ export default function LoginForm({ slug, employeeId }: Props) {
           onBlur={handleEmailBlur}
           autoComplete="email"
           placeholder="tu@email.com"
-          className={`w-full font-body text-sm text-white/90 border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-[#101827] placeholder:text-white/30 ${
-            emailError ? "border-[#ef4444]" : "border-white/10"
+          className={`w-full font-body text-sm text-[#2A2829] border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30 ${
+            emailError ? "border-[#ef4444]" : "border-[#E0E0DB]"
           }`}
         />
         {emailError && (
@@ -108,7 +108,7 @@ export default function LoginForm({ slug, employeeId }: Props) {
       <div className="flex flex-col gap-1.5">
         <label
           htmlFor="login-password"
-          className="font-body text-xs text-white font-medium uppercase tracking-wide"
+          className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
         >
           Contraseña <span aria-hidden="true" className="text-[#ef4444]">*</span>
         </label>
@@ -123,12 +123,12 @@ export default function LoginForm({ slug, employeeId }: Props) {
             }}
             autoComplete="current-password"
             placeholder="Tu contraseña"
-            className="w-full font-body text-sm text-white/90 border border-white/10 rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-[#101827] placeholder:text-white/30"
+            className="w-full font-body text-sm text-[#2A2829] border border-[#E0E0DB] rounded-md px-3 py-2 pr-10 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30"
           />
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/40 hover:text-[#2A2829] transition-colors"
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
           >
             {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -158,7 +158,7 @@ export default function LoginForm({ slug, employeeId }: Props) {
             </svg>
           )}
         </span>
-        <span className="font-body text-sm text-white">Recordarme</span>
+        <span className="font-body text-sm text-[#2A2829]">Recordarme</span>
       </label>
 
       {serverError && (
@@ -181,7 +181,7 @@ export default function LoginForm({ slug, employeeId }: Props) {
       <div className="text-center">
         <a
           href={`/turnos/${slug}/recuperar-contrasena`}
-          className="font-body text-xs text-white/50 hover:text-[var(--brand-color)] transition-colors"
+          className="font-body text-xs text-[#2A2829]/50 hover:text-[var(--brand-color)] transition-colors"
         >
           ¿Olvidaste tu contraseña?
         </a>

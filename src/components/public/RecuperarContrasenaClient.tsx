@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Plasma } from "@/components/landing/Plasma";
+import Silk from "@/components/ui/Silk";
 
 type Props = {
   slug: string;
@@ -65,33 +65,26 @@ export default function RecuperarContrasenaClient({ slug, businessName, brandCol
       className="auth-page relative min-h-screen overflow-hidden flex flex-col items-center px-4 py-12"
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
-      <Plasma
-        speed={0.5}
-        color1="#080c14"
-        color2="#0d1f3c"
-        color3="#1a3a6b"
-        color4="#0f2a50"
-      />
-      <div className="absolute inset-0 bg-[#080c14]/50" />
+      <Silk speed={0.6} />
 
       <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
         {/* Header */}
-        <div className="rounded-lg bg-[#080c14] border border-white/10 px-8 py-7 flex flex-col items-center gap-2 shadow-sm">
-          <div className="h-10 w-10 rounded-lg bg-[var(--brand-color)]/20 flex items-center justify-center mb-1">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2 shadow-sm">
+          <div className="h-10 w-10 rounded-lg bg-[#F4F5F7] border border-[#E0E0DB] flex items-center justify-center mb-1">
             <span className="font-heading text-lg text-[var(--brand-color)] font-semibold uppercase">
               {businessName.charAt(0)}
             </span>
           </div>
-          <h1 className="font-heading text-xl text-white text-center leading-tight">
+          <h1 className="font-heading text-xl text-[#2A2829] text-center leading-tight">
             {businessName}
           </h1>
-          <p className="font-body text-sm text-white/50 text-center">
+          <p className="font-body text-sm text-[#2A2829]/50 text-center">
             Recuperar contraseña
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-lg bg-[#080c14] border border-white/10 p-6 shadow-sm">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] p-6 shadow-sm">
           {estado === "enviado" ? (
             <div className="flex flex-col items-center gap-4 text-center py-2">
               <div className="h-12 w-12 rounded-full bg-[#22c55e]/10 flex items-center justify-center">
@@ -99,7 +92,7 @@ export default function RecuperarContrasenaClient({ slug, businessName, brandCol
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="font-body text-sm text-white/80">
+              <p className="font-body text-sm text-[#2A2829]/70">
                 Si el email existe, te llegará un correo con las instrucciones.
               </p>
               <Link
@@ -111,14 +104,14 @@ export default function RecuperarContrasenaClient({ slug, businessName, brandCol
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-              <p className="font-body text-sm text-white/60">
+              <p className="font-body text-sm text-[#2A2829]/60">
                 Ingresá tu email y te enviaremos un link para restablecer tu contraseña.
               </p>
 
               <div className="flex flex-col gap-1.5">
                 <label
                   htmlFor="recovery-email"
-                  className="font-body text-xs text-white/70 font-medium uppercase tracking-wide"
+                  className="font-body text-xs text-[#2A2829] font-medium uppercase tracking-wide"
                 >
                   Email <span aria-hidden="true" className="text-[#ef4444]">*</span>
                 </label>
@@ -137,8 +130,8 @@ export default function RecuperarContrasenaClient({ slug, businessName, brandCol
                   }}
                   autoComplete="email"
                   placeholder="tu@email.com"
-                  className={`w-full font-body text-sm text-white border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white/5 placeholder:text-white/20 ${
-                    emailError ? "border-[#ef4444]" : "border-white/15"
+                  className={`w-full font-body text-sm text-[#2A2829] border rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white placeholder:text-[#2A2829]/30 ${
+                    emailError ? "border-[#ef4444]" : "border-[#E0E0DB]"
                   }`}
                 />
                 {emailError && (
@@ -166,7 +159,7 @@ export default function RecuperarContrasenaClient({ slug, businessName, brandCol
               <div className="text-center">
                 <Link
                   href={`/turnos/${slug}/login`}
-                  className="font-body text-xs text-white/40 hover:text-[var(--brand-color)] transition-colors"
+                  className="font-body text-xs text-[#2A2829]/40 hover:text-[var(--brand-color)] transition-colors"
                 >
                   Volver al login
                 </Link>

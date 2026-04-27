@@ -110,7 +110,7 @@ function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center px-4">
       <CalendarCheck size={32} className="text-[#E0E0DB]" aria-hidden="true" />
-      <p className="font-body text-sm text-[#2A2829] opacity-50">{label}</p>
+      <p className="font-body text-sm text-[#E0E0DB] opacity-60">{label}</p>
     </div>
   );
 }

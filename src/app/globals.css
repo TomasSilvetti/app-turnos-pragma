@@ -170,17 +170,25 @@ body {
   }
 }
 
-/* Override browser autofill white background on dark pages */
+/* Override browser autofill on dark pages */
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus,
-.dark input:-webkit-autofill:active,
-.auth-page input:-webkit-autofill,
-.auth-page input:-webkit-autofill:hover,
-.auth-page input:-webkit-autofill:focus,
-.auth-page input:-webkit-autofill:active {
+.dark input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 1000px #101827 inset !important;
   box-shadow: 0 0 0 1000px #101827 inset !important;
   -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
   caret-color: rgba(255, 255, 255, 0.9);
+}
+
+/* Override browser autofill on light auth pages */
+.auth-page input:-webkit-autofill,
+.auth-page input:-webkit-autofill:hover,
+.auth-page input:-webkit-autofill:focus,
+.auth-page input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #2A2829 !important;
+  caret-color: #2A2829;
+  transition: background-color 5000s ease-in-out 0s !important;
 }

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LandingNavbar } from "@/components/landing/LandingNavbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
 import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
@@ -12,21 +12,7 @@ import { CTAFinalSection } from "@/components/landing/CTAFinalSection";
 export function LandingPage() {
   return (
     <div className="min-h-screen bg-[#080c14] text-white">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#080c14]/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-lg tracking-tight text-white">
-            <span className="font-bold">pragma</span>
-            <span className="font-normal"> turnos</span>
-          </span>
-          <Link
-            href="/login"
-            className="rounded-md border border-white/20 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
-          >
-            Iniciar sesión
-          </Link>
-        </div>
-      </nav>
+      <LandingNavbar />
 
       <HeroSection />
 
