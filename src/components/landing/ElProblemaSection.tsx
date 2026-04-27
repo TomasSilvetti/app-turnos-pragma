@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
-
-const Beams = lazy(() => import("./Beams"));
+import { useEffect, useRef, useState } from "react";
 
 // TODO: reemplazar con datos reales
 const DOLORES = [
@@ -200,23 +198,7 @@ export function ElProblemaSection() {
       ref={sectionRef}
       className="relative border-t border-white/10 overflow-hidden"
     >
-      {/* Beams — fondo detrás de la lista de problemas */}
-      <div className="pointer-events-none absolute inset-0 opacity-30">
-        <Suspense fallback={null}>
-          <Beams
-            beamWidth={2}
-            beamHeight={15}
-            beamNumber={10}
-            lightColor="#E24B4A"
-            speed={1.2}
-            noiseIntensity={1.75}
-            scale={0.2}
-            rotation={35}
-          />
-        </Suspense>
-      </div>
-
-      <div className="relative mx-auto max-w-3xl px-6 py-24">
+<div className="relative mx-auto max-w-3xl px-6 py-24">
         {/* Encabezado */}
         <div
           style={{

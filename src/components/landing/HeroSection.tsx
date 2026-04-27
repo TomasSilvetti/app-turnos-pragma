@@ -36,7 +36,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="relative flex min-h-[calc(100vh-57px)] items-center overflow-hidden">
+    <section className="relative flex min-h-[calc(100vh-57px)] items-center overflow-hidden" style={{ willChange: "transform" }}>
       {/* Plasma background */}
       <Plasma
         speed={0.5}

@@ -40,6 +40,7 @@ export function Plasma({
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+    const safeCtx = ctx;
 
     const c1 = hexToRgb(color1);
     const c2 = hexToRgb(color2);
@@ -98,7 +99,7 @@ export function Plasma({
         }
       }
 
-      ctx.putImageData(new ImageData(buf, W, H), 0, 0);
+      safeCtx.putImageData(new ImageData(buf, W, H), 0, 0);
       animRef.current = requestAnimationFrame(draw);
     }
 
@@ -111,7 +112,7 @@ export function Plasma({
     <canvas
       ref={canvasRef}
       className={`absolute inset-0 h-full w-full ${className}`}
-      style={{ imageRendering: "auto" }}
+      style={{ imageRendering: "auto", willChange: "transform" }}
     />
   );
 }

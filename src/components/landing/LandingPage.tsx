@@ -12,12 +12,14 @@ import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
 import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
 import { FuncionalidadesSection } from "@/components/landing/FuncionalidadesSection";
 import { ParaQuienEsSection } from "@/components/landing/ParaQuienEsSection";
+import { TestimoniosSection } from "@/components/landing/TestimoniosSection";
+import { PreciosSection } from "@/components/landing/PreciosSection";
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0f1623] text-white">
+    <div className="min-h-screen bg-[#080c14] text-white">
       {/* Navbar */}
-      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0f1623]/90 backdrop-blur-md">
+      <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#080c14]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <span className="text-lg tracking-tight text-white">
             <span className="font-bold">pragma</span>
@@ -60,6 +62,10 @@ export function LandingPage() {
       <FuncionalidadesSection />
 
       <ParaQuienEsSection />
+
+      <TestimoniosSection />
+
+      <PreciosSection />
 
       {/* Beneficios */}
       <section className="border-t border-white/10 bg-white/[0.02]">
