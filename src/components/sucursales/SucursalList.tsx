@@ -12,7 +12,7 @@ type SucursalListProps = {
 export function SucursalList({ sucursales, onEdit, onDelete, onAdd }: SucursalListProps) {
   if (sucursales.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] px-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-5 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] px-6 py-16 text-center">
         <Building2 size={40} className="text-[#E0E0DB]" aria-hidden="true" />
         <div>
           <p className="font-heading text-base text-[#2A2829] dark:text-[#e2e8f0]">
@@ -35,7 +35,7 @@ export function SucursalList({ sucursales, onEdit, onDelete, onAdd }: SucursalLi
   return (
     <>
       {/* Tabla — desktop */}
-      <div className="hidden overflow-hidden rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] sm:block">
+      <div className="hidden overflow-hidden rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] sm:block">
         <table className="w-full text-sm" aria-label="Lista de sucursales">
           <thead>
             <tr className="bg-[var(--brand-color)] text-white">
@@ -50,11 +50,11 @@ export function SucursalList({ sucursales, onEdit, onDelete, onAdd }: SucursalLi
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white dark:bg-[#1e293b]">
+          <tbody className="bg-white dark:bg-[#0c1220]">
             {sucursales.map((sucursal, index) => (
               <tr
                 key={sucursal.id}
-                className={`border-b border-[#E0E0DB] dark:border-[#2d3548] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 ${
+                className={`border-b border-[#E0E0DB] dark:border-[#1a2840] transition-colors hover:bg-[#eef1f6] dark:hover:bg-[var(--brand-color)]/10 ${
                   index === sucursales.length - 1 ? "border-b-0" : ""
                 }`}
               >
@@ -93,7 +93,7 @@ export function SucursalList({ sucursales, onEdit, onDelete, onAdd }: SucursalLi
         {sucursales.map((sucursal) => (
           <div
             key={sucursal.id}
-            className="rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-4"
+            className="rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-4"
           >
             <div className="mb-1">
               <span className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{sucursal.name}</span>

@@ -143,9 +143,9 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
 
       {/* Dropdown */}
       {open && (
-        <div className={cn("absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] shadow-lg overflow-hidden", dropdownAlign === "right" ? "right-0" : "left-0")}>
+        <div className={cn("absolute z-50 mt-1.5 w-52 rounded-xl border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] shadow-lg overflow-hidden", dropdownAlign === "right" ? "right-0" : "left-0")}>
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#E0E0DB] dark:border-[#2d3548] px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-[#E0E0DB] dark:border-[#1a2840] px-4 py-2.5">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-color)]/60">
               Hora (24h)
             </span>
@@ -157,8 +157,8 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
           {/* Columns */}
           <div className="flex">
             {/* Hours column */}
-            <div className="flex-1 border-r border-[#E0E0DB] dark:border-[#2d3548]">
-              <div className="border-b border-[#E0E0DB] dark:border-[#2d3548] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
+            <div className="flex-1 border-r border-[#E0E0DB] dark:border-[#1a2840]">
+              <div className="border-b border-[#E0E0DB] dark:border-[#1a2840] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
                 HH
               </div>
               <div
@@ -185,7 +185,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                           ? "text-[#2A2829]/20 dark:text-[#e2e8f0]/15 cursor-not-allowed line-through"
                           : h === selectedHour
                             ? "bg-[var(--brand-color)] text-white font-semibold"
-                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840]"
                       )}
                     >
                       {h}
@@ -197,7 +197,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
 
             {/* Minutes column */}
             <div className="flex-1">
-              <div className="border-b border-[#E0E0DB] dark:border-[#2d3548] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
+              <div className="border-b border-[#E0E0DB] dark:border-[#1a2840] py-1.5 text-center text-[10px] font-semibold uppercase tracking-wider text-[#2A2829]/40 dark:text-[#64748b]">
                 MM
               </div>
               <div
@@ -229,7 +229,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
                           ? "text-[#2A2829]/20 dark:text-[#e2e8f0]/15 cursor-not-allowed line-through"
                           : m === selectedMinute
                             ? "bg-[var(--brand-color)] text-white font-semibold"
-                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                            : "text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840]"
                       )}
                     >
                       {m}
@@ -241,7 +241,7 @@ export function TimePicker24h({ id, value, onChange, hasError, dropdownAlign = "
           </div>
 
           {/* Footer */}
-          <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] px-3 py-2 flex justify-end">
+          <div className="border-t border-[#E0E0DB] dark:border-[#1a2840] px-3 py-2 flex justify-end">
             <button
               type="button"
               onClick={() => setOpen(false)}

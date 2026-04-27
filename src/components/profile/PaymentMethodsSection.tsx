@@ -137,7 +137,7 @@ export function PaymentMethodsSection({ onTransferChange }: Props) {
           aria-modal="true"
           aria-labelledby="payment-modal-title"
         >
-          <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-4 shadow-lg">
+          <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex flex-col gap-4 shadow-lg">
             <div className="flex items-start justify-between gap-2">
               <h2
                 id="payment-modal-title"
@@ -147,7 +147,7 @@ export function PaymentMethodsSection({ onTransferChange }: Props) {
               </h2>
               <button
                 onClick={handleModalCancel}
-                className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
                 aria-label="Cerrar"
               >
                 <X size={16} className="text-[#2A2829] dark:text-[#94a3b8]" />
@@ -166,7 +166,7 @@ export function PaymentMethodsSection({ onTransferChange }: Props) {
               <button
                 type="button"
                 onClick={handleModalCancel}
-                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               >
                 Cancelar
               </button>
@@ -201,7 +201,7 @@ function PaymentMethodRow({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-4 py-3">
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">{label}</span>
         <span className="text-xs text-[#2A2829]/50 dark:text-[#64748b]">{description}</span>
@@ -215,7 +215,7 @@ function PaymentMethodRow({
         onClick={onToggle}
         className={`relative shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] ${
           disabled || saving ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-        } ${enabled ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#2d3548]"}`}
+        } ${enabled ? "bg-[var(--brand-color)]" : "bg-[#E0E0DB] dark:bg-[#1a2840]"}`}
       >
         <span
           className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${

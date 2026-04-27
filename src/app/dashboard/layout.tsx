@@ -108,7 +108,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (isBlocked === true) {
     return (
-      <div className="min-h-screen bg-[#0f172a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#080c14] flex items-center justify-center px-4">
         <div className="max-w-md w-full text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 border border-red-500/20">
             <span className="material-symbols-outlined text-red-400" style={{ fontSize: "32px" }} translate="no">block</span>
@@ -140,7 +140,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="min-h-screen bg-[#F4F5F7] dark:bg-[#0f172a]"
+      className="min-h-screen bg-[#F4F5F7] dark:bg-[#080c14]"
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
       {sidebarOpen && (
@@ -154,13 +154,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       <aside
         className={cn(
           "fixed top-0 left-0 h-full z-30 flex flex-col transition-transform duration-300",
-          "border-r border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#111827]",
+          "border-r border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
         style={{ width: "14rem" }}
         aria-label="Menú de navegación"
       >
-        <div className="px-5 py-6 border-b border-[#E0E0DB] dark:border-[#2d3548] flex items-center gap-3">
+        <div className="px-5 py-6 border-b border-[#E0E0DB] dark:border-[#1a2840] flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(false)}
             className="text-[var(--brand-color)] dark:text-[#93c5fd] hover:text-[#1c2a40] dark:hover:text-white transition-colors"
@@ -184,7 +184,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                   "flex items-center justify-between rounded-md px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-[var(--brand-color)] text-white font-medium"
-                    : "text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
+                    : "text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#111c30]"
                 )}
               >
                 <span className="flex items-center gap-2">
@@ -196,7 +196,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "ml-2 min-w-[1.25rem] rounded-full px-1.5 py-0.5 text-center font-small text-[10px] font-bold leading-none",
                       active
-                        ? "bg-white text-[var(--brand-color)] dark:text-[#1e293b]"
+                        ? "bg-white text-[var(--brand-color)] dark:text-[#0c1220]"
                         : "bg-[#ef4444] text-white"
                     )}
                     aria-label={`${rescheduleCount} reprogramaciones pendientes`}
@@ -209,7 +209,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#1e293b] flex flex-col gap-2">
+        <div className="m-3 p-3 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-[#F4F5F7] dark:bg-[#111c30] flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-[var(--brand-color)] text-white flex items-center justify-center font-small text-[11px] font-bold shrink-0">
               {initials}

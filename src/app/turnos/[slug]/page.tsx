@@ -5,6 +5,7 @@ import Image from "next/image";
 import BookingSection from "@/components/public/BookingSection";
 import { prisma } from "@/lib/prisma";
 import { verifyClientToken } from "@/lib/cliente-auth";
+import Silk from "@/components/ui/Silk";
 
 
 const DEFAULT_BRAND_COLOR = "#253551";
@@ -72,10 +73,11 @@ export default async function PublicBusinessPage({
 
   return (
     <main
-      className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12"
+      className="relative min-h-screen overflow-hidden flex flex-col items-center px-4 py-12"
       style={{ "--brand-color": business.brandColor } as React.CSSProperties}
     >
-      <div className="w-full max-w-md flex flex-col gap-6">
+      <Silk speed={0.6} />
+      <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
         {/* Card del negocio */}
         <div className="rounded-lg bg-white border border-[#E0E0DB] p-8 flex flex-col items-center gap-6">
           {/* Logo */}

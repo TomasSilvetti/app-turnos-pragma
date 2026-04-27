@@ -29,16 +29,16 @@ type ClientRescheduleItem = {
 
 function SkeletonRow() {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] animate-pulse">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840] animate-pulse">
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-40 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
-        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3.5 w-40 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
+        <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
       </div>
       <div className="flex-1 flex flex-col gap-1.5">
-        <div className="h-3.5 w-32 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
-        <div className="h-3 w-44 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+        <div className="h-3.5 w-32 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
+        <div className="h-3 w-44 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
       </div>
-      <div className="h-9 w-full sm:w-28 bg-[#E0E0DB] dark:bg-[#2d3548] rounded-md" />
+      <div className="h-9 w-full sm:w-28 bg-[#E0E0DB] dark:bg-[#1a2840] rounded-md" />
     </div>
   );
 }
@@ -111,7 +111,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
       aria-modal="true"
       aria-labelledby="reject-modal-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg flex flex-col gap-5 p-5">
         <div className="flex items-start justify-between gap-2">
           <h2
             id="reject-modal-title"
@@ -121,7 +121,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
@@ -130,7 +130,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
 
         {!whatsappData ? (
           <>
-            <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-1.5 text-xs font-body">
+            <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-1.5 text-xs font-body">
               <p className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{item.clientName}</p>
               <div className="flex gap-2 text-[#2A2829]/50 dark:text-[#64748b]">
                 <span>Turno original:</span>
@@ -157,7 +157,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               >
                 Cancelar
               </button>
@@ -190,7 +190,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
                 rows={5}
-                className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#0f172a] resize-none"
+                className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 bg-white dark:bg-[#080c14] resize-none"
               />
             </div>
 
@@ -208,7 +208,7 @@ function RejectModal({ item, onClose, onRejected }: RejectModalProps) {
             <button
               type="button"
               onClick={() => { onRejected(item.id); onClose(); }}
-              className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
             >
               Omitir
             </button>
@@ -264,7 +264,7 @@ function ApproveModal({ data, onClose }: ApproveModalProps) {
       aria-modal="true"
       aria-labelledby="approve-modal-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg flex flex-col gap-5 p-5">
         <div className="flex items-start justify-between gap-2">
           <h2
             id="approve-modal-title"
@@ -274,14 +274,14 @@ function ApproveModal({ data, onClose }: ApproveModalProps) {
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
           </button>
         </div>
 
-        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-1.5 text-xs font-body">
+        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-1.5 text-xs font-body">
           <p className="font-medium text-[#2A2829] dark:text-[#e2e8f0]">{data.clientDisplayName}</p>
           <div className="flex gap-2 text-[#22c55e]">
             <span>Nuevo turno:</span>
@@ -305,7 +305,7 @@ function ApproveModal({ data, onClose }: ApproveModalProps) {
             value={messageText}
             onChange={(e) => setMessageText(e.target.value)}
             rows={5}
-            className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#0f172a] resize-none"
+            className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 bg-white dark:bg-[#080c14] resize-none"
           />
         </div>
 
@@ -323,7 +323,7 @@ function ApproveModal({ data, onClose }: ApproveModalProps) {
         <button
           type="button"
           onClick={onClose}
-          className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+          className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
         >
           Omitir
         </button>
@@ -401,7 +401,7 @@ export default function RescheduleList() {
 
   return (
     <>
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] overflow-hidden">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] overflow-hidden">
         {/* Header de tabla */}
         <div className="hidden sm:grid grid-cols-[1fr_1fr_auto] bg-[var(--brand-color)] text-white text-xs uppercase tracking-[0.05em] font-body px-4 py-2.5">
           <span>Cliente</span>
@@ -444,7 +444,7 @@ export default function RescheduleList() {
               return (
                 <div
                   key={item.bookingId}
-                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#1e293b] transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#111c30] transition-colors"
                 >
                   <div className="flex-1 flex flex-col gap-0.5 min-w-0">
                     <span className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] font-medium truncate">
@@ -480,7 +480,7 @@ export default function RescheduleList() {
               return (
                 <div
                   key={item.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#1e293b] transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-4 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840] last:border-b-0 hover:bg-[#eef1f6] dark:hover:bg-[#111c30] transition-colors"
                 >
                   {/* Cliente con badge de solicitud */}
                   <div className="flex-1 flex flex-col gap-0.5 min-w-0">

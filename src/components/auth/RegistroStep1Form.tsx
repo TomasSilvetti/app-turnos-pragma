@@ -80,7 +80,7 @@ export function RegistroStep1Form({ onSuccess }: Props) {
     >
       {/* Nombre */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="reg-name" className="text-sm font-medium text-slate-700">
+        <label htmlFor="reg-name" className="text-sm font-medium text-white">
           Nombre completo
         </label>
         <input
@@ -105,7 +105,7 @@ export function RegistroStep1Form({ onSuccess }: Props) {
 
       {/* Email */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="reg-email" className="text-sm font-medium text-slate-700">
+        <label htmlFor="reg-email" className="text-sm font-medium text-white">
           Email
         </label>
         <input
@@ -145,7 +145,7 @@ export function RegistroStep1Form({ onSuccess }: Props) {
 
       {/* Contraseña */}
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="reg-password" className="text-sm font-medium text-slate-700">
+        <label htmlFor="reg-password" className="text-sm font-medium text-white">
           Contraseña
         </label>
         <div className="relative">

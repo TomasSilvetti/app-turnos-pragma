@@ -56,7 +56,7 @@ export default function ConfiguracionPage() {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] dark:text-[#94a3b8] px-1">
           General
         </h2>
-        <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 sm:p-8 flex flex-col gap-6">
+        <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 sm:p-8 flex flex-col gap-6">
 
           {/* Link de reservas */}
           {myLink && (
@@ -66,7 +66,7 @@ export default function ConfiguracionPage() {
                   Mi link de reservas
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="flex-1 truncate text-sm text-[#2A2829] dark:text-[#cbd5e1] bg-[#F4F5F7] dark:bg-[#0f172a] rounded-md px-3 py-2 border border-[#E0E0DB] dark:border-[#2d3548]">
+                  <span className="flex-1 truncate text-sm text-[#2A2829] dark:text-[#cbd5e1] bg-[#F4F5F7] dark:bg-[#080c14] rounded-md px-3 py-2 border border-[#E0E0DB] dark:border-[#1a2840]">
                     {myLink}
                   </span>
                   <button
@@ -77,7 +77,7 @@ export default function ConfiguracionPage() {
                         setTimeout(() => setLinkCopied(false), 2000);
                       });
                     }}
-                    className="flex items-center gap-1.5 shrink-0 rounded-md px-3 py-2 text-sm border border-[#E0E0DB] dark:border-[#2d3548] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors"
+                    className="flex items-center gap-1.5 shrink-0 rounded-md px-3 py-2 text-sm border border-[#E0E0DB] dark:border-[#1a2840] text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors"
                     aria-label="Copiar link de reservas"
                   >
                     <span className="material-symbols-outlined text-[var(--brand-color)]" style={{ fontSize: "16px" }} translate="no">
@@ -87,19 +87,19 @@ export default function ConfiguracionPage() {
                   </button>
                 </div>
               </div>
-              <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+              <hr className="border-[#E0E0DB] dark:border-[#1a2840]" />
             </>
           )}
 
           {/* Notificaciones push */}
           <PushNotificationToggle />
 
-          <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+          <hr className="border-[#E0E0DB] dark:border-[#1a2840]" />
 
           {/* Instalar PWA */}
           <InstallPWAButton variant="panel" />
 
-          <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+          <hr className="border-[#E0E0DB] dark:border-[#1a2840]" />
 
           {/* Tutorial */}
           <div className="flex flex-col gap-3">
@@ -108,7 +108,7 @@ export default function ConfiguracionPage() {
             </span>
             <Link
               href="/dashboard/tutorial"
-              className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors duration-200"
+              className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors duration-200"
             >
               <span className="flex items-center gap-2">
                 <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">school</span>
@@ -118,7 +118,7 @@ export default function ConfiguracionPage() {
             </Link>
           </div>
 
-          <hr className="border-[#E0E0DB] dark:border-[#2d3548]" />
+          <hr className="border-[#E0E0DB] dark:border-[#1a2840]" />
 
           {/* Tema */}
           <div className="flex flex-col gap-3">
@@ -127,7 +127,7 @@ export default function ConfiguracionPage() {
             </span>
             <button
               onClick={toggleTheme}
-              className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors duration-200 cursor-pointer"
+              className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors duration-200 cursor-pointer"
               aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
               aria-pressed={isDark}
             >
@@ -163,7 +163,7 @@ export default function ConfiguracionPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-[#6b7280] dark:text-[#94a3b8] px-1">
             Administración
           </h2>
-          <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 sm:p-8 flex flex-col gap-6">
+          <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 sm:p-8 flex flex-col gap-6">
             <AttendanceToggle />
           </div>
         </div>

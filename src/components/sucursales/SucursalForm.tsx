@@ -43,7 +43,7 @@ export function SucursalForm({ initialValues, isSaving, error, onSave, onCancel 
       aria-modal="true"
       aria-labelledby="sucursal-form-title"
     >
-      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
+      <div className="w-full max-w-md rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg">
         <div className="mb-5 flex items-center justify-between">
           <h2 id="sucursal-form-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             {initialValues ? "Editar sucursal" : "Nueva sucursal"}
@@ -69,9 +69,9 @@ export function SucursalForm({ initialValues, isSaving, error, onSave, onCancel 
               placeholder="Ej: Sucursal Centro"
               aria-invalid={!!errors.name}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.name ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.name ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("name", { required: "El nombre es obligatorio" })}
             />
@@ -91,9 +91,9 @@ export function SucursalForm({ initialValues, isSaving, error, onSave, onCancel 
               placeholder="Ej: Av. Corrientes 1234, CABA"
               aria-invalid={!!errors.address}
               className={cn(
-                "h-10 rounded-lg border bg-white dark:bg-[#0f172a] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
+                "h-10 rounded-lg border bg-white dark:bg-[#080c14] px-3 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none transition-colors",
                 "focus:border-[var(--brand-color)] focus:ring-2 focus:ring-[var(--brand-color)]/20",
-                errors.address ? "border-red-400" : "border-[#E0E0DB] dark:border-[#2d3548]"
+                errors.address ? "border-red-400" : "border-[#E0E0DB] dark:border-[#1a2840]"
               )}
               {...register("address", { required: "La dirección es obligatoria" })}
             />

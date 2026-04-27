@@ -100,7 +100,7 @@ export default function WaitlistInfoModal({ isOpen, loading, tieneRespaldo, onEn
           <div className="flex flex-col gap-4">
             <div>
               <h2 id="waitlist-modal-title" className="font-heading text-base text-[#2A2829] mb-2">
-                Este turno está ocupado
+                Reserva un turno de respaldo
               </h2>
               <p id="waitlist-modal-desc" className="font-body text-sm text-[#2A2829]/70 leading-relaxed">
                 Para entrar a la lista de espera primero necesitás reservar un turno como respaldo.

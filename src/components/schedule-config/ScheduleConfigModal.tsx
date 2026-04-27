@@ -301,9 +301,9 @@ export function ScheduleConfigModal({
       aria-labelledby="schedule-modal-title"
       onClick={handleBackdropClick}
     >
-      <div className="w-full max-w-lg rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] shadow-lg flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-lg rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] shadow-lg flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0DB] dark:border-[#2d3548] shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#E0E0DB] dark:border-[#1a2840] shrink-0">
           <h2 id="schedule-modal-title" className="font-heading text-lg text-[var(--brand-color)] dark:text-[#93c5fd]">
             {isEditing ? "Editar horario" : "Agregar horario"}
           </h2>
@@ -311,7 +311,7 @@ export function ScheduleConfigModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar modal"
-            className="rounded-md p-1 text-[#2A2829]/50 dark:text-[#94a3b8] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] hover:text-[#2A2829] transition-colors"
+            className="rounded-md p-1 text-[#2A2829]/50 dark:text-[#94a3b8] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] hover:text-[#2A2829] transition-colors"
           >
             <X size={18} aria-hidden="true" />
           </button>
@@ -331,7 +331,7 @@ export function ScheduleConfigModal({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder="Ej: Lunes a viernes mañana"
-              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+              className="w-full rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
             />
           </div>
 
@@ -397,7 +397,7 @@ export function ScheduleConfigModal({
                       "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
                       !showCustomInput && intervalMinutes === min
                         ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
-                        : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
+                        : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#111c30]"
                     )}
                   >
                     {min} min
@@ -414,7 +414,7 @@ export function ScheduleConfigModal({
                     "rounded-md border px-4 py-2 text-sm font-medium transition-colors",
                     showCustomInput
                       ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
-                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
+                      : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#111c30]"
                   )}
                 >
                   Personalizado
@@ -437,7 +437,7 @@ export function ScheduleConfigModal({
                     }}
                     placeholder="Ej: 20"
                     aria-label="Intervalo personalizado en minutos"
-                    className="w-24 rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                    className="w-24 rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
                   />
                   <span className="text-sm text-[#2A2829]/60 dark:text-[#94a3b8]">min</span>
                 </div>
@@ -465,7 +465,7 @@ export function ScheduleConfigModal({
                     "h-10 w-12 rounded-md border text-xs font-medium transition-colors",
                     daysOfWeek.includes(dia)
                       ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white"
-                      : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#1e293b]"
+                      : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] text-[#2A2829] dark:text-[#e2e8f0] hover:bg-[#F4F5F7] dark:hover:bg-[#111c30]"
                   )}
                 >
                   {DIAS_NOMBRE[dia]}
@@ -516,7 +516,7 @@ export function ScheduleConfigModal({
                         "flex items-center gap-3 rounded-md border px-4 py-3 text-sm transition-colors",
                         checked
                           ? "border-[var(--brand-color)] bg-[#eef1f6] dark:bg-[#1e3a5f]/40 text-[var(--brand-color)] dark:text-[#93c5fd]"
-                          : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] text-[#2A2829] dark:text-[#e2e8f0]"
+                          : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] text-[#2A2829] dark:text-[#e2e8f0]"
                       )}
                     >
                       {/* Checkbox */}
@@ -533,7 +533,7 @@ export function ScheduleConfigModal({
                             "flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors",
                             checked
                               ? "border-[var(--brand-color)] bg-[var(--brand-color)]"
-                              : "border-[#C8C8C2] dark:border-[#2d3548] bg-white dark:bg-[#0f172a]"
+                              : "border-[#C8C8C2] dark:border-[#1a2840] bg-white dark:bg-[#080c14]"
                           )}
                           aria-hidden="true"
                         >
@@ -554,7 +554,7 @@ export function ScheduleConfigModal({
                             type="button"
                             onClick={() => openInlineEdit(tipo)}
                             aria-label={`Editar ${tipo.titulo}`}
-                            className="rounded p-1 text-[#2A2829]/40 dark:text-[#94a3b8] hover:text-[var(--brand-color)] dark:hover:text-[#93c5fd] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                            className="rounded p-1 text-[#2A2829]/40 dark:text-[#94a3b8] hover:text-[var(--brand-color)] dark:hover:text-[#93c5fd] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
                           >
                             <Pencil size={13} aria-hidden="true" />
                           </button>
@@ -600,7 +600,7 @@ export function ScheduleConfigModal({
         )}
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E0E0DB] dark:border-[#2d3548] shrink-0">
+        <div className="flex justify-end gap-3 px-5 py-4 border-t border-[#E0E0DB] dark:border-[#1a2840] shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
@@ -624,14 +624,14 @@ export function ScheduleConfigModal({
           <div className="absolute inset-0 bg-black/50" onClick={cancelInlineForm} />
 
           {/* Sheet */}
-          <div className="relative z-10 w-full rounded-t-2xl bg-white dark:bg-[#1e293b] shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="relative z-10 w-full rounded-t-2xl bg-white dark:bg-[#0c1220] shadow-2xl animate-in slide-in-from-bottom duration-300">
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-1">
-              <div className="h-1 w-10 rounded-full bg-[#E0E0DB] dark:bg-[#2d3548]" />
+              <div className="h-1 w-10 rounded-full bg-[#E0E0DB] dark:bg-[#1a2840]" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-[#E0E0DB] dark:border-[#2d3548]">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-[#E0E0DB] dark:border-[#1a2840]">
               <h3 className="font-heading text-base text-[var(--brand-color)] dark:text-[#93c5fd]">
                 {inlineForm === "create" ? "Nuevo tipo de turno" : "Editar tipo de turno"}
               </h3>
@@ -639,7 +639,7 @@ export function ScheduleConfigModal({
                 type="button"
                 onClick={cancelInlineForm}
                 aria-label="Cerrar"
-                className="rounded-md p-1 text-[#2A2829]/50 dark:text-[#94a3b8] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+                className="rounded-md p-1 text-[#2A2829]/50 dark:text-[#94a3b8] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
               >
                 <X size={18} aria-hidden="true" />
               </button>
@@ -658,7 +658,7 @@ export function ScheduleConfigModal({
                   value={inlineTitulo}
                   onChange={(e) => setInlineTitulo(e.target.value)}
                   placeholder="Ej: Consulta general"
-                  className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                  className="w-full rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
                 />
               </div>
 
@@ -673,7 +673,7 @@ export function ScheduleConfigModal({
                   value={inlineDescripcion}
                   onChange={(e) => setInlineDescripcion(e.target.value)}
                   placeholder="Ej: Primera visita con radiografías"
-                  className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                  className="w-full rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
                 />
               </div>
 
@@ -695,7 +695,7 @@ export function ScheduleConfigModal({
                       setInlinePrecio(num.toLocaleString("es-AR").replace(/,/g, "."));
                     }}
                     placeholder="Ej: 2.000"
-                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
+                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)]"
                   />
                 </div>
                 <div>
@@ -710,7 +710,7 @@ export function ScheduleConfigModal({
                     onChange={(e) => setInlineDuracion(e.target.value)}
                     placeholder="Ej: 30"
                     disabled={modoTurno === "FIJO"}
-                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#0f172a] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-800"
+                    className="w-full rounded-md border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#080c14] px-3 py-2 text-sm text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-[#2A2829]/40 dark:placeholder:text-slate-500 focus:border-[var(--brand-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-color)] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-50 dark:disabled:bg-slate-800"
                   />
                 </div>
               </div>

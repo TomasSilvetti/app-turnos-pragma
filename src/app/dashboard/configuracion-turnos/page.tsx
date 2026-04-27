@@ -383,7 +383,7 @@ export default function ConfiguracionTurnosPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="h-20 rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] animate-pulse" />
+            <div key={i} className="h-20 rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] animate-pulse" />
           ))}
         </div>
       ) : (

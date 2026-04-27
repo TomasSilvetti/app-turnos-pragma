@@ -13,9 +13,9 @@ function formatARS(value: number): string {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 animate-pulse">
-      <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#2d3548] rounded mb-3" />
-      <div className="h-7 w-32 bg-[#E0E0DB] dark:bg-[#2d3548] rounded" />
+    <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 animate-pulse">
+      <div className="h-3 w-24 bg-[#E0E0DB] dark:bg-[#1a2840] rounded mb-3" />
+      <div className="h-7 w-32 bg-[#E0E0DB] dark:bg-[#1a2840] rounded" />
     </div>
   );
 }
@@ -36,7 +36,7 @@ export function FinancialSummaryCards({ totalIngresos, totalEgresos, balanceNeto
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {/* Ingresos */}
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
         <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8] mb-1">
           Ingresos
         </p>
@@ -46,7 +46,7 @@ export function FinancialSummaryCards({ totalIngresos, totalEgresos, balanceNeto
       </div>
 
       {/* Egresos */}
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
         <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8] mb-1">
           Egresos
         </p>
@@ -56,7 +56,7 @@ export function FinancialSummaryCards({ totalIngresos, totalEgresos, balanceNeto
       </div>
 
       {/* Balance neto */}
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
         <p className="font-small text-[11px] uppercase tracking-widest text-[#6b7280] dark:text-[#94a3b8] mb-1">
           Balance neto
         </p>

@@ -79,7 +79,7 @@ export default function MiniCalendar({
   }
 
   return (
-    <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-[#2d3548] shadow-sm p-5">
+    <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-gray-100 dark:border-[#1a2840] shadow-sm p-5">
       {/* Leyendas */}
       {(originalDate || (clientBookingDates && clientBookingDates.length > 0)) && (
         <div className="flex flex-col gap-1.5 mb-4 px-1">
@@ -106,7 +106,7 @@ export default function MiniCalendar({
       <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => onMonthChange(subMonths(viewMonth, 1))}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#2d3548] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#1a2840] transition-colors"
           aria-label="Mes anterior"
         >
           <ChevronLeft size={16} className="text-gray-500 dark:text-[#94a3b8]" />
@@ -118,7 +118,7 @@ export default function MiniCalendar({
 
         <button
           onClick={() => onMonthChange(addMonths(viewMonth, 1))}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#2d3548] transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-[#1a2840] transition-colors"
           aria-label="Mes siguiente"
         >
           <ChevronRight size={16} className="text-gray-500 dark:text-[#94a3b8]" />
@@ -138,7 +138,7 @@ export default function MiniCalendar({
       </div>
 
       {/* Separador sutil */}
-      <div className="border-t border-gray-50 dark:border-[#2d3548] mb-2" />
+      <div className="border-t border-gray-50 dark:border-[#1a2840] mb-2" />
 
       {/* Grilla de días */}
       <div className="grid grid-cols-7 gap-y-1">
@@ -169,9 +169,9 @@ export default function MiniCalendar({
                   : clientBookingDay
                   ? "bg-[var(--brand-color)]/20 text-[var(--brand-color)] dark:text-[#93c5fd] font-semibold ring-1 ring-[var(--brand-color)]/50 rounded-lg hover:bg-[var(--brand-color)] hover:text-white hover:ring-0 cursor-pointer"
                   : todayDay && !available
-                  ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#1e293b] text-[var(--brand-color)] dark:text-[#93c5fd] font-bold rounded-lg"
+                  ? "ring-2 ring-[var(--brand-color)] ring-offset-1 dark:ring-offset-[#0c1220] text-[var(--brand-color)] dark:text-[#93c5fd] font-bold rounded-lg"
                   : available
-                  ? "rounded-full bg-[#eef1f6] dark:bg-[#2d3548] text-[var(--brand-color)] dark:text-[#e2e8f0] font-semibold hover:bg-[var(--brand-color)] hover:text-white cursor-pointer"
+                  ? "rounded-full bg-[#eef1f6] dark:bg-[#1a2840] text-[var(--brand-color)] dark:text-[#e2e8f0] font-semibold hover:bg-[var(--brand-color)] hover:text-white cursor-pointer"
                   : "text-gray-300 dark:text-[#475569] cursor-default rounded-lg",
               ].join(" ")}
             >

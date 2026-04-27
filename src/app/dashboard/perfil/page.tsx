@@ -36,7 +36,7 @@ export default function DashboardPerfilPage() {
           Actualizá los datos de tu negocio. Los cambios se reflejan de inmediato en tu link público.
         </p>
       </div>
-      <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 sm:p-8 flex flex-col gap-6">
+      <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 sm:p-8 flex flex-col gap-6">
         <BusinessProfileEditForm />
         <hr className="border-[#E0E0DB]" />
         <BrandColorPicker

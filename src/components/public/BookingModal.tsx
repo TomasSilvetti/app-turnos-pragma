@@ -111,7 +111,7 @@ export default function BookingModal({
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 flex flex-col gap-5 shadow-lg">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 flex flex-col gap-5 shadow-lg">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -127,7 +127,7 @@ export default function BookingModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar modal"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#94a3b8]" />
@@ -152,7 +152,7 @@ export default function BookingModal({
                     className={`flex items-center justify-between rounded-md border px-3 py-2.5 text-left transition-colors ${
                       isSelected
                         ? "border-[var(--brand-color)] bg-[var(--brand-color)]/5"
-                        : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                        : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840]"
                     }`}
                   >
                     <span className={`font-body text-sm ${isSelected ? "text-[var(--brand-color)] font-medium" : "text-[#2A2829] dark:text-[#e2e8f0]"}`}>
@@ -190,7 +190,7 @@ export default function BookingModal({
                     className={`flex items-start gap-3 rounded-md border px-3 py-2.5 text-left transition-colors ${
                       isSelected
                         ? "border-[var(--brand-color)] bg-[var(--brand-color)]/5"
-                        : "border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548]"
+                        : "border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#253045] hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840]"
                     }`}
                   >
                     <div className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -219,7 +219,7 @@ export default function BookingModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
           {isAuthenticated ? (
             /* Flujo autenticado: mostrar nombre del cliente sin campos editables */
-            <div className="rounded-md bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#2d3548] px-3 py-2.5">
+            <div className="rounded-md bg-[#F4F5F7] dark:bg-[#151e2d] border border-[#E0E0DB] dark:border-[#1a2840] px-3 py-2.5">
               <p className="font-body text-xs text-[#2A2829]/50 dark:text-[#64748b] uppercase tracking-wide mb-0.5">
                 Reservando como
               </p>
@@ -245,7 +245,7 @@ export default function BookingModal({
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
                   autoComplete="given-name"
-                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
                 />
               </div>
 
@@ -264,7 +264,7 @@ export default function BookingModal({
                   onChange={(e) => setSurname(e.target.value)}
                   placeholder="Tu apellido"
                   autoComplete="family-name"
-                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
                 />
               </div>
 
@@ -283,7 +283,7 @@ export default function BookingModal({
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Ej: 11 1234-5678"
                   autoComplete="tel"
-                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
+                  className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 outline-none focus:border-[var(--brand-color)] transition-colors bg-white dark:bg-[#253045] placeholder:text-[#2A2829]/30 dark:placeholder:text-[#94a3b8]/50"
                 />
               </div>
             </>
@@ -304,7 +304,7 @@ export default function BookingModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
             >
               Cancelar
             </button>

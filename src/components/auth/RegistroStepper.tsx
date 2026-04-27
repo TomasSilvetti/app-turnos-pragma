@@ -28,10 +28,10 @@ export function RegistroStepper({ stepActivo }: RegistroStepperProps) {
                   className={cn(
                     "flex h-8 w-8 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors",
                     completado
-                      ? "border-[#253551] bg-[#253551] text-white"
+                      ? "border-[#4a7fbd] bg-[#253551] text-white"
                       : activo
-                      ? "border-[#253551] bg-white text-[#253551]"
-                      : "border-slate-200 bg-white text-slate-400"
+                      ? "border-white bg-white/10 text-white"
+                      : "border-white/20 bg-white/5 text-white/40"
                   )}
                 >
                   {completado ? (
@@ -55,7 +55,7 @@ export function RegistroStepper({ stepActivo }: RegistroStepperProps) {
                 <span
                   className={cn(
                     "text-xs font-medium whitespace-nowrap",
-                    activo ? "text-[#253551]" : completado ? "text-[#253551]" : "text-slate-400"
+                    activo ? "text-white" : completado ? "text-white/80" : "text-white/40"
                   )}
                 >
                   {paso.titulo}
@@ -68,7 +68,7 @@ export function RegistroStepper({ stepActivo }: RegistroStepperProps) {
                   aria-hidden="true"
                   className={cn(
                     "mx-3 h-0.5 flex-1 transition-colors",
-                    completado ? "bg-[#253551]" : "bg-slate-200"
+                    completado ? "bg-[#253551]" : "bg-white/20"
                   )}
                 />
               )}

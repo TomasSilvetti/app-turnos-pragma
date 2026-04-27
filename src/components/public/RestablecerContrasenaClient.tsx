@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
 import { validatePassword } from "@/lib/password-validation";
+import Silk from "@/components/ui/Silk";
 
 type Props = {
   slug: string;
@@ -72,13 +73,15 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
 
   return (
     <main
-      className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12"
+      className="auth-page relative min-h-screen overflow-hidden flex flex-col items-center px-4 py-12"
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
-      <div className="w-full max-w-md flex flex-col gap-6">
+      <Silk speed={0.6} />
+
+      <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
         {/* Header */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-[var(--brand-color)]/10 flex items-center justify-center mb-1">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2 shadow-sm">
+          <div className="h-10 w-10 rounded-lg bg-[#F4F5F7] border border-[#E0E0DB] flex items-center justify-center mb-1">
             <span className="font-heading text-lg text-[var(--brand-color)] font-semibold uppercase">
               {businessName.charAt(0)}
             </span>
@@ -92,7 +95,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
         </div>
 
         {/* Card */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] p-6">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] p-6 shadow-sm">
           {isTokenError ? (
             <div className="flex flex-col items-center gap-4 text-center py-2">
               <div className="h-12 w-12 rounded-full bg-[#ef4444]/10 flex items-center justify-center">
@@ -100,7 +103,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <p className="font-body text-sm text-[#2A2829]">
+              <p className="font-body text-sm text-[#2A2829]/70">
                 {estado === "tokenExpirado"
                   ? "El link expiró. Solicitá uno nuevo para restablecer tu contraseña."
                   : "El link no es válido o ya fue utilizado."}
@@ -135,7 +138,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/40 hover:text-[#2A2829] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/30 hover:text-[#2A2829]/70 transition-colors"
                     aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
@@ -174,7 +177,7 @@ export default function RestablecerContrasenaClient({ slug, businessName, brandC
                   <button
                     type="button"
                     onClick={() => setShowConfirm((v) => !v)}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/40 hover:text-[#2A2829] transition-colors"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#2A2829]/30 hover:text-[#2A2829]/70 transition-colors"
                     aria-label={showConfirm ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {showConfirm ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}

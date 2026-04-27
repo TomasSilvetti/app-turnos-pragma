@@ -3,6 +3,7 @@
 import { useState } from "react";
 import LoginForm from "./LoginForm";
 import RegisterForm from "./RegisterForm";
+import Silk from "@/components/ui/Silk";
 
 type Props = {
   slug: string;
@@ -16,13 +17,15 @@ export default function LoginPageClient({ slug, businessName, brandColor, employ
 
   return (
     <main
-      className="min-h-screen bg-[#F4F5F7] flex flex-col items-center px-4 py-12"
+      className="auth-page relative min-h-screen overflow-hidden flex flex-col items-center px-4 py-12"
       style={{ "--brand-color": brandColor } as React.CSSProperties}
     >
-      <div className="w-full max-w-md flex flex-col gap-6">
+      <Silk speed={0.6} />
+
+      <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
         {/* Header del negocio */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2">
-          <div className="h-10 w-10 rounded-lg bg-[var(--brand-color)]/10 flex items-center justify-center mb-1">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] px-8 py-7 flex flex-col items-center gap-2 shadow-sm">
+          <div className="h-10 w-10 rounded-lg bg-[#F4F5F7] border border-[#E0E0DB] flex items-center justify-center mb-1">
             <span className="font-heading text-lg text-[var(--brand-color)] font-semibold uppercase">
               {businessName.charAt(0)}
             </span>
@@ -36,7 +39,7 @@ export default function LoginPageClient({ slug, businessName, brandColor, employ
         </div>
 
         {/* Card con tabs */}
-        <div className="rounded-lg bg-white border border-[#E0E0DB] overflow-hidden">
+        <div className="rounded-lg bg-white border border-[#E0E0DB] overflow-hidden shadow-sm">
           {/* Tabs */}
           <div className="flex border-b border-[#E0E0DB]">
             <button
@@ -45,8 +48,8 @@ export default function LoginPageClient({ slug, businessName, brandColor, employ
               role="tab"
               className={`flex-1 font-body text-sm py-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] ${
                 activeTab === "login"
-                  ? "text-[var(--brand-color)] border-b-2 border-[var(--brand-color)] font-medium bg-white"
-                  : "text-[#2A2829]/50 hover:text-[#2A2829] hover:bg-[#F4F5F7]/50"
+                  ? "text-[var(--brand-color)] border-b-2 border-[var(--brand-color)] font-medium bg-[#F4F5F7]"
+                  : "text-[#2A2829]/50 hover:text-[#2A2829] hover:bg-[#F4F5F7]"
               }`}
             >
               Iniciar sesión
@@ -57,8 +60,8 @@ export default function LoginPageClient({ slug, businessName, brandColor, employ
               role="tab"
               className={`flex-1 font-body text-sm py-3.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-color)] ${
                 activeTab === "register"
-                  ? "text-[var(--brand-color)] border-b-2 border-[var(--brand-color)] font-medium bg-white"
-                  : "text-[#2A2829]/50 hover:text-[#2A2829] hover:bg-[#F4F5F7]/50"
+                  ? "text-[var(--brand-color)] border-b-2 border-[var(--brand-color)] font-medium bg-[#F4F5F7]"
+                  : "text-[#2A2829]/50 hover:text-[#2A2829] hover:bg-[#F4F5F7]"
               }`}
             >
               Crear cuenta

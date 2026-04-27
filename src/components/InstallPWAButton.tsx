@@ -47,7 +47,7 @@ export function InstallPWAButton({ variant = "panel" }: { variant?: "banner" | "
 
   if (variant === "banner") {
     return (
-      <div className="w-full flex items-center justify-between gap-3 rounded-lg border border-[#E0E0DB] bg-white dark:bg-[#1e293b] dark:border-[#2d3548] px-4 py-3">
+      <div className="w-full flex items-center justify-between gap-3 rounded-lg border border-[#E0E0DB] bg-white dark:bg-[#0c1220] dark:border-[#1a2840] px-4 py-3">
         <div className="flex items-center gap-3 min-w-0">
           <span className="material-symbols-outlined text-[#6b7280] dark:text-[#94a3b8] shrink-0" style={{ fontSize: "20px" }} translate="no">install_mobile</span>
           <span className="text-sm text-[#2A2829] dark:text-[#cbd5e1] truncate">Descargá la app para móvil</span>
@@ -55,7 +55,7 @@ export function InstallPWAButton({ variant = "panel" }: { variant?: "banner" | "
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleInstall}
-            className="rounded-md bg-[#2A2829] dark:bg-[#e2e8f0] text-white dark:text-[#1e293b] px-3 py-1.5 text-xs font-semibold hover:opacity-90 transition-opacity"
+            className="rounded-md bg-[#2A2829] dark:bg-[#e2e8f0] text-white dark:text-[#0c1220] px-3 py-1.5 text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             Instalar
           </button>
@@ -78,7 +78,7 @@ export function InstallPWAButton({ variant = "panel" }: { variant?: "banner" | "
       </span>
       <button
         onClick={handleInstall}
-        className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#0f172a] transition-colors duration-200 cursor-pointer"
+        className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-[#2A2829] dark:text-[#cbd5e1] hover:bg-[#F4F5F7] dark:hover:bg-[#080c14] transition-colors duration-200 cursor-pointer"
       >
         <span className="flex items-center gap-2">
           <span className="material-symbols-outlined" style={{ fontSize: "18px" }} translate="no">install_mobile</span>

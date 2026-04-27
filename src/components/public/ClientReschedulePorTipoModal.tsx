@@ -140,7 +140,7 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
       aria-modal="true"
       aria-labelledby="reschedule-por-tipo-title"
     >
-      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5 my-auto">
+      <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg flex flex-col gap-5 p-5 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -158,7 +158,7 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
@@ -194,7 +194,7 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
         ) : (
           <>
             {/* Turno actual */}
-            <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-2">
+            <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-2">
               <p className="font-body text-xs text-gray-400 dark:text-[#64748b] uppercase tracking-widest">
                 Turno actual
               </p>
@@ -247,7 +247,7 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
                   />
                 </>
               ) : (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
                     No hay horario de atención configurado para este día.
                   </p>
@@ -272,7 +272,7 @@ export default function ClientReschedulePorTipoModal({ booking, slug, onClose }:
             <button
               type="button"
               onClick={onClose}
-              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+              className="font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
             >
               Cerrar
             </button>

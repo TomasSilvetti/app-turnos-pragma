@@ -253,7 +253,7 @@ export function BrandColorPicker({ currentColor = DEFAULT_COLOR, onConfirm }: Pr
             type="button"
             onClick={openModal}
             aria-label={`Color de empresa actual: ${currentColor}. Hacer clic para cambiar`}
-            className="h-10 w-10 rounded-full border-2 border-[#E0E0DB] dark:border-[#2d3548] shadow-sm cursor-pointer hover:border-[#253551] dark:hover:border-[#3b82f6] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#253551] focus-visible:ring-offset-2"
+            className="h-10 w-10 rounded-full border-2 border-[#E0E0DB] dark:border-[#1a2840] shadow-sm cursor-pointer hover:border-[#253551] dark:hover:border-[#3b82f6] transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#253551] focus-visible:ring-offset-2"
             style={{ backgroundColor: currentColor }}
           />
           <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{currentColor}</span>
@@ -270,7 +270,7 @@ export function BrandColorPicker({ currentColor = DEFAULT_COLOR, onConfirm }: Pr
           aria-labelledby="brand-color-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
         >
-          <div className="w-full max-w-xs rounded-xl bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl p-5 flex flex-col gap-4">
+          <div className="w-full max-w-xs rounded-xl bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-xl p-5 flex flex-col gap-4">
             <h2
               id="brand-color-modal-title"
               className="font-heading text-base font-semibold text-[#2A2829] dark:text-[#e2e8f0]"
@@ -292,7 +292,7 @@ export function BrandColorPicker({ currentColor = DEFAULT_COLOR, onConfirm }: Pr
             {/* Preview + hex input */}
             <div className="flex items-center gap-3">
               <div
-                className="h-9 w-9 rounded-full border border-[#E0E0DB] dark:border-[#2d3548] shadow-sm shrink-0"
+                className="h-9 w-9 rounded-full border border-[#E0E0DB] dark:border-[#1a2840] shadow-sm shrink-0"
                 style={{ backgroundColor: pickedColor }}
                 aria-hidden="true"
               />
@@ -305,10 +305,10 @@ export function BrandColorPicker({ currentColor = DEFAULT_COLOR, onConfirm }: Pr
                 placeholder="#253551"
                 aria-label="Valor hexadecimal"
                 className={cn(
-                  "h-9 flex-1 rounded-lg border px-3 text-sm font-mono bg-white dark:bg-[#0f172a] text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 outline-none transition-colors",
+                  "h-9 flex-1 rounded-lg border px-3 text-sm font-mono bg-white dark:bg-[#080c14] text-[#2A2829] dark:text-[#e2e8f0] placeholder:text-slate-400 outline-none transition-colors",
                   "focus:border-[#253551] focus:ring-2 focus:ring-[#253551]/20 dark:focus:border-[#3b82f6] dark:focus:ring-[#3b82f6]/20",
                   isValidHex(hexInput) || hexInput === ""
-                    ? "border-[#E0E0DB] dark:border-[#2d3548]"
+                    ? "border-[#E0E0DB] dark:border-[#1a2840]"
                     : "border-red-400"
                 )}
               />

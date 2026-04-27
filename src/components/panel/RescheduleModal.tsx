@@ -298,7 +298,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
       aria-modal="true"
       aria-labelledby="reschedule-modal-title"
     >
-      <div className="w-full max-w-md rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-lg flex flex-col gap-5 p-5 my-auto">
+      <div className="w-full max-w-md rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-lg flex flex-col gap-5 p-5 my-auto">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
           <div>
@@ -314,7 +314,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors shrink-0"
+            className="p-1 rounded hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors shrink-0"
             aria-label="Cerrar"
           >
             <X size={18} className="text-[#2A2829] dark:text-[#e2e8f0]" />
@@ -322,7 +322,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
         </div>
 
         {/* Datos del cliente (precargados, no editables) */}
-        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-4 flex flex-col gap-3">
+        <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-4 flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label
               htmlFor="reschedule-name"
@@ -335,7 +335,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
               type="text"
               value={item.clientName}
               disabled
-              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#1e293b] opacity-60 cursor-not-allowed"
+              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 bg-white dark:bg-[#0c1220] opacity-60 cursor-not-allowed"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -350,7 +350,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
               type="tel"
               value={item.clientPhone}
               disabled
-              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md px-3 py-2 bg-white dark:bg-[#1e293b] opacity-60 cursor-not-allowed"
+              className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md px-3 py-2 bg-white dark:bg-[#0c1220] opacity-60 cursor-not-allowed"
             />
           </div>
         </div>
@@ -392,7 +392,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             )}
 
             {loadingDates ? (
-              <div className="rounded-xl bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-10 flex items-center justify-center">
+              <div className="rounded-xl bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-10 flex items-center justify-center">
                 <Loader2 size={22} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
               </div>
             ) : (
@@ -409,7 +409,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             {/* Día seleccionado: POR_TIPO → columna temporal + formulario */}
             {selectedDate && modoTurno === "POR_TIPO" && (
               loadingSlots ? (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex items-center justify-center">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-8 flex items-center justify-center">
                   <Loader2 size={20} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
                 </div>
               ) : daySchedule ? (
@@ -447,7 +447,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                   />
                 </>
               ) : (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-60">
                     No hay horario de atención configurado para este día.
                   </p>
@@ -458,17 +458,17 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             {/* Día seleccionado: FIJO → cards de slots */}
             {selectedDate && modoTurno !== "POR_TIPO" && (
               loadingSlots ? (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-8 flex items-center justify-center">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-8 flex items-center justify-center">
                   <Loader2 size={20} className="animate-spin text-[var(--brand-color)] dark:text-[#93c5fd]" />
                 </div>
               ) : slots.length === 0 ? (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5 text-center">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5 text-center">
                   <p className="font-body text-sm text-[#2A2829] dark:text-[#94a3b8] opacity-50">
                     No hay turnos disponibles para este día.
                   </p>
                 </div>
               ) : (
-                <div className="rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] p-5">
+                <div className="rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] p-5">
                   <h3 className="font-heading text-sm text-[#2A2829] dark:text-[#e2e8f0] mb-4 uppercase tracking-wide">
                     Elegí el nuevo turno
                   </h3>
@@ -494,7 +494,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
                               ? "border-[var(--brand-color)] bg-[var(--brand-color)] text-white shadow-md scale-[1.02]"
                               : isOriginalSlot
                               ? "border-amber-400 bg-amber-400 text-white cursor-default"
-                              : "border-[#E0E0DB] dark:border-[#2d3548] bg-[#F4F5F7] dark:bg-[#253045] text-[#2A2829] dark:text-[#e2e8f0] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[#2d3548]",
+                              : "border-[#E0E0DB] dark:border-[#1a2840] bg-[#F4F5F7] dark:bg-[#253045] text-[#2A2829] dark:text-[#e2e8f0] hover:border-[var(--brand-color)] hover:bg-[#eef1f6] dark:hover:bg-[#1a2840]",
                           ].join(" ")}
                           aria-pressed={isSelected}
                           aria-label={`Turno a las ${slot.time}${isOriginalSlot ? " (turno original)" : ""}`}
@@ -526,7 +526,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+            className="flex-1 font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
           >
             Cancelar
           </button>
@@ -548,7 +548,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
     {/* Modal de notificación al cliente */}
     {showNotification && confirmedSlot && confirmedDate && (
       <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/50">
-        <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#1e293b] border border-[#E0E0DB] dark:border-[#2d3548] shadow-xl flex flex-col gap-5 p-6">
+        <div className="w-full max-w-sm rounded-lg bg-white dark:bg-[#0c1220] border border-[#E0E0DB] dark:border-[#1a2840] shadow-xl flex flex-col gap-5 p-6">
           <div className="flex flex-col items-center text-center gap-2">
             <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-green-600 dark:text-green-400" aria-hidden="true">
@@ -563,12 +563,12 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
             </p>
           </div>
 
-          <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#0f172a] border border-[#E0E0DB] dark:border-[#2d3548] p-3 flex flex-col gap-1.5 text-xs font-body">
+          <div className="rounded-lg bg-[#F4F5F7] dark:bg-[#080c14] border border-[#E0E0DB] dark:border-[#1a2840] p-3 flex flex-col gap-1.5 text-xs font-body">
             <div className="flex gap-2 text-[#2A2829]/50 dark:text-[#64748b]">
               <span className="font-medium uppercase tracking-wide">Antes</span>
               <span>{format(parseISO(item.appointmentDate), "dd/MM/yyyy")} · {item.appointmentTime}</span>
             </div>
-            <div className="border-t border-[#E0E0DB] dark:border-[#2d3548] my-0.5" />
+            <div className="border-t border-[#E0E0DB] dark:border-[#1a2840] my-0.5" />
             <div className="flex gap-2 text-[#2A2829] dark:text-[#e2e8f0]">
               <span className="font-medium uppercase tracking-wide">Ahora</span>
               <span>{format(parseISO(confirmedDate), "dd/MM/yyyy")} · {confirmedSlot.time}</span>
@@ -589,7 +589,7 @@ export default function RescheduleModal({ item, onClose, onRescheduled }: Props)
           <button
             type="button"
             onClick={() => { setShowNotification(false); onRescheduled(item.bookingId); }}
-            className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#2d3548] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#2d3548] transition-colors"
+            className="w-full font-body text-sm text-[#2A2829] dark:text-[#e2e8f0] border border-[#E0E0DB] dark:border-[#1a2840] rounded-md py-2.5 hover:bg-[#F4F5F7] dark:hover:bg-[#1a2840] transition-colors"
           >
             Omitir
           </button>

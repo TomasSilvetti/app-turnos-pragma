@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Tuturno",
+  title: "Pragma Turnos",
   description: "Gestión profesional de turnos",
   manifest: "/manifest.json",
   icons: {

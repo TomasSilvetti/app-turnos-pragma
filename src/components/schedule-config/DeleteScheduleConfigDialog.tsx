@@ -55,7 +55,7 @@ export function DeleteScheduleConfigDialog({
       aria-modal="true"
       aria-labelledby="delete-config-dialog-title"
     >
-      <div className="w-full max-w-sm rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] p-5 shadow-lg">
+      <div className="w-full max-w-sm rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] p-5 shadow-lg">
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 size={20} className="animate-spin text-[var(--brand-color)]" />

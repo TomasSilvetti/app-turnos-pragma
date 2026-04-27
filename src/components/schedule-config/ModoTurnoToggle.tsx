@@ -10,7 +10,7 @@ type ModoTurnoToggleProps = {
 
 export function ModoTurnoToggle({ value, onChange, disabled = false }: ModoTurnoToggleProps) {
   return (
-    <div className="rounded-lg border border-[#E0E0DB] dark:border-[#2d3548] bg-white dark:bg-[#1e293b] px-4 py-3">
+    <div className="rounded-lg border border-[#E0E0DB] dark:border-[#1a2840] bg-white dark:bg-[#0c1220] px-4 py-3">
       <div className="flex items-center justify-between gap-4">
         <div className="flex-1">
           <p className="text-sm font-medium text-[#2A2829] dark:text-[#e2e8f0]">
@@ -33,7 +33,7 @@ export function ModoTurnoToggle({ value, onChange, disabled = false }: ModoTurno
             "relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[var(--brand-color)] focus:ring-offset-2",
             value
               ? "bg-[var(--brand-color)]"
-              : "bg-[#E0E0DB] dark:bg-[#2d3548]",
+              : "bg-[#E0E0DB] dark:bg-[#1a2840]",
             disabled && "opacity-50 cursor-not-allowed"
           )}
         >

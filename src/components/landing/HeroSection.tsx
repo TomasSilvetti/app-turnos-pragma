@@ -60,13 +60,13 @@ export function HeroSection() {
       {/* Plasma background */}
       <Plasma
         speed={0.5}
-        color1="#0a1628"
+        color1="#080c14"
         color2="#0d1f3c"
         color3="#1a3a6b"
         color4="#0f2a50"
       />
       {/* Subtle dark overlay so text stays readable */}
-      <div className="absolute inset-0 bg-[#0a1628]/50" />
+      <div className="absolute inset-0 bg-[#080c14]/50" />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
         <div className="grid items-center gap-16 lg:grid-cols-2">

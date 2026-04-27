@@ -25,7 +25,7 @@ function lerp(a: number, b: number, t: number) {
 
 export function Plasma({
   speed = 0.5,
-  color1 = "#0a1628",
+  color1 = "#080c14",
   color2 = "#0d1f3c",
   color3 = "#1a3a6b",
   color4 = "#0f2a50",
@@ -140,7 +140,7 @@ export function Plasma({
     <canvas
       ref={canvasRef}
       className={`absolute inset-0 h-full w-full ${className}`}
-      style={{ imageRendering: "auto" }}
+      style={{ imageRendering: "auto", animation: "plasma-fadein 0.6s ease-out forwards" }}
     />
   );
 }
