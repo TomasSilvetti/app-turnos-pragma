@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 
 const PASOS = [
   {
@@ -148,9 +148,8 @@ export function ComoFuncionaSection() {
       {/* Pasos */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-center gap-0">
         {PASOS.map((paso, i) => (
-          <>
+          <Fragment key={paso.numero}>
             <div
-              key={paso.numero}
               style={{
                 opacity: visible ? 1 : 0,
                 transform: visible ? "translateY(0)" : "translateY(20px)",
@@ -193,8 +192,8 @@ export function ComoFuncionaSection() {
             </div>
 
             {/* Conector entre pasos */}
-            {i < PASOS.length - 1 && <Conector key={`conector-${i}`} />}
-          </>
+            {i < PASOS.length - 1 && <Conector />}
+          </Fragment>
         ))}
       </div>
     </section>
