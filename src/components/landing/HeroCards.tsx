@@ -1,6 +1,11 @@
 "use client";
 
-import CardSwap, { Card } from "./CardSwap";
+import React from "react";
+import CardSwap, { Card as CardBase } from "./CardSwap";
+
+const Card = CardBase as React.ComponentType<
+  React.HTMLAttributes<HTMLDivElement> & { customClass?: string }
+>;
 
 interface Props {
   swapTrigger: number;
