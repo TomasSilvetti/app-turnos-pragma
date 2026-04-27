@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { HeroCarousel } from "./HeroCarousel";
 import { HeroCards } from "./HeroCards";
+import { Plasma } from "./Plasma";
 
 const INTERVAL_MS = 3000;
 const TOTAL = 3;
@@ -35,8 +36,19 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section className="flex min-h-[calc(100vh-57px)] items-center overflow-hidden">
-      <div className="mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
+    <section className="relative flex min-h-[calc(100vh-57px)] items-center overflow-hidden">
+      {/* Plasma background */}
+      <Plasma
+        speed={0.5}
+        color1="#0a1628"
+        color2="#0d1f3c"
+        color3="#1a3a6b"
+        color4="#0f2a50"
+      />
+      {/* Subtle dark overlay so text stays readable */}
+      <div className="absolute inset-0 bg-[#0a1628]/50" />
+
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-16 lg:py-24">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           {/* Left */}
           <div>
@@ -83,3 +95,4 @@ export function HeroSection() {
     </section>
   );
 }
+
