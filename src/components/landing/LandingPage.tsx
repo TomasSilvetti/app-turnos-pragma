@@ -7,6 +7,7 @@ import { ParaQuienEsSection } from "@/components/landing/ParaQuienEsSection";
 import { TestimoniosSection } from "@/components/landing/TestimoniosSection";
 import { PreciosSection } from "@/components/landing/PreciosSection";
 import { FAQSection } from "@/components/landing/FAQSection";
+import { CTAFinalSection } from "@/components/landing/CTAFinalSection";
 
 export function LandingPage() {
   return (
@@ -61,6 +62,8 @@ export function LandingPage() {
       <PreciosSection />
 
       <FAQSection />
+
+      <CTAFinalSection />
 
       {/* Footer */}
       <footer className="border-t border-white/10">
