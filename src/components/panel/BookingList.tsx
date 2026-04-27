@@ -551,7 +551,7 @@ export default function BookingList() {
                       <button
                         onClick={() => !item.isMock && (setRescheduleTarget(item), setRescheduleSuccess(false))}
                         disabled={loadingId === item.bookingId}
-                        className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 font-body text-sm text-white border border-[var(--brand-color)] bg-[var(--brand-color)] rounded-md px-3 py-2 hover:opacity-90 transition-colors disabled:opacity-50"
                         aria-label="Reprogramar turno"
                       >
                         <CalendarClock size={15} />
@@ -603,7 +603,7 @@ export default function BookingList() {
                       <button
                         onClick={() => !item.isMock && (setRescheduleTarget(item), setRescheduleSuccess(false))}
                         disabled={loadingId === item.bookingId}
-                        className="flex items-center gap-1.5 font-body text-sm text-[var(--brand-color)] border border-[var(--brand-color)] rounded-md px-3 py-2 hover:bg-[var(--brand-color)]/5 dark:hover:bg-[var(--brand-color)]/10 transition-colors disabled:opacity-50"
+                        className="flex items-center gap-1.5 font-body text-sm text-white border border-[var(--brand-color)] bg-[var(--brand-color)] rounded-md px-3 py-2 hover:opacity-90 transition-colors disabled:opacity-50"
                         aria-label="Reprogramar turno"
                       >
                         <CalendarClock size={15} />

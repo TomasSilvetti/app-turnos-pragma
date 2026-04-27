@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import {
   Salad,
   Dumbbell,
@@ -33,10 +34,28 @@ const profesiones = [
 const doubled = [...profesiones, ...profesiones];
 
 export function LogoLoop() {
-  return (
-    <div className="relative w-screen overflow-hidden" style={{ marginLeft: "calc(50% - 50vw)" }}>
+  const stripRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
-      <div className="flex w-max animate-logo-loop gap-10">
+  useEffect(() => {
+    const strip = stripRef.current;
+    const wrapper = wrapperRef.current;
+    if (!strip || !wrapper) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        strip.style.animationPlayState = entry.isIntersecting ? "running" : "paused";
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={wrapperRef} className="relative w-screen overflow-hidden" style={{ marginLeft: "calc(50% - 50vw)" }}>
+      <div ref={stripRef} className="flex w-max animate-logo-loop gap-10">
         {doubled.map(({ icon: Icon, nombre }, i) => (
           <div
             key={i}

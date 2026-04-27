@@ -12,31 +12,51 @@ const TOTAL = 3;
 export function HeroSection() {
   const [index, setIndex] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
-  function startTimer(fromIndex: number) {
+  function startTimer() {
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
-      setIndex((prev) => {
-        const next = (prev + 1) % TOTAL;
-        return next;
-      });
+      setIndex((prev) => (prev + 1) % TOTAL);
     }, INTERVAL_MS);
+  }
+
+  function stopTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
   }
 
   function goTo(i: number) {
     setIndex(i);
-    startTimer(i);
+    startTimer();
   }
 
   useEffect(() => {
-    startTimer(0);
+    const section = sectionRef.current;
+    if (!section) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startTimer();
+        } else {
+          stopTimer();
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(section);
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      observer.disconnect();
+      stopTimer();
     };
   }, []);
 
   return (
-    <section className="relative flex min-h-[calc(100vh-57px)] items-center overflow-hidden" style={{ willChange: "transform" }}>
+    <section ref={sectionRef} className="relative flex min-h-[calc(100vh-57px)] items-center overflow-hidden">
       {/* Plasma background */}
       <Plasma
         speed={0.5}

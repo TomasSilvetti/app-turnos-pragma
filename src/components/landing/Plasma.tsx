@@ -33,6 +33,9 @@ export function Plasma({
 }: PlasmaProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
+  const pausedOffsetRef = useRef<number>(0);
+  const pausedAtRef = useRef<number | null>(null);
+  const frameCountRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -56,7 +59,13 @@ export function Plasma({
     const buf = new Uint8ClampedArray(W * H * 4);
 
     function draw(timestamp: number) {
-      const t = timestamp * 0.001 * speed;
+      animRef.current = requestAnimationFrame(draw);
+
+      // Throttle to ~20fps to avoid blocking the main thread
+      frameCountRef.current++;
+      if (frameCountRef.current % 3 !== 0) return;
+
+      const t = (timestamp - pausedOffsetRef.current) * 0.001 * speed;
 
       for (let y = 0; y < H; y++) {
         for (let x = 0; x < W; x++) {
@@ -100,19 +109,38 @@ export function Plasma({
       }
 
       safeCtx.putImageData(new ImageData(buf, W, H), 0, 0);
-      animRef.current = requestAnimationFrame(draw);
     }
 
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (pausedAtRef.current !== null) {
+            pausedOffsetRef.current += performance.now() - pausedAtRef.current;
+            pausedAtRef.current = null;
+          }
+          animRef.current = requestAnimationFrame(draw);
+        } else {
+          cancelAnimationFrame(animRef.current);
+          pausedAtRef.current = performance.now();
+        }
+      },
+      { threshold: 0 }
+    );
+
+    observer.observe(canvas);
     animRef.current = requestAnimationFrame(draw);
 
-    return () => cancelAnimationFrame(animRef.current);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(animRef.current);
+    };
   }, [speed, color1, color2, color3, color4]);
 
   return (
     <canvas
       ref={canvasRef}
       className={`absolute inset-0 h-full w-full ${className}`}
-      style={{ imageRendering: "auto", willChange: "transform" }}
+      style={{ imageRendering: "auto" }}
     />
   );
 }

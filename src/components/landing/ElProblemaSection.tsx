@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Beams from "./Beams";
+import dynamic from "next/dynamic";
+
+const Beams = dynamic(() => import("./Beams"), { ssr: false });
 
 // TODO: reemplazar con datos reales
 const DOLORES = [

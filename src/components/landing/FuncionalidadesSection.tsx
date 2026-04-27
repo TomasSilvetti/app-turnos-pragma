@@ -8,7 +8,9 @@ import {
   Zap,
   HeadphonesIcon,
 } from "lucide-react";
-import Aurora from "@/components/ui/Aurora";
+import dynamic from "next/dynamic";
+
+const Aurora = dynamic(() => import("@/components/ui/Aurora"), { ssr: false });
 
 const features = [
   {
