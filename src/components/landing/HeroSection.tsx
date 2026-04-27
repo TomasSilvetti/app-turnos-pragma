@@ -97,12 +97,14 @@ export function HeroSection() {
               >
                 Empezar gratis
               </Link>
-              <Link
-                href="/login"
+              <a
+                href="https://wa.me/543815122808?text=Hola%20quiero%20una%20demo%20personalizada%20para%20la%20app%20de%20Pragma%20Turnos"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-md border border-white/20 px-6 py-2.5 text-sm font-medium text-white transition-colors duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
               >
                 Quiero una demo personalizada
-              </Link>
+              </a>
             </div>
           </div>
 
