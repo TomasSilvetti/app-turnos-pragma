@@ -1,7 +1,5 @@
 import Link from "next/link";
 import {
-  Building2,
-  Users,
   Clock,
   CheckCircle,
   ArrowRight,
@@ -10,6 +8,8 @@ import {
   Shield,
 } from "lucide-react";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
+import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
 
 export function LandingPage() {
   return (
@@ -32,6 +32,8 @@ export function LandingPage() {
 
       <HeroSection />
 
+      <ElProblemaSection />
+
       {/* Stats bar */}
       <section className="border-y border-white/10 bg-white/[0.03]">
         <div className="mx-auto max-w-6xl px-6 py-10">
@@ -40,7 +42,7 @@ export function LandingPage() {
               { value: "0 filas", label: "de espera para tus clientes" },
               { value: "24/7", label: "disponibilidad para reservar" },
               { value: "-40%", label: "de ausencias con recordatorios" },
-              { value: "5 min", label: "para tener tu empresa lista" },
+              { value: "7 min", label: "para tener tu agenda lista" },
             ].map(({ value, label }) => (
               <div key={label}>
                 <p className="text-3xl font-bold text-white">{value}</p>
@@ -51,58 +53,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="mb-14 text-center">
-          <h2 className="text-3xl font-bold text-white md:text-4xl">
-            Cómo funciona
-          </h2>
-          <p className="mt-3 text-slate-400">
-            En tres pasos ya estás operativo
-          </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {[
-            {
-              step: "01",
-              icon: Building2,
-              title: "Registrás tu empresa",
-              description:
-                "Creás tu cuenta, configurás los datos de tu empresa, los servicios que ofrecés y los horarios de atención.",
-            },
-            {
-              step: "02",
-              icon: Users,
-              title: "Tus clientes reservan",
-              description:
-                "Compartís un link único con tus clientes. Ellos eligen el servicio, el día y el horario disponible — sin llamadas, sin intermediarios.",
-            },
-            {
-              step: "03",
-              icon: Bell,
-              title: "Ambos reciben confirmación",
-              description:
-                "Tu cliente recibe la confirmación del turno y recordatorios automáticos. Vos ves todo organizado en tu panel de administración.",
-            },
-          ].map(({ step, icon: Icon, title, description }) => (
-            <div
-              key={step}
-              className="group relative rounded-2xl border border-white/10 bg-white/[0.04] p-8 transition-all duration-200 hover:border-white/20 hover:bg-white/[0.06] cursor-default"
-            >
-              <p className="mb-4 text-4xl font-bold text-white/10 transition-colors duration-200 group-hover:text-white/20">
-                {step}
-              </p>
-              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-[#253551]">
-                <Icon className="h-5 w-5 text-white" />
-              </div>
-              <h3 className="mb-2 text-lg font-semibold text-white">{title}</h3>
-              <p className="text-sm leading-relaxed text-slate-400">
-                {description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ComoFuncionaSection />
 
       {/* Beneficios */}
       <section className="border-t border-white/10 bg-white/[0.02]">
