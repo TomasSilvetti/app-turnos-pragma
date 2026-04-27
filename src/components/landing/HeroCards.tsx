@@ -22,6 +22,7 @@ export function HeroCards({ swapTrigger }: Props) {
       skewAmount={4}
       easing="elastic"
       swapTrigger={swapTrigger}
+      onCardClick={() => {}}
     >
       {/* Card 0 — responde "¿Huecos en la agenda?" */}
       <Card className="p-7 flex flex-col justify-between">

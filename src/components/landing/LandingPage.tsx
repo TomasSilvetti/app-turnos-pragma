@@ -11,6 +11,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
 import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
 import { FuncionalidadesSection } from "@/components/landing/FuncionalidadesSection";
+import { ParaQuienEsSection } from "@/components/landing/ParaQuienEsSection";
 
 export function LandingPage() {
   return (
@@ -57,6 +58,8 @@ export function LandingPage() {
       <ComoFuncionaSection />
 
       <FuncionalidadesSection />
+
+      <ParaQuienEsSection />
 
       {/* Beneficios */}
       <section className="border-t border-white/10 bg-white/[0.02]">
