@@ -72,9 +72,22 @@ export function PreciosSection() {
   return (
     <section className="border-t border-white/10" id="precios">
       <style>{`
+        @keyframes metallicShift {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes greenPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 0 18px 2px rgba(34,197,94,0.10); }
+          50%       { box-shadow: 0 0 0 0 rgba(34,197,94,0), 0 0 28px 6px rgba(34,197,94,0.22); }
+        }
         @keyframes shimmer {
           0%   { background-position: -200% center; }
           100% { background-position: 200% center; }
+        }
+        @keyframes amberPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0), 0 0 18px 2px rgba(245,158,11,0.10); }
+          50%       { box-shadow: 0 0 0 0 rgba(245,158,11,0), 0 0 28px 6px rgba(245,158,11,0.22); }
         }
       `}</style>
       <div className="mx-auto max-w-6xl px-6 py-24">
@@ -103,7 +116,7 @@ export function PreciosSection() {
           style={{
             background: "linear-gradient(145deg, rgba(34,24,10,0.95) 0%, rgba(25,18,8,0.98) 100%)",
             border: "1px solid rgba(245,158,11,0.25)",
-            boxShadow: "0 0 22px 4px rgba(245,158,11,0.14)",
+            animation: "amberPulse 3s ease-in-out infinite",
           }}
         >
           <div className="flex flex-col gap-5 md:flex-row md:items-center md:gap-8">
@@ -214,7 +227,7 @@ export function PreciosSection() {
         {/* Plan único + Garantía */}
         <div className="mt-10 grid gap-6 md:grid-cols-2 md:items-start">
           {/* Plan */}
-          <div className="relative p-[2px] rounded-2xl" style={{background: "linear-gradient(135deg, #c0c0c0 0%, #e8d5b7 15%, #b87333 28%, #e8e8e8 40%, #9b9b9b 50%, #d4af37 62%, #c0c0c0 72%, #f0e68c 82%, #b8b8b8 90%, #e0d0a0 100%)"}}>
+          <div className="relative p-[2px] rounded-2xl" style={{background: "linear-gradient(135deg, #c0c0c0 0%, #e8d5b7 15%, #b87333 28%, #e8e8e8 40%, #9b9b9b 50%, #d4af37 62%, #c0c0c0 72%, #f0e68c 82%, #b8b8b8 90%, #e0d0a0 100%)", backgroundSize: "300% 300%", animation: "metallicShift 4s ease infinite"}}>
           <div className="relative overflow-hidden rounded-[14px] bg-[#0d1420] p-8 shadow-2xl">
             <div className="absolute right-5 top-5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 border border-emerald-500/20">
               Primera semana gratis
@@ -257,6 +270,8 @@ export function PreciosSection() {
               className="relative flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 overflow-hidden"
               style={{
                 background: "linear-gradient(135deg, #d4d4d4 0%, #f5e6c8 12%, #c8a882 22%, #e8e8e8 32%, #a8a8a8 42%, #f0d060 52%, #d4d4d4 62%, #f5f0d0 72%, #b8b8b8 82%, #e8deb0 92%, #d0d0d0 100%)",
+                backgroundSize: "300% 300%",
+                animation: "metallicShift 3s ease infinite",
                 color: "#1a1a1a",
               }}
             >
@@ -277,7 +292,7 @@ export function PreciosSection() {
             style={{
               background: "linear-gradient(145deg, rgba(17,34,24,0.95) 0%, rgba(10,25,18,0.98) 100%)",
               border: "1px solid rgba(34,197,94,0.25)",
-              boxShadow: "0 0 22px 4px rgba(34,197,94,0.14)",
+              animation: "greenPulse 3s ease-in-out infinite",
             }}
           >
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10" style={{border: "1px solid rgba(34,197,94,0.3)"}}>

@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import {
   Bell,
   ListOrdered,
@@ -9,8 +8,7 @@ import {
   Zap,
   HeadphonesIcon,
 } from "lucide-react";
-
-const Aurora = dynamic(() => import("@/components/ui/Aurora"), { ssr: false });
+import Aurora from "@/components/ui/Aurora";
 
 const features = [
   {
