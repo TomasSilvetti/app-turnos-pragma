@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  CalendarCheck,
   Building2,
   Users,
   Clock,
@@ -10,6 +9,7 @@ import {
   BarChart3,
   Shield,
 } from "lucide-react";
+import { HeroSection } from "@/components/landing/HeroSection";
 
 export function LandingPage() {
   return (
@@ -17,63 +17,20 @@ export function LandingPage() {
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-white/10 bg-[#0f1623]/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#253551]">
-              <CalendarCheck className="h-4 w-4 text-white" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight">Turnos</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-slate-300 transition-colors duration-200 hover:bg-white/5 hover:text-white hover:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-[#253551] px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-[#2e4166] focus:outline-none focus:ring-2 focus:ring-[#253551]/50 cursor-pointer"
-            >
-              Registrarme
-            </Link>
-          </div>
+          <span className="text-lg tracking-tight text-white">
+            <span className="font-bold">pragma</span>
+            <span className="font-normal"> turnos</span>
+          </span>
+          <Link
+            href="/login"
+            className="rounded-md border border-white/20 px-4 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20"
+          >
+            Iniciar sesión
+          </Link>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 py-24 text-center">
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#253551]/60 bg-[#253551]/20 px-4 py-1.5 text-sm text-slate-300">
-            <Shield className="h-3.5 w-3.5 text-slate-400" />
-            Gestión profesional de turnos para empresas
-          </div>
-          <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight text-white md:text-6xl">
-            Tus clientes reservan.
-            <br />
-            <span className="text-slate-400">Vos te enfocás en atender.</span>
-          </h1>
-          <p className="mb-10 text-lg leading-relaxed text-slate-400 md:text-xl">
-            Plataforma de gestión de turnos diseñada para empresas que quieren
-            eliminar las filas, reducir las ausencias y darle a sus clientes una
-            experiencia de reserva moderna.
-          </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/register"
-              className="flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-base font-semibold text-[#0f1623] transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-white/50 cursor-pointer"
-            >
-              Registrarme
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-xl border border-white/15 px-6 py-3 text-base font-medium text-slate-300 transition-all duration-200 hover:border-white/30 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/20 cursor-pointer"
-            >
-              Ya tengo cuenta
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroSection />
 
       {/* Stats bar */}
       <section className="border-y border-white/10 bg-white/[0.03]">
@@ -278,7 +235,6 @@ export function LandingPage() {
       <footer className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 sm:flex-row">
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <CalendarCheck className="h-4 w-4" />
             <span>Turnos</span>
           </div>
           <p className="text-xs text-slate-700">
