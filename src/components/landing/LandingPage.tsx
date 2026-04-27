@@ -10,6 +10,7 @@ import {
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ElProblemaSection } from "@/components/landing/ElProblemaSection";
 import { ComoFuncionaSection } from "@/components/landing/ComoFuncionaSection";
+import { FuncionalidadesSection } from "@/components/landing/FuncionalidadesSection";
 
 export function LandingPage() {
   return (
@@ -42,7 +43,7 @@ export function LandingPage() {
               { value: "0 filas", label: "de espera para tus clientes" },
               { value: "24/7", label: "disponibilidad para reservar" },
               { value: "-40%", label: "de ausencias con recordatorios" },
-              { value: "7 min", label: "para tener tu agenda lista" },
+              { value: "7mmit min", label: "para tener tu agenda lista" },
             ].map(({ value, label }) => (
               <div key={label}>
                 <p className="text-3xl font-bold text-white">{value}</p>
@@ -54,6 +55,8 @@ export function LandingPage() {
       </section>
 
       <ComoFuncionaSection />
+
+      <FuncionalidadesSection />
 
       {/* Beneficios */}
       <section className="border-t border-white/10 bg-white/[0.02]">
