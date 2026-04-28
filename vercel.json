@@ -1,5 +1,10 @@
 {
   "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"staging\" ] && [ \"$VERCEL_GIT_COMMIT_REF\" != \"main\" ]",
+  "functions": {
+    "app/api/**": {
+      "regions": ["gru1"]
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/whatsapp-reminders",
