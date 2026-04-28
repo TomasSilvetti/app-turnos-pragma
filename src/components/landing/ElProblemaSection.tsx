@@ -10,7 +10,7 @@ const DOLORES = [
   {
     titulo: "Turnos cancelados a último momento",
     descripcion:
-      "El cliente avisa una hora antes — o no avisa. El hueco queda vacío y no hay forma de llenarlo a tiempo.",
+      "El cliente avisa una hora antes o no avisa. El hueco queda vacío y no hay forma de llenarlo a tiempo.",
     metricaValor: "1 de 4",
     metricaEtiqueta: "turnos se cancela sin aviso previo",
     icono: "ban",
@@ -26,7 +26,7 @@ const DOLORES = [
   {
     titulo: "No sabés cuánto ganás por mes",
     descripcion:
-      "Los cobros están en la cabeza, en notas, en WhatsApp. A fin de mes no cerrás los números.",
+      "Los cobros están en la cabeza, en notas, en WhatsApp. A fin de mes los numeros no cuadran.",
     metricaValor: "Sin control",
     metricaEtiqueta: "de ingresos y cobros",
     icono: "wallet",
@@ -235,8 +235,8 @@ export function ElProblemaSection() {
             Tu agenda debería trabajar para vos,&nbsp;no al revés.
           </h2>
           <p className="mt-3 max-w-[460px] text-[15px] leading-relaxed text-slate-400">
-            Sin una herramienta que lo gestione, cada turno vacío es tiempo y
-            dinero que no recuperás.
+            Sin una herramienta que gestione tus turnos, cada turno vacío es tiempo y
+            dinero que no recuperás. ¿Te paso alguna vez?
           </p>
         </div>
 

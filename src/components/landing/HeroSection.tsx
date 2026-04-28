@@ -86,8 +86,7 @@ export function HeroSection() {
             </h1>
 
             <p className="mt-5 max-w-[480px] text-base leading-[1.6] text-slate-400">
-              Pragma Turnos gestiona los recordatorios, las cancelaciones y la
-              lista de espera por vos. Llegá y atendé.
+              Pragma Turnos se encarga de los recordatorios y que tu agenda no tenga huecos. Vos llegá y atendé.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
