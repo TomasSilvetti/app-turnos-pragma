@@ -31,7 +31,7 @@ const PASOS = [
     numero: "02",
     titulo: "Tus clientes sacan turno solos",
     descripcion:
-      "Compartís un link único. Ellos eligen servicio, día y horario sin llamadas ni mensajes.",
+      "Compartís un link único. Ellos eligen servicio, día y horario y listo.",
     icono: (
       <svg
         viewBox="0 0 40 40"
@@ -51,9 +51,9 @@ const PASOS = [
   },
   {
     numero: "03",
-    titulo: "La agenda se gestiona sola",
+    titulo: "La app se encarga de lo que sigue",
     descripcion:
-      "Confirmaciones y recordatorios automáticos. Vos solo aparecés a atender.",
+      "Recordatorios automáticos antes de los turnos. Vos no te preocupas por perseguir a nadie.",
     icono: (
       <svg
         viewBox="0 0 40 40"

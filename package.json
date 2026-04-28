@@ -6,7 +6,9 @@
     "dev": "node --max-old-space-size=4096 node_modules/next/dist/bin/next dev -p 3001",
     "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "jest",
+    "test:ci": "jest --ci --forceExit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -40,15 +42,19 @@
   "devDependencies": {
     "@prisma/client": "^5.22.0",
     "@tailwindcss/postcss": "^4",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "jest": "^30.3.0",
+    "jest-environment-node": "^30.3.0",
     "prisma": "^5.22.0",
     "shadcn": "^4.5.0",
     "tailwindcss": "^4",
+    "ts-jest": "^29.4.9",
     "typescript": "^5"
   }
 }
