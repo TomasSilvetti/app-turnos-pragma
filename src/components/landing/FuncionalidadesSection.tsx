@@ -18,13 +18,13 @@ const features = [
     title: "Recordatorios automáticos",
     description:
       "Enviá notificaciones antes del turno sin hacer nada. Tus clientes llegan, vos no perseguís.",
-    benefit: "-40% inasistencias",
+    benefit: "- inasistencias",
   },
   {
     icon: ListOrdered,
     title: "Lista de espera",
     description:
-      "Cuando se cancela un turno, el siguiente en la lista entra automáticamente. Ningún hueco queda vacío.",
+      "Cuando no hay turnos cercanos, el cliente se anota en lista de espera. Si alguien cancela, el sistema le avisa al instante para que tome ese lugar.",
     benefit: "0 turnos perdidos",
   },
   {
@@ -52,7 +52,7 @@ const features = [
     icon: HeadphonesIcon,
     title: "Onboarding 1 a 1",
     description:
-      "Te acompañamos en la configuración inicial para que arranques sin dudas y con todo funcionando.",
+      "Si necesitas ayuda para configurar al principio, te acompañamos en una sesión personalizada para que arranques sin dudas",
     benefit: "Sin fricción",
   },
 ];

@@ -18,25 +18,6 @@ export function LandingPage() {
 
       <ElProblemaSection />
 
-      {/* Stats bar */}
-      <section className="border-y border-white/10 bg-white/[0.03]">
-        <div className="mx-auto max-w-6xl px-6 py-10">
-          <div className="grid grid-cols-2 gap-8 text-center md:grid-cols-4">
-            {[
-              { value: "0 filas", label: "de espera para tus clientes" },
-              { value: "24/7", label: "disponibilidad para reservar" },
-              { value: "-40%", label: "de ausencias con recordatorios" },
-              { value: "7 min", label: "para tener tu agenda lista" },
-            ].map(({ value, label }) => (
-              <div key={label}>
-                <p className="text-3xl font-bold text-white">{value}</p>
-                <p className="mt-1 text-sm text-slate-500">{label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <ComoFuncionaSection />
 
       <FuncionalidadesSection />
