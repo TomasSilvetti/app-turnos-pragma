@@ -7,16 +7,22 @@ import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { notasFetch } from "@/lib/notas/client";
 import { Modal } from "./Modal";
+import { dotColor } from "./editor/colors";
+import { PROGRESS_UPDATED_EVENT } from "./editor/progressCard";
 
 const COLORES = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6", "#14b8a6"];
 
 export type ProgressValues = { hasGoal: boolean; goal: number; label: string; color: string };
 
+type MiniNota = { id: string; text: string; createdAt: string };
+
 export function ProgressModal({
   open,
   mode,
   initial,
+  progressId,
   onClose,
   onSave,
   onDelete,
@@ -24,6 +30,7 @@ export function ProgressModal({
   open: boolean;
   mode: "create" | "edit";
   initial?: Partial<ProgressValues>;
+  progressId?: string;
   onClose: () => void;
   onSave: (v: ProgressValues) => Promise<void>;
   onDelete?: () => Promise<void>;
@@ -33,6 +40,8 @@ export function ProgressModal({
   const [label, setLabel] = useState("");
   const [color, setColor] = useState(COLORES[0]);
   const [guardando, setGuardando] = useState(false);
+  const [notes, setNotes] = useState<MiniNota[]>([]);
+  const [borrando, setBorrando] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -43,6 +52,37 @@ export function ProgressModal({
       setGuardando(false);
     }
   }, [open, initial]);
+
+  // Carga las mini notas del progreso al abrir el modal en modo edición.
+  useEffect(() => {
+    if (!open || mode !== "edit" || !progressId) {
+      setNotes([]);
+      return;
+    }
+    let activo = true;
+    notasFetch(`/api/notas/progress/${progressId}/notes`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { notes: MiniNota[] } | null) => {
+        if (activo && d) setNotes(d.notes);
+      })
+      .catch(() => {});
+    return () => {
+      activo = false;
+    };
+  }, [open, mode, progressId]);
+
+  const eliminarNota = async (noteId: string) => {
+    if (borrando) return;
+    setBorrando(noteId);
+    const res = await notasFetch(`/api/notas/progress/notes/${noteId}`, { method: "DELETE" });
+    if (res.ok) {
+      setNotes((prev) => prev.filter((n) => n.id !== noteId));
+      const { progress } = await res.json().catch(() => ({ progress: null }));
+      // Sincroniza la card: el puntito eliminado desaparece del contador.
+      if (progress) window.dispatchEvent(new CustomEvent(PROGRESS_UPDATED_EVENT, { detail: progress }));
+    }
+    setBorrando(null);
+  };
 
   const guardar = async () => {
     setGuardando(true);
@@ -124,6 +164,43 @@ export function ProgressModal({
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {mode === "edit" && (
+          <div className="space-y-2 border-t border-border pt-4">
+            <label className="text-sm font-medium">Mini notas</label>
+            {notes.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Todavía no hay notas. Tocá el progreso para sumar un puntito y agregar una.
+              </p>
+            ) : (
+              <ul className="max-h-60 space-y-1.5 overflow-y-auto">
+                {notes.map((n, i) => (
+                  <li
+                    key={n.id}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2"
+                  >
+                    <span
+                      className="size-3 shrink-0 rounded-full"
+                      style={{ backgroundColor: hasGoal ? color : dotColor(i) }}
+                    />
+                    <span className={cn("min-w-0 flex-1 truncate text-sm", !n.text.trim() && "text-muted-foreground")}>
+                      {n.text.trim() || "Sin nota"}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => eliminarNota(n.id)}
+                      disabled={borrando === n.id}
+                      aria-label="Eliminar nota"
+                      className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
