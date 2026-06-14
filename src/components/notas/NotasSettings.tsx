@@ -5,6 +5,7 @@ import { Copy, Check, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { notasFetch } from "@/lib/notas/client";
 import { Modal } from "./Modal";
+import { InstallPWAButton } from "./InstallPWAButton";
 
 export function NotasSettings({
   open,
@@ -52,6 +53,14 @@ export function NotasSettings({
     <Modal open={open} onClose={onClose} title="Tus notas">
       <div className="space-y-6">
         <section className="space-y-2">
+          <h3 className="text-sm font-semibold">Instalar en el celular</h3>
+          <p className="text-xs text-muted-foreground">
+            Instalá Notas como app: abre directo en esta pantalla, sin el resto del sistema.
+          </p>
+          <InstallPWAButton />
+        </section>
+
+        <section className="space-y-2 border-t border-border pt-5">
           <h3 className="text-sm font-semibold">Frase de recuperación</h3>
           <p className="text-xs text-muted-foreground">
             Guardala. Con esta frase podés recuperar tus notas en otro dispositivo o navegador.
