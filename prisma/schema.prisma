@@ -349,3 +349,87 @@ model DisponibilidadListaEspera {
 
   @@map("disponibilidad_lista_espera")
 }
+
+// ─────────────────────────────────────────────────────────────
+// Módulo Notas (app secundaria, sin login). Identidad anónima por
+// device + frase de recuperación. Todo cuelga del NotaDevice.
+// ─────────────────────────────────────────────────────────────
+
+model NotaDevice {
+  id             String   @id @default(cuid())
+  recoveryPhrase String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  notas             Nota[]
+  pushSubscriptions NotaPushSubscription[]
+
+  @@map("nota_devices")
+}
+
+model Nota {
+  id        String   @id @default(cuid())
+  deviceId  String
+  title     String   @default("")
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device     NotaDevice     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  reminders  NotaReminder[]
+  progresses NotaProgress[]
+
+  @@index([deviceId])
+  @@map("notas")
+}
+
+model NotaReminder {
+  id           String   @id @default(cuid())
+  notaId       String
+  deviceId     String
+  text         String   @default("")
+  time         String
+  daysOfWeek   Int[]
+  oneTimeDate  String?
+  enabled      Boolean  @default(true)
+  lastFiredKey String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  nota Nota @relation(fields: [notaId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, enabled])
+  @@index([notaId])
+  @@map("nota_reminders")
+}
+
+model NotaProgress {
+  id        String   @id @default(cuid())
+  notaId    String
+  hasGoal   Boolean  @default(false)
+  goal      Int?
+  count     Int      @default(0)
+  label     String   @default("")
+  color     String   @default("blue")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nota Nota @relation(fields: [notaId], references: [id], onDelete: Cascade)
+
+  @@index([notaId])
+  @@map("nota_progresses")
+}
+
+model NotaPushSubscription {
+  id        String   @id @default(cuid())
+  deviceId  String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId])
+  @@map("nota_push_subscriptions")
+}
