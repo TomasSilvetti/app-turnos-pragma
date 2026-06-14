@@ -266,6 +266,7 @@ export function NotaEditor({
         open={progressModal.open}
         mode={progressModal.mode}
         initial={progressModal.initial}
+        progressId={progressModal.progressId}
         onClose={() => setProgressModal({ open: false, mode: "create" })}
         onSave={guardarProgress}
         onDelete={progressModal.mode === "edit" ? eliminarProgress : undefined}

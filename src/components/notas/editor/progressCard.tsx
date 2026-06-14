@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
 import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
-import { Target } from "lucide-react";
+import { Check, Target, X } from "lucide-react";
 import { notasFetch } from "@/lib/notas/client";
 import { dotColor } from "./colors";
 
@@ -26,8 +26,12 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   const onEdit = (extension.options as ProgressCardOptions).onEdit;
 
   const [data, setData] = useState<ProgressData | null>(null);
+  const [composing, setComposing] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [saving, setSaving] = useState(false);
   const longPressed = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!progressId) return;
@@ -46,21 +50,35 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
     return () => window.removeEventListener(PROGRESS_UPDATED_EVENT, onUpdated);
   }, [progressId]);
 
-  const incrementar = useCallback(async () => {
-    if (!progressId || !data) return;
-    // Optimista
-    const tope = data.hasGoal && data.goal != null ? data.goal : Infinity;
-    const nuevo = Math.min(data.count + 1, tope);
-    setData({ ...data, count: nuevo });
-    const res = await notasFetch(`/api/notas/progress/${progressId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ delta: 1 }),
+  // Foco automático al abrir el compositor de la mini nota.
+  useEffect(() => {
+    if (composing) inputRef.current?.focus();
+  }, [composing]);
+
+  const tope = data?.hasGoal && data.goal != null ? data.goal : Infinity;
+  const lleno = (data?.count ?? 0) >= tope;
+
+  // Registra el toque: crea la mini nota (texto opcional) y suma el puntito.
+  const agregarNota = useCallback(async () => {
+    if (!progressId || !data || saving) return;
+    setSaving(true);
+    const res = await notasFetch(`/api/notas/progress/${progressId}/notes`, {
+      method: "POST",
+      body: JSON.stringify({ text: noteText.trim() }),
     });
     if (res.ok) {
       const { progress } = await res.json();
-      setData(progress);
+      if (progress) setData(progress);
     }
-  }, [progressId, data]);
+    setSaving(false);
+    setNoteText("");
+    setComposing(false);
+  }, [progressId, data, noteText, saving]);
+
+  const cancelarNota = () => {
+    setNoteText("");
+    setComposing(false);
+  };
 
   const onPointerDown = () => {
     longPressed.current = false;
@@ -75,8 +93,11 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   };
   const onPointerUp = () => {
     limpiar();
-    if (!longPressed.current) incrementar();
+    if (!longPressed.current && !composing && !lleno) setComposing(true);
   };
+
+  // Evita que los toques dentro del compositor disparen el contador / long-press.
+  const stop = (e: PointerEvent) => e.stopPropagation();
 
   const pct = data && data.hasGoal && data.goal ? Math.min(100, Math.round((data.count / data.goal) * 100)) : 0;
 
@@ -89,7 +110,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
         onPointerLeave={limpiar}
         role="button"
         tabIndex={0}
-        title="Click para sumar · mantené presionado para editar"
+        title="Tocá para sumar y agregar una mini nota · mantené presionado para editar"
         className="w-full cursor-pointer select-none rounded-xl border border-border bg-card p-3 transition-colors hover:border-primary/40"
       >
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -118,9 +139,53 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
                 style={{ backgroundColor: dotColor(i) }}
               />
             ))}
-            {(data?.count ?? 0) === 0 && (
+            {(data?.count ?? 0) === 0 && !composing && (
               <span className="text-xs text-muted-foreground">Tocá para sumar el primero</span>
             )}
+          </div>
+        )}
+
+        {composing && (
+          <div
+            className="mt-3 flex items-center gap-2"
+            onPointerDown={stop}
+            onPointerUp={stop}
+            onPointerLeave={stop}
+          >
+            <input
+              ref={inputRef}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  agregarNota();
+                } else if (e.key === "Escape") {
+                  e.preventDefault();
+                  cancelarNota();
+                }
+              }}
+              placeholder="Mini nota (opcional)…"
+              maxLength={280}
+              className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <button
+              type="button"
+              onClick={agregarNota}
+              disabled={saving}
+              aria-label="Agregar"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <Check className="size-4" />
+            </button>
+            <button
+              type="button"
+              onClick={cancelarNota}
+              aria-label="Cancelar"
+              className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted"
+            >
+              <X className="size-4" />
+            </button>
           </div>
         )}
       </div>

@@ -416,10 +416,23 @@ model NotaProgress {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  nota Nota @relation(fields: [notaId], references: [id], onDelete: Cascade)
+  nota  Nota               @relation(fields: [notaId], references: [id], onDelete: Cascade)
+  notes NotaProgressNote[]
 
   @@index([notaId])
   @@map("nota_progresses")
+}
+
+model NotaProgressNote {
+  id         String   @id @default(cuid())
+  progressId String
+  text       String   @default("")
+  createdAt  DateTime @default(now())
+
+  progress NotaProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)
+
+  @@index([progressId])
+  @@map("nota_progress_notes")
 }
 
 model NotaPushSubscription {
