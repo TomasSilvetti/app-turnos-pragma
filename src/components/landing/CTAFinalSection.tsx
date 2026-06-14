@@ -47,12 +47,14 @@ export function CTAFinalSection() {
             />
           </Link>
 
-          <Link
-            href="/demo"
+          <a
+            href="https://wa.me/543815122808?text=Hola%20quiero%20una%20demo%20personalizada%20para%20la%20app%20de%20Pragma%20Turnos"
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-lg border border-black/15 px-8 py-4 text-base font-medium text-black/60 transition-all duration-200 hover:border-black/30 hover:text-black focus:outline-none focus:ring-2 focus:ring-black/20 focus:ring-offset-2 focus:ring-offset-white"
           >
             Pedir una demo
-          </Link>
+          </a>
         </div>
 
         {/* Trust micro-copy */}
