@@ -356,10 +356,12 @@ model DisponibilidadListaEspera {
 // ─────────────────────────────────────────────────────────────
 
 model NotaDevice {
-  id             String   @id @default(cuid())
-  recoveryPhrase String   @unique
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           String   @id @default(cuid())
+  // Hash determinístico de la contraseña de recuperación que elige el usuario.
+  // Nullable: un device recién creado no tiene contraseña hasta que se define.
+  passwordHash String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   notas             Nota[]
   pushSubscriptions NotaPushSubscription[]

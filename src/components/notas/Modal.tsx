@@ -22,16 +22,32 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  // Bloquear el scroll del body mientras el modal está abierto y compensar el
+  // ancho de la scrollbar para que la página no salte ni aparezca scroll horizontal.
+  useEffect(() => {
+    if (!open) return;
+    const { body } = document;
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    const overflowPrev = body.style.overflow;
+    const paddingPrev = body.style.paddingRight;
+    body.style.overflow = "hidden";
+    if (scrollbar > 0) body.style.paddingRight = `${scrollbar}px`;
+    return () => {
+      body.style.overflow = overflowPrev;
+      body.style.paddingRight = paddingPrev;
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/50 p-4 backdrop-blur-sm"
       onMouseDown={onClose}
     >
       <div
         className={cn(
-          "w-full max-w-md rounded-2xl border border-border bg-card text-card-foreground shadow-2xl",
+          "my-auto w-full max-w-md rounded-2xl border border-border bg-card text-card-foreground shadow-2xl",
           className
         )}
         onMouseDown={(e) => e.stopPropagation()}

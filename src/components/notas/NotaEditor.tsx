@@ -10,7 +10,6 @@ import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { notasFetch } from "@/lib/notas/client";
-import { EditorToolbar } from "./EditorToolbar";
 import { SlashCommands, type SlashCommandType } from "./editor/slashCommands";
 import { ReminderChip } from "./editor/reminderChip";
 import { ProgressCard, PROGRESS_UPDATED_EVENT } from "./editor/progressCard";
@@ -51,10 +50,12 @@ export function NotaEditor({
   notaId,
   initialContent,
   focusReminderId,
+  onEditorReady,
 }: {
   notaId: string;
   initialContent: object;
   focusReminderId?: string | null;
+  onEditorReady?: (editor: Editor | null) => void;
 }) {
   const [estado, setEstado] = useState<Estado>("idle");
   const [reminderModal, setReminderModal] = useState<ReminderModalState>({ open: false, mode: "create" });
@@ -115,7 +116,7 @@ export function NotaEditor({
       StarterKit,
       TextStyle,
       Color,
-      Placeholder.configure({ placeholder: "Escribí algo… usá /recordatorio o /progreso" }),
+      Placeholder.configure({ placeholder: "Escribí algo… escribí / para ver los comandos" }),
       SlashCommands.configure({ onCommand: onSlashCommand }),
       ReminderChip.configure({ onEdit: onEditReminder }),
       ProgressCard.configure({ onEdit: onEditProgress }),
@@ -129,7 +130,8 @@ export function NotaEditor({
 
   useEffect(() => {
     editorRef.current = editor;
-  }, [editor]);
+    onEditorReady?.(editor);
+  }, [editor, onEditorReady]);
 
   // Deep-link: enfocar el recordatorio indicado por la notificación.
   useEffect(() => {
@@ -246,7 +248,6 @@ export function NotaEditor({
 
   return (
     <div className="rounded-xl border border-border bg-card">
-      {editor && <EditorToolbar editor={editor} />}
       <div className="relative">
         <EditorContent editor={editor} />
         <span className="pointer-events-none absolute right-3 top-2 text-[11px] text-muted-foreground">

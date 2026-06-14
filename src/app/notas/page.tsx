@@ -14,11 +14,12 @@ type NotaItem = { id: string; title: string; updatedAt: string };
 
 export default function NotasListPage() {
   const router = useRouter();
-  const { deviceId, ready, nuevaFrase, recuperar, descartarNuevaFrase } = useNotaDevice();
+  const { deviceId, ready, hasPassword, recuperar, establecerPassword } = useNotaDevice();
   const [notas, setNotas] = useState<NotaItem[]>([]);
   const [cargando, setCargando] = useState(true);
   const [creando, setCreando] = useState(false);
   const [ajustes, setAjustes] = useState(false);
+  const [avisoOculto, setAvisoOculto] = useState(false);
 
   const cargar = useCallback(() => {
     notasFetch("/api/notas")
@@ -58,20 +59,25 @@ export default function NotasListPage() {
         </div>
       </header>
 
-      {nuevaFrase && (
+      {ready && !hasPassword && !avisoOculto && (
         <div className="mb-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
           <div className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-              <p className="text-sm font-semibold">Guardá tu frase de recuperación</p>
+              <p className="text-sm font-semibold">Protegé tus notas</p>
               <p className="text-xs text-muted-foreground">
-                Sin cuenta ni contraseña. Con esta frase recuperás tus notas en otro dispositivo:
+                Definí una contraseña para poder recuperar tus notas en otro dispositivo o navegador.
               </p>
-              <code className="mt-1 inline-block rounded-md bg-background px-2.5 py-1 font-mono text-sm">
-                {nuevaFrase}
-              </code>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2"
+                onClick={() => setAjustes(true)}
+              >
+                Definir contraseña
+              </Button>
             </div>
             <button
-              onClick={descartarNuevaFrase}
+              onClick={() => setAvisoOculto(true)}
               aria-label="Cerrar"
               className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
             >
@@ -115,7 +121,12 @@ export default function NotasListPage() {
         </ul>
       )}
 
-      <NotasSettings open={ajustes} onClose={() => setAjustes(false)} onRecover={recuperar} />
+      <NotasSettings
+        open={ajustes}
+        onClose={() => setAjustes(false)}
+        onRecover={recuperar}
+        onSetPassword={establecerPassword}
+      />
     </div>
   );
 }
