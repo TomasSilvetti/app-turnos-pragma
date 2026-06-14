@@ -38,7 +38,10 @@ function renderSlashMenu() {
 
   return {
     onStart: (props: SuggestionProps<SlashItem, SlashItem>) => {
-      const renderer = new ReactRenderer(SlashMenu, { props, editor: props.editor });
+      const renderer = new ReactRenderer(SlashMenu, {
+        props: { items: props.items, command: props.command },
+        editor: props.editor,
+      });
       component = renderer;
       popup = document.createElement("div");
       popup.style.position = "absolute";
@@ -48,7 +51,7 @@ function renderSlashMenu() {
       ubicarPopup(popup, props.clientRect?.() ?? null);
     },
     onUpdate: (props: SuggestionProps<SlashItem, SlashItem>) => {
-      component?.updateProps(props);
+      component?.updateProps({ items: props.items, command: props.command });
       if (popup) ubicarPopup(popup, props.clientRect?.() ?? null);
     },
     onKeyDown: (props: SuggestionKeyDownProps) => {
