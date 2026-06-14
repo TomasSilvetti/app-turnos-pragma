@@ -1,4 +1,4 @@
-// v3
+// v4
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -26,5 +26,25 @@ self.addEventListener("push", (event) => {
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = event.notification.data?.url ?? "/";
-  event.waitUntil(clients.openWindow(url));
+  event.waitUntil(
+    (async () => {
+      const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      // Si ya hay una pestaña abierta, enfocarla y navegar al destino exacto.
+      for (const client of allClients) {
+        if ("focus" in client) {
+          await client.focus();
+          if ("navigate" in client) {
+            try {
+              await client.navigate(url);
+            } catch {
+              // navigate puede fallar en cross-origin; abrir ventana nueva como fallback.
+              return clients.openWindow(url);
+            }
+          }
+          return;
+        }
+      }
+      return clients.openWindow(url);
+    })()
+  );
 });

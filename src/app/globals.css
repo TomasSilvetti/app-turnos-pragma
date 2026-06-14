@@ -192,3 +192,60 @@ body {
   caret-color: #2A2829;
   transition: background-color 5000s ease-in-out 0s !important;
 }
+/* ───────── Módulo Notas: editor TipTap ───────── */
+.notas-prose :where(h1) {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0.6em 0 0.3em;
+}
+.notas-prose :where(h2) {
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0.5em 0 0.3em;
+}
+.notas-prose :where(p) {
+  margin: 0.35em 0;
+  line-height: 1.6;
+}
+.notas-prose :where(ul) {
+  list-style: disc;
+  padding-left: 1.4em;
+  margin: 0.35em 0;
+}
+.notas-prose :where(ol) {
+  list-style: decimal;
+  padding-left: 1.4em;
+  margin: 0.35em 0;
+}
+.notas-prose :where(li) {
+  margin: 0.15em 0;
+}
+.notas-prose :where(a) {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+.notas-prose strong { font-weight: 700; }
+.notas-prose em { font-style: italic; }
+.notas-prose u { text-decoration: underline; }
+.notas-prose s { text-decoration: line-through; }
+
+/* Placeholder del editor (extension-placeholder) */
+.notas-prose p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--color-muted-foreground);
+}
+
+/* Flash al llegar desde una notificación (deep-link) */
+.nota-deeplink-flash {
+  animation: nota-deeplink 2.2s ease-out;
+  border-radius: 9999px;
+}
+@keyframes nota-deeplink {
+  0%, 40% { box-shadow: 0 0 0 3px var(--color-primary); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
