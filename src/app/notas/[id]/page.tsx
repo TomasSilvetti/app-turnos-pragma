@@ -91,7 +91,7 @@ export default function NotaEditorPage() {
     // Barra superior fija: título + toolbar de estilos.
     // El contenido del editor tiene padding-top para que no quede debajo.
     <>
-      <div className="fixed inset-x-0 top-0 z-30 border-b border-border bg-card shadow-sm">
+      <div className="fixed inset-x-0 top-0 z-30 overflow-hidden border-b border-border bg-card shadow-sm">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           {/* Fila 1: navegación y título */}
           <div className="flex items-center gap-2 py-2">

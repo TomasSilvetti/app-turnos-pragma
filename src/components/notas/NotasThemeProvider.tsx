@@ -8,7 +8,9 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 function syncBodyBg(theme: "light" | "dark") {
   const bg = theme === "dark" ? "oklch(0.09 0.025 264)" : "oklch(1 0 0)";
   document.documentElement.style.backgroundColor = bg;
+  document.documentElement.style.overflowX = "hidden";
   document.body.style.backgroundColor = bg;
+  document.body.style.overflowX = "hidden";
 }
 import { cn } from "@/lib/utils";
 
@@ -49,13 +51,15 @@ export function NotasThemeProvider({
     syncBodyBg(theme);
     return () => {
       document.documentElement.style.backgroundColor = "";
+      document.documentElement.style.overflowX = "";
       document.body.style.backgroundColor = "";
+      document.body.style.overflowX = "";
     };
   }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>
-      <div className={cn("notas-app min-h-screen bg-background text-foreground font-sans", theme === "dark" && "dark")}>
+      <div className={cn("notas-app min-h-screen overflow-x-hidden bg-background text-foreground font-sans", theme === "dark" && "dark")}>
         {children}
       </div>
     </ThemeContext.Provider>
