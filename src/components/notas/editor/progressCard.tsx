@@ -29,6 +29,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   const [composing, setComposing] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const longPressed = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -62,21 +63,31 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   const agregarNota = useCallback(async () => {
     if (!progressId || !data || saving) return;
     setSaving(true);
-    const res = await notasFetch(`/api/notas/progress/${progressId}/notes`, {
-      method: "POST",
-      body: JSON.stringify({ text: noteText.trim() }),
-    });
-    if (res.ok) {
+    setError(null);
+    try {
+      const res = await notasFetch(`/api/notas/progress/${progressId}/notes`, {
+        method: "POST",
+        body: JSON.stringify({ text: noteText.trim() }),
+      });
+      if (!res.ok) {
+        const detalle = await res.json().catch(() => null);
+        setError(detalle?.error || `No se pudo guardar (${res.status})`);
+        return;
+      }
       const { progress } = await res.json();
       if (progress) setData(progress);
+      setNoteText("");
+      setComposing(false);
+    } catch {
+      setError("Error de conexión");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
-    setNoteText("");
-    setComposing(false);
   }, [progressId, data, noteText, saving]);
 
   const cancelarNota = () => {
     setNoteText("");
+    setError(null);
     setComposing(false);
   };
 
@@ -147,11 +158,12 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
 
         {composing && (
           <div
-            className="mt-3 flex items-center gap-2"
+            className="mt-3"
             onPointerDown={stop}
             onPointerUp={stop}
             onPointerLeave={stop}
           >
+          <div className="flex items-center gap-2">
             <input
               ref={inputRef}
               value={noteText}
@@ -186,6 +198,8 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
             >
               <X className="size-4" />
             </button>
+          </div>
+            {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
           </div>
         )}
       </div>
