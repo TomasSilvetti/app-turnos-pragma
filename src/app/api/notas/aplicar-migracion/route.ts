@@ -12,6 +12,17 @@ const SECRET = "6bacd58e8e611598974fa0e3f8bf1a8b4568d8053dffde4e";
 const MIGRATION_NAME = "20260614144638_add_notas_module";
 const MIGRATION_CHECKSUM = "d4ccfafb7eefe1d6fd9a7af9de98b739f77805a9c953184cf94a4a1440de8dcb";
 
+// Migración de recuperación por contraseña (reemplaza la frase autogenerada).
+const PASSWORD_MIGRATION_NAME = "20260614191500_notas_password_recovery";
+const PASSWORD_MIGRATION_CHECKSUM =
+  "6fd7d1fb16408fdcf7a12a22c1e010843028c45d6e8e368d9608371a584aee68";
+const PASSWORD_STATEMENTS: string[] = [
+  `DROP INDEX IF EXISTS "nota_devices_recoveryPhrase_key"`,
+  `ALTER TABLE "nota_devices" DROP COLUMN IF EXISTS "recoveryPhrase"`,
+  `ALTER TABLE "nota_devices" ADD COLUMN IF NOT EXISTS "passwordHash" TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "nota_devices_passwordHash_key" ON "nota_devices"("passwordHash")`,
+];
+
 const STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS "nota_devices" (
     "id" TEXT NOT NULL,
@@ -106,6 +117,20 @@ export async function POST(request: NextRequest) {
       randomUUID(),
       MIGRATION_CHECKSUM,
       MIGRATION_NAME
+    );
+
+    // Migración de recuperación por contraseña (idempotente).
+    for (const sql of PASSWORD_STATEMENTS) {
+      await prisma.$executeRawUnsafe(sql);
+      resultados.push(sql.slice(0, 60).replace(/\s+/g, " "));
+    }
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "_prisma_migrations" (id, checksum, finished_at, migration_name, logs, rolled_back_at, started_at, applied_steps_count)
+       SELECT $1, $2, now(), $3, NULL, NULL, now(), 1
+       WHERE NOT EXISTS (SELECT 1 FROM "_prisma_migrations" WHERE migration_name = $3)`,
+      randomUUID(),
+      PASSWORD_MIGRATION_CHECKSUM,
+      PASSWORD_MIGRATION_NAME
     );
 
     return NextResponse.json({ ok: true, aplicadas: resultados.length });

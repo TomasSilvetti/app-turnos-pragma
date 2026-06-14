@@ -115,7 +115,7 @@ export function NotaEditor({
       StarterKit,
       TextStyle,
       Color,
-      Placeholder.configure({ placeholder: "Escribí algo… usá /recordatorio o /progreso" }),
+      Placeholder.configure({ placeholder: "Escribí algo… escribí / para ver los comandos" }),
       SlashCommands.configure({ onCommand: onSlashCommand }),
       ReminderChip.configure({ onEdit: onEditReminder }),
       ProgressCard.configure({ onEdit: onEditProgress }),

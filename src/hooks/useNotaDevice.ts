@@ -1,59 +1,73 @@
 "use client";
 
-// El effect inicializa el device leyendo localStorage (sistema externo): el
-// setState de arranque acá es intencional.
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import { useCallback, useEffect, useState } from "react";
-import { getStoredDeviceId, setStoredDeviceId } from "@/lib/notas/client";
+import { getStoredDeviceId, setStoredDeviceId, notasFetch } from "@/lib/notas/client";
 
 type Estado = {
   deviceId: string | null;
   ready: boolean;
-  // Frase mostrada una sola vez, al crear un device nuevo en este navegador.
-  nuevaFrase: string | null;
+  // Si el device ya tiene contraseña de recuperación definida.
+  hasPassword: boolean;
 };
 
+export type SetPasswordResult = { ok: true } | { ok: false; error?: string; code?: string };
+
 export function useNotaDevice() {
-  const [estado, setEstado] = useState<Estado>({ deviceId: null, ready: false, nuevaFrase: null });
+  const [estado, setEstado] = useState<Estado>({ deviceId: null, ready: false, hasPassword: false });
 
   useEffect(() => {
     let cancelado = false;
-    const existente = getStoredDeviceId();
-    if (existente) {
-      setEstado({ deviceId: existente, ready: true, nuevaFrase: null });
-      return;
-    }
-    // Sin device en este navegador → crear uno nuevo.
-    fetch("/api/notas/device", { method: "POST" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { id: string; recoveryPhrase: string } | null) => {
-        if (cancelado || !data) return;
-        setStoredDeviceId(data.id);
-        setEstado({ deviceId: data.id, ready: true, nuevaFrase: data.recoveryPhrase });
-      })
-      .catch(() => {});
+
+    const init = async () => {
+      let id = getStoredDeviceId();
+      if (!id) {
+        // Sin device en este navegador → crear uno nuevo.
+        const creado = await fetch("/api/notas/device", { method: "POST" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+        if (cancelado || !creado?.id) return;
+        id = creado.id as string;
+        setStoredDeviceId(id);
+      }
+
+      // Consultar si el device ya tiene contraseña definida.
+      const info = await notasFetch("/api/notas/device")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (cancelado) return;
+      setEstado({ deviceId: id, ready: true, hasPassword: Boolean(info?.hasPassword) });
+    };
+
+    init();
     return () => {
       cancelado = true;
     };
   }, []);
 
-  const recuperar = useCallback(async (phrase: string): Promise<boolean> => {
-    const res = await fetch("/api/notas/device/recover", {
+  const recuperar = useCallback(async (password: string): Promise<boolean> => {
+    const res = await notasFetch("/api/notas/device/recover", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phrase }),
+      body: JSON.stringify({ password }),
     });
     if (!res.ok) return false;
     const data: { id: string } = await res.json();
     setStoredDeviceId(data.id);
-    setEstado({ deviceId: data.id, ready: true, nuevaFrase: null });
+    setEstado({ deviceId: data.id, ready: true, hasPassword: true });
     return true;
   }, []);
 
-  const descartarNuevaFrase = useCallback(() => {
-    setEstado((e) => ({ ...e, nuevaFrase: null }));
+  const establecerPassword = useCallback(async (password: string): Promise<SetPasswordResult> => {
+    const res = await notasFetch("/api/notas/device/password", {
+      method: "POST",
+      body: JSON.stringify({ password }),
+    });
+    if (res.ok) {
+      setEstado((e) => ({ ...e, hasPassword: true }));
+      return { ok: true };
+    }
+    const data = await res.json().catch(() => null);
+    return { ok: false, error: data?.error, code: data?.code };
   }, []);
 
-  return { ...estado, recuperar, descartarNuevaFrase };
+  return { ...estado, recuperar, establecerPassword };
 }

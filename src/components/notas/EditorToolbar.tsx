@@ -63,7 +63,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
   const sep = <span className="mx-1 h-5 w-px bg-border" />;
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-border bg-card/95 px-2 py-1.5 backdrop-blur">
+    <div className="sticky top-0 z-30 flex flex-wrap items-center gap-0.5 rounded-t-xl border-b border-border bg-card px-2 py-1.5 shadow-sm">
       <Btn label="Negrita" active={state.bold} onClick={() => editor.chain().focus().toggleBold().run()}>
         <Bold />
       </Btn>
