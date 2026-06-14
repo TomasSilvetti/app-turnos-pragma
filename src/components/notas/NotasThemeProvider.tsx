@@ -1,6 +1,15 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+
+// Los temas de la app de notas usan las mismas variables CSS que el root, pero
+// el fondo del body global es oscuro (#080c14). Sincronizamos el fondo del
+// html/body para que al hacer zoom-out no aparezca el fondo negro del layout raíz.
+function syncBodyBg(theme: "light" | "dark") {
+  const bg = theme === "dark" ? "oklch(0.09 0.025 264)" : "oklch(1 0 0)";
+  document.documentElement.style.backgroundColor = bg;
+  document.body.style.backgroundColor = bg;
+}
 import { cn } from "@/lib/utils";
 
 type Theme = "light" | "dark";
@@ -28,9 +37,21 @@ export function NotasThemeProvider({
       const next = prev === "dark" ? "light" : "dark";
       // Persistir en cookie (1 año) para que el SSR no genere flash en la próxima carga.
       document.cookie = `notas_theme=${next}; path=/; max-age=31536000; samesite=lax`;
+      // Propagar el color de fondo al html/body para que no aparezca el fondo
+      // oscuro del layout raíz cuando el usuario hace zoom out.
+      syncBodyBg(next);
       return next;
     });
   }, []);
+
+  // Sincronizar al montar también (el body tiene bg oscuro del layout raíz).
+  useEffect(() => {
+    syncBodyBg(theme);
+    return () => {
+      document.documentElement.style.backgroundColor = "";
+      document.body.style.backgroundColor = "";
+    };
+  }, [theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, toggle }}>

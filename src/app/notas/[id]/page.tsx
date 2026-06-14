@@ -3,13 +3,15 @@
 // Effects que sincronizan con sistemas externos (URL, fetch de la nota).
 /* eslint-disable react-hooks/set-state-in-effect */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Trash2, Loader2 } from "lucide-react";
+import { type Editor } from "@tiptap/react";
 import { Button } from "@/components/ui/button";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
+import { EditorToolbar } from "@/components/notas/EditorToolbar";
 import { NotaEditor } from "@/components/notas/NotaEditor";
 
 type NotaFull = { id: string; title: string; content: object };
@@ -24,6 +26,7 @@ export default function NotaEditorPage() {
   const [title, setTitle] = useState("");
   const [estado, setEstado] = useState<"cargando" | "ok" | "404">("cargando");
   const [focusReminderId, setFocusReminderId] = useState<string | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Deep-link: ?reminder=<id> (sin useSearchParams para no requerir Suspense en build).
@@ -65,6 +68,8 @@ export default function NotaEditorPage() {
     router.push("/notas");
   };
 
+  const onEditorReady = useCallback((e: Editor | null) => setEditor(e), []);
+
   if (estado === "cargando") {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
@@ -83,26 +88,45 @@ export default function NotaEditorPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-24 pt-4 sm:px-6">
-      <header className="mb-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon" onClick={() => router.push("/notas")} aria-label="Volver">
-          <ArrowLeft />
-        </Button>
-        <input
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="Título de la nota"
-          className="flex-1 bg-transparent text-xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/60"
-        />
-        <ThemeToggle />
-        <Button variant="ghost" size="icon" onClick={eliminarNota} aria-label="Eliminar nota">
-          <Trash2 />
-        </Button>
-      </header>
+    // Barra superior fija: título + toolbar de estilos.
+    // El contenido del editor tiene padding-top para que no quede debajo.
+    <>
+      <div className="fixed inset-x-0 top-0 z-30 border-b border-border bg-card shadow-sm">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          {/* Fila 1: navegación y título */}
+          <div className="flex items-center gap-2 py-2">
+            <Button variant="ghost" size="icon" onClick={() => router.push("/notas")} aria-label="Volver">
+              <ArrowLeft />
+            </Button>
+            <input
+              value={title}
+              onChange={(e) => onTitleChange(e.target.value)}
+              placeholder="Título de la nota"
+              className="flex-1 bg-transparent text-xl font-bold tracking-tight outline-none placeholder:text-muted-foreground/60"
+            />
+            <ThemeToggle />
+            <Button variant="ghost" size="icon" onClick={eliminarNota} aria-label="Eliminar nota">
+              <Trash2 />
+            </Button>
+          </div>
+          {/* Fila 2: toolbar de estilos (siempre visible) */}
+          <div className="border-t border-border/60">
+            {editor && <EditorToolbar editor={editor} />}
+          </div>
+        </div>
+      </div>
 
-      {nota && (
-        <NotaEditor notaId={nota.id} initialContent={nota.content} focusReminderId={focusReminderId} />
-      )}
-    </div>
+      {/* Área de contenido con espacio para la barra fija (~fila1 ~44px + ~fila2 ~40px = ~84px) */}
+      <div className="mx-auto max-w-3xl px-4 pb-24 pt-[88px] sm:px-6">
+        {nota && (
+          <NotaEditor
+            notaId={nota.id}
+            initialContent={nota.content}
+            focusReminderId={focusReminderId}
+            onEditorReady={onEditorReady}
+          />
+        )}
+      </div>
+    </>
   );
 }
