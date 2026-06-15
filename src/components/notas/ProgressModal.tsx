@@ -42,6 +42,16 @@ export function ProgressModal({
   const [guardando, setGuardando] = useState(false);
   const [notes, setNotes] = useState<MiniNota[]>([]);
   const [borrando, setBorrando] = useState<string | null>(null);
+  // Mini notas expandidas (muestran el texto completo en vez de una línea).
+  const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
+
+  const toggleExpandir = (noteId: string) =>
+    setExpandidas((prev) => {
+      const next = new Set(prev);
+      if (next.has(noteId)) next.delete(noteId);
+      else next.add(noteId);
+      return next;
+    });
 
   useEffect(() => {
     if (open) {
@@ -60,6 +70,7 @@ export function ProgressModal({
       return;
     }
     let activo = true;
+    setExpandidas(new Set());
     notasFetch(`/api/notas/progress/${progressId}/notes`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { notes: MiniNota[] } | null) => {
@@ -176,29 +187,41 @@ export function ProgressModal({
               </p>
             ) : (
               <ul className="max-h-60 space-y-1.5 overflow-y-auto">
-                {notes.map((n, i) => (
+                {notes.map((n, i) => {
+                  const abierta = expandidas.has(n.id);
+                  return (
                   <li
                     key={n.id}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2"
+                    className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2"
                   >
                     <span
-                      className="size-3 shrink-0 rounded-full"
+                      className="mt-0.5 size-3 shrink-0 rounded-full"
                       style={{ backgroundColor: hasGoal ? color : dotColor(i) }}
                     />
-                    <span className={cn("min-w-0 flex-1 truncate text-sm", !n.text.trim() && "text-muted-foreground")}>
+                    <button
+                      type="button"
+                      onClick={() => toggleExpandir(n.id)}
+                      className={cn(
+                        "min-w-0 flex-1 cursor-pointer text-left text-sm",
+                        abierta ? "whitespace-pre-wrap break-words" : "truncate",
+                        !n.text.trim() && "text-muted-foreground"
+                      )}
+                      title={abierta ? "Tocá para contraer" : "Tocá para ver la nota completa"}
+                    >
                       {n.text.trim() || "Sin nota"}
-                    </span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => eliminarNota(n.id)}
                       disabled={borrando === n.id}
                       aria-label="Eliminar nota"
-                      className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+                      className="mt-0.5 shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
                     >
                       <Trash2 className="size-4" />
                     </button>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
             )}
           </div>
