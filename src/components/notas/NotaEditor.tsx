@@ -62,6 +62,7 @@ export function NotaEditor({
   const [progressModal, setProgressModal] = useState<ProgressModalState>({ open: false, mode: "create" });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<Editor | null>(null);
+  const insertPosRef = useRef<number | null>(null);
 
   const guardarContenido = useCallback(
     (content: object) => {
@@ -79,6 +80,7 @@ export function NotaEditor({
   );
 
   const onSlashCommand = useCallback((cmd: SlashCommandType) => {
+    insertPosRef.current = editorRef.current?.state.selection.from ?? null;
     if (cmd === "recordatorio") setReminderModal({ open: true, mode: "create" });
     else setProgressModal({ open: true, mode: "create" });
   }, []);
@@ -159,9 +161,14 @@ export function NotaEditor({
       });
       if (res.ok) {
         const { reminder } = await res.json();
-        editor
-          .chain()
-          .focus()
+        const savedPos = insertPosRef.current;
+        const chain = editor.chain();
+        if (savedPos !== null) {
+          chain.setTextSelection(savedPos);
+        } else {
+          chain.focus();
+        }
+        chain
           .insertContent({
             type: "reminderChip",
             attrs: {
@@ -175,6 +182,7 @@ export function NotaEditor({
           })
           .insertContent(" ")
           .run();
+        insertPosRef.current = null;
       }
     } else if (reminderModal.reminderId) {
       const id = reminderModal.reminderId;
@@ -223,11 +231,15 @@ export function NotaEditor({
       });
       if (res.ok) {
         const { progress } = await res.json();
-        editor
-          .chain()
-          .focus()
-          .insertContent({ type: "progressCard", attrs: { progressId: progress.id } })
-          .run();
+        const savedPos = insertPosRef.current;
+        const chain = editor.chain();
+        if (savedPos !== null) {
+          chain.setTextSelection(savedPos);
+        } else {
+          chain.focus();
+        }
+        chain.insertContent({ type: "progressCard", attrs: { progressId: progress.id } }).run();
+        insertPosRef.current = null;
       }
     } else if (progressModal.progressId) {
       const res = await notasFetch(`/api/notas/progress/${progressModal.progressId}`, {
