@@ -24,7 +24,7 @@ export default function NotaEditorPage() {
 
   const [nota, setNota] = useState<NotaFull | null>(null);
   const [title, setTitle] = useState("");
-  const [estado, setEstado] = useState<"cargando" | "ok" | "404">("cargando");
+  const [estado, setEstado] = useState<"cargando" | "ok" | "404" | "error">("cargando");
   const [focusReminderId, setFocusReminderId] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -38,13 +38,20 @@ export default function NotaEditorPage() {
   useEffect(() => {
     if (!ready) return;
     if (!deviceId) { setEstado("404"); return; }
+    setEstado("cargando");
     notasFetch(`/api/notas/${notaId}`)
       .then((r) => {
         if (r.status === 404) {
           setEstado("404");
           return null;
         }
-        return r.ok ? r.json() : null;
+        if (!r.ok) {
+          // Cualquier otro error (500/401/…): mostramos pantalla de error en
+          // lugar de quedar girando para siempre.
+          setEstado("error");
+          return null;
+        }
+        return r.json();
       })
       .then((d: { nota: NotaFull } | null) => {
         if (!d) return;
@@ -52,7 +59,7 @@ export default function NotaEditorPage() {
         setTitle(d.nota.title ?? "");
         setEstado("ok");
       })
-      .catch(() => setEstado("404"));
+      .catch(() => setEstado("error"));
   }, [ready, deviceId, notaId]);
 
   const onTitleChange = (value: string) => {
@@ -84,6 +91,18 @@ export default function NotaEditorPage() {
       <div className="mx-auto max-w-2xl px-4 py-16 text-center">
         <p className="mb-4 text-muted-foreground">No encontramos esta nota.</p>
         <Button onClick={() => router.push("/notas")}>Volver a mis notas</Button>
+      </div>
+    );
+  }
+
+  if (estado === "error") {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <p className="mb-4 text-muted-foreground">No se pudo cargar la nota. Reintentá en un momento.</p>
+        <div className="flex justify-center gap-2">
+          <Button variant="outline" onClick={() => router.push("/notas")}>Volver a mis notas</Button>
+          <Button onClick={() => location.reload()}>Reintentar</Button>
+        </div>
       </div>
     );
   }

@@ -24,8 +24,6 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       content: true,
       deviceId: true,
       updatedAt: true,
-      reminders: true,
-      progresses: true,
     },
   });
   if (!nota || nota.deviceId !== deviceId) {
