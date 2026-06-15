@@ -30,7 +30,13 @@ export default function NotasListPage() {
   }, []);
 
   useEffect(() => {
-    if (ready && deviceId) cargar();
+    if (!ready) return;
+    if (deviceId) {
+      cargar();
+    } else {
+      // Sin device (falló la creación): salir del spinner para mostrar la UI.
+      setCargando(false);
+    }
   }, [ready, deviceId, cargar]);
 
   const crearNota = async () => {

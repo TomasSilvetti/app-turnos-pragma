@@ -36,7 +36,8 @@ export default function NotaEditorPage() {
   }, []);
 
   useEffect(() => {
-    if (!ready || !deviceId) return;
+    if (!ready) return;
+    if (!deviceId) { setEstado("404"); return; }
     notasFetch(`/api/notas/${notaId}`)
       .then((r) => {
         if (r.status === 404) {
