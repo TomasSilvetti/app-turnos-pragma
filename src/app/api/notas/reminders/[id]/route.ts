@@ -27,10 +27,19 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
     if (!esHoraValida(body.time)) return NextResponse.json({ error: "Hora inválida" }, { status: 400 });
     data.time = body.time;
   }
+
+  // Tipo intervalo: suena cada N minutos en la ventana [time, endTime].
+  const interval = Number.isInteger(body.intervalMinutes) && body.intervalMinutes > 0 ? body.intervalMinutes : null;
+  if ("intervalMinutes" in body) {
+    data.intervalMinutes = interval;
+    data.endTime = interval ? (esHoraValida(body.endTime) ? body.endTime : "23:59") : null;
+  }
+
   if (Array.isArray(body.daysOfWeek)) {
     const days = body.daysOfWeek.filter((d: unknown) => Number.isInteger(d) && (d as number) >= 0 && (d as number) <= 6);
     data.daysOfWeek = days;
-    data.oneTimeDate = days.length === 0 ? nextOneTimeDate(body.time ?? "09:00") : null;
+    // Los de intervalo no usan oneTimeDate (días vacíos = todos los días).
+    data.oneTimeDate = interval ? null : days.length === 0 ? nextOneTimeDate(body.time ?? "09:00") : null;
   }
   if (typeof body.text === "string") data.text = body.text.slice(0, 200);
   if (typeof body.enabled === "boolean") data.enabled = body.enabled;

@@ -21,7 +21,25 @@ const DIAS = [
   { label: "D", value: 0 },
 ];
 
-export type ReminderValues = { time: string; daysOfWeek: number[]; text: string };
+export type ReminderValues = {
+  time: string;
+  daysOfWeek: number[];
+  text: string;
+  intervalMinutes: number | null;
+  endTime: string;
+};
+
+// Opciones de frecuencia para el recordatorio por intervalo.
+const INTERVALOS = [
+  { label: "30 minutos", value: 30 },
+  { label: "1 hora", value: 60 },
+  { label: "2 horas", value: 120 },
+  { label: "3 horas", value: 180 },
+  { label: "4 horas", value: 240 },
+  { label: "6 horas", value: 360 },
+  { label: "8 horas", value: 480 },
+  { label: "12 horas", value: 720 },
+];
 
 export function ReminderModal({
   open,
@@ -41,6 +59,9 @@ export function ReminderModal({
   const [time, setTime] = useState("09:00");
   const [days, setDays] = useState<number[]>([]);
   const [text, setText] = useState("");
+  const [esIntervalo, setEsIntervalo] = useState(false);
+  const [intervalMinutes, setIntervalMinutes] = useState(60);
+  const [endTime, setEndTime] = useState("21:00");
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
@@ -48,6 +69,9 @@ export function ReminderModal({
       setTime(initial?.time ?? "09:00");
       setDays(initial?.daysOfWeek ?? []);
       setText(initial?.text ?? "");
+      setEsIntervalo((initial?.intervalMinutes ?? null) !== null);
+      setIntervalMinutes(initial?.intervalMinutes ?? 60);
+      setEndTime(initial?.endTime || "21:00");
       setGuardando(false);
     }
   }, [open, initial]);
@@ -57,20 +81,80 @@ export function ReminderModal({
 
   const guardar = async () => {
     setGuardando(true);
-    await onSave({ time, daysOfWeek: days, text: text.trim() });
+    await onSave({
+      time,
+      daysOfWeek: days,
+      text: text.trim(),
+      intervalMinutes: esIntervalo ? intervalMinutes : null,
+      endTime: esIntervalo ? endTime : "",
+    });
     setGuardando(false);
   };
 
   return (
     <Modal open={open} onClose={onClose} title={mode === "create" ? "Nuevo recordatorio" : "Editar recordatorio"}>
       <div className="space-y-5">
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium">Hora</label>
-          <TimeField value={time} onChange={setTime} />
+        {/* Tipo: hora fija vs intervalo recurrente */}
+        <div className="flex rounded-lg border border-border p-1">
+          <button
+            type="button"
+            onClick={() => setEsIntervalo(false)}
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              !esIntervalo ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+            )}
+          >
+            Hora fija
+          </button>
+          <button
+            type="button"
+            onClick={() => setEsIntervalo(true)}
+            className={cn(
+              "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+              esIntervalo ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"
+            )}
+          >
+            Cada cierto tiempo
+          </button>
         </div>
 
+        {esIntervalo ? (
+          <>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium">Frecuencia</label>
+              <select
+                value={intervalMinutes}
+                onChange={(e) => setIntervalMinutes(Number(e.target.value))}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                {INTERVALOS.map((i) => (
+                  <option key={i.value} value={i.value}>
+                    Cada {i.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Desde</label>
+                <TimeField value={time} onChange={setTime} />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">Hasta</label>
+                <TimeField value={endTime} onChange={setEndTime} />
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Hora</label>
+            <TimeField value={time} onChange={setTime} />
+          </div>
+        )}
+
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Repetir</label>
+          <label className="text-sm font-medium">{esIntervalo ? "Días (opcional)" : "Repetir"}</label>
           <div className="flex gap-1.5">
             {DIAS.map((d) => (
               <button
@@ -90,9 +174,13 @@ export function ReminderModal({
             ))}
           </div>
           <p className="text-xs text-muted-foreground">
-            {days.length === 0
-              ? "Sin días seleccionados: suena una sola vez en la próxima ocurrencia de esa hora."
-              : "Suena cada semana en los días marcados."}
+            {esIntervalo
+              ? days.length === 0
+                ? "Suena todos los días dentro de la franja horaria elegida."
+                : "Suena en los días marcados, dentro de la franja horaria."
+              : days.length === 0
+                ? "Sin días seleccionados: suena una sola vez en la próxima ocurrencia de esa hora."
+                : "Suena cada semana en los días marcados."}
           </p>
         </div>
 

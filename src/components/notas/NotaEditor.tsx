@@ -94,6 +94,8 @@ export function NotaEditor({
         time: (info.attrs.time as string) || "09:00",
         daysOfWeek: (info.attrs.days as number[]) || [],
         text: (info.attrs.text as string) || "",
+        intervalMinutes: (info.attrs.interval as number | null) ?? null,
+        endTime: (info.attrs.endTime as string) || "",
       },
     });
   }, []);
@@ -162,7 +164,14 @@ export function NotaEditor({
           .focus()
           .insertContent({
             type: "reminderChip",
-            attrs: { reminderId: reminder.id, time: reminder.time, days: reminder.daysOfWeek, text: reminder.text },
+            attrs: {
+              reminderId: reminder.id,
+              time: reminder.time,
+              days: reminder.daysOfWeek,
+              text: reminder.text,
+              interval: reminder.intervalMinutes ?? null,
+              endTime: reminder.endTime ?? "",
+            },
           })
           .insertContent(" ")
           .run();
@@ -179,6 +188,8 @@ export function NotaEditor({
             tr.setNodeAttribute(pos, "time", v.time);
             tr.setNodeAttribute(pos, "days", v.daysOfWeek);
             tr.setNodeAttribute(pos, "text", v.text);
+            tr.setNodeAttribute(pos, "interval", v.intervalMinutes);
+            tr.setNodeAttribute(pos, "endTime", v.endTime);
             return true;
           })
           .run();

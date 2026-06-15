@@ -37,3 +37,9 @@ export function nextOneTimeDate(time: string): string {
 export function esHoraValida(time: string): boolean {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 }
+
+// Convierte "HH:mm" a minutos desde la medianoche (0..1439).
+export function timeToMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}

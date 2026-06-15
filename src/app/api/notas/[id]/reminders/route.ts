@@ -27,6 +27,17 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     : [];
   const text = typeof body.text === "string" ? body.text.slice(0, 200) : "";
 
+  // Recordatorio por intervalo: suena cada N minutos dentro de la ventana
+  // [time, endTime], en los días marcados (o todos los días si no hay ninguno).
+  const interval = Number.isInteger(body.intervalMinutes) && body.intervalMinutes > 0 ? body.intervalMinutes : null;
+  if (interval) {
+    const endTime = esHoraValida(body.endTime) ? body.endTime : "23:59";
+    const reminder = await prisma.notaReminder.create({
+      data: { notaId, deviceId, text, time: body.time, daysOfWeek, oneTimeDate: null, intervalMinutes: interval, endTime },
+    });
+    return NextResponse.json({ reminder }, { status: 201 });
+  }
+
   // Sin días → una sola vez en la próxima ocurrencia de esa hora.
   const oneTimeDate = daysOfWeek.length === 0 ? nextOneTimeDate(body.time) : null;
 

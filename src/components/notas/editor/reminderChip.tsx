@@ -7,10 +7,21 @@ const DIAS = ["D", "L", "M", "X", "J", "V", "S"];
 
 export type ReminderChipOptions = { onEdit: (reminderId: string) => void };
 
+// 90 → "1h30", 60 → "1h", 30 → "30min".
+function etiquetaIntervalo(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h && m) return `${h}h${m}`;
+  if (h) return `${h}h`;
+  return `${m}min`;
+}
+
 function ReminderChipView({ node, extension }: NodeViewProps) {
   const reminderId = node.attrs.reminderId as string | null;
   const time = (node.attrs.time as string) || "";
   const days = (node.attrs.days as number[]) || [];
+  const interval = node.attrs.interval as number | null;
+  const endTime = (node.attrs.endTime as string) || "";
   const onEdit = (extension.options as ReminderChipOptions).onEdit;
 
   const etiquetaDias = days.length
@@ -27,8 +38,19 @@ function ReminderChipView({ node, extension }: NodeViewProps) {
         title="Editar recordatorio"
       >
         <Clock className="size-3.5" />
-        <span className="font-mono">{time}</span>
-        <span className="opacity-70">· {etiquetaDias}</span>
+        {interval ? (
+          <>
+            <span>cada {etiquetaIntervalo(interval)}</span>
+            <span className="opacity-70 font-mono">
+              · {time}{endTime ? `–${endTime}` : ""}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="font-mono">{time}</span>
+            <span className="opacity-70">· {etiquetaDias}</span>
+          </>
+        )}
       </button>
     </NodeViewWrapper>
   );
@@ -51,6 +73,8 @@ export const ReminderChip = Node.create<ReminderChipOptions>({
       time: { default: "" },
       days: { default: [] as number[] },
       text: { default: "" },
+      interval: { default: null as number | null },
+      endTime: { default: "" },
     };
   },
 
