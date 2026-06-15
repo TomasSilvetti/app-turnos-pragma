@@ -127,6 +127,14 @@ const MIGRATIONS: Migration[] = [
        END IF; END $$`,
     ],
   },
+  {
+    name: "20260615020000_add_reminder_interval",
+    checksum: "0d37de74ac73aa479a3c29d362bdb06a368f0def05d858e65b55f09687a52add",
+    statements: [
+      `ALTER TABLE "nota_reminders" ADD COLUMN IF NOT EXISTS "intervalMinutes" INTEGER`,
+      `ALTER TABLE "nota_reminders" ADD COLUMN IF NOT EXISTS "endTime" TEXT`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {
