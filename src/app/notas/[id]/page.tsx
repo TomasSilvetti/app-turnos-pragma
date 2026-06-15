@@ -28,6 +28,27 @@ export default function NotaEditorPage() {
   const [focusReminderId, setFocusReminderId] = useState<string | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
   const titleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const topBarRef = useRef<HTMLDivElement | null>(null);
+
+  // Mantener la barra de estilos pegada al borde superior del área VISIBLE.
+  // En móvil, al abrir el teclado el viewport visual se achica y `position: fixed`
+  // deja de seguir esa área; con la VisualViewport API la reposicionamos para que
+  // la toolbar siempre quede visible arriba mientras se escribe.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => {
+      const bar = topBarRef.current;
+      if (bar) bar.style.transform = `translateY(${vv.offsetTop}px)`;
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, [estado]);
 
   // Deep-link: ?reminder=<id> (sin useSearchParams para no requerir Suspense en build).
   useEffect(() => {
@@ -111,7 +132,10 @@ export default function NotaEditorPage() {
     // Barra superior fija: título + toolbar de estilos.
     // El contenido del editor tiene padding-top para que no quede debajo.
     <>
-      <div className="fixed inset-x-0 top-0 z-30 overflow-hidden border-b border-border bg-card shadow-sm">
+      <div
+        ref={topBarRef}
+        className="fixed inset-x-0 top-0 z-30 overflow-hidden border-b border-border bg-card shadow-sm will-change-transform"
+      >
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           {/* Fila 1: navegación y título */}
           <div className="flex items-center gap-2 py-2">
