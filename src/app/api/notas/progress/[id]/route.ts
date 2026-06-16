@@ -20,7 +20,13 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   if (!progress) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   const owner = await prisma.nota.findUnique({ where: { id: progress.notaId }, select: { deviceId: true } });
   if (owner?.deviceId !== deviceId) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
-  return NextResponse.json({ progress });
+
+  const noteColors = await prisma.notaProgressNote.findMany({
+    where: { progressId: id },
+    orderBy: { createdAt: "asc" },
+    select: { dotColor: true },
+  });
+  return NextResponse.json({ progress, noteDotColors: noteColors.map((n) => n.dotColor) });
 }
 
 // PATCH: incrementa (o decrementa) el contador de forma atómica. Body opcional { delta }.

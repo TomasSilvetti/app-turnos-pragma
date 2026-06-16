@@ -57,5 +57,10 @@ export async function POST(request: NextRequest, ctx: Ctx) {
     prisma.notaProgress.update({ where: { id }, data: { count: { increment: 1 } } }),
   ]);
 
-  return NextResponse.json({ progress, note }, { status: 201 });
+  const allColors = await prisma.notaProgressNote.findMany({
+    where: { progressId: id },
+    orderBy: { createdAt: "asc" },
+    select: { dotColor: true },
+  });
+  return NextResponse.json({ progress, note, noteDotColors: allColors.map((n) => n.dotColor) }, { status: 201 });
 }

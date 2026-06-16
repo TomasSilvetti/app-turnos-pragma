@@ -16,6 +16,8 @@ export type ProgressData = {
   color: string;
 };
 
+type ProgressResponse = { progress: ProgressData; noteDotColors?: string[] };
+
 // Evento para sincronizar la card cuando se edita desde el modal del editor.
 export const PROGRESS_UPDATED_EVENT = "notas:progress-updated";
 
@@ -26,6 +28,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   const onEdit = (extension.options as ProgressCardOptions).onEdit;
 
   const [data, setData] = useState<ProgressData | null>(null);
+  const [dotColors, setDotColors] = useState<string[]>([]);
   const [composing, setComposing] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [noteDotColor, setNoteDotColor] = useState<"green" | "red">("green");
@@ -39,14 +42,23 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
     if (!progressId) return;
     notasFetch(`/api/notas/progress/${progressId}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d: { progress: ProgressData } | null) => d && setData(d.progress))
+      .then((d: ProgressResponse | null) => {
+        if (!d) return;
+        setData(d.progress);
+        if (d.noteDotColors) setDotColors(d.noteDotColors);
+      })
       .catch(() => {});
   }, [progressId]);
 
   useEffect(() => {
     const onUpdated = (e: Event) => {
-      const detail = (e as CustomEvent<ProgressData>).detail;
-      if (detail && detail.id === progressId) setData(detail);
+      const detail = (e as CustomEvent<ProgressResponse>).detail;
+      if (!detail) return;
+      const p = (detail as unknown as ProgressData).id ? (detail as unknown as ProgressData) : detail.progress;
+      if (p && p.id === progressId) {
+        setData(p);
+        if ((detail as ProgressResponse).noteDotColors) setDotColors((detail as ProgressResponse).noteDotColors!);
+      }
     };
     window.addEventListener(PROGRESS_UPDATED_EVENT, onUpdated);
     return () => window.removeEventListener(PROGRESS_UPDATED_EVENT, onUpdated);
@@ -75,8 +87,9 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
         setError(detalle?.error || `No se pudo guardar (${res.status})`);
         return;
       }
-      const { progress } = await res.json();
-      if (progress) setData(progress);
+      const json: { progress: ProgressData; noteDotColors?: string[] } = await res.json();
+      if (json.progress) setData(json.progress);
+      if (json.noteDotColors) setDotColors(json.noteDotColors);
       setNoteText("");
       setNoteDotColor("green");
       setComposing(false);
@@ -146,13 +159,11 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
           </div>
         ) : (
           <div className="flex flex-wrap gap-1.5">
-            {Array.from({ length: data?.count ?? 0 }).map((_, i) => (
-              <span
-                key={i}
-                className="size-3 rounded-full"
-                style={{ backgroundColor: dotColor(i) }}
-              />
-            ))}
+            {Array.from({ length: data?.count ?? 0 }).map((_, i) => {
+              const c = dotColors[i];
+              const bg = c === "red" ? "#ef4444" : c === "green" ? "#22c55e" : dotColor(i);
+              return <span key={i} className="size-3 rounded-full" style={{ backgroundColor: bg }} />;
+            })}
             {(data?.count ?? 0) === 0 && !composing && (
               <span className="text-xs text-muted-foreground">Tocá para sumar el primero</span>
             )}

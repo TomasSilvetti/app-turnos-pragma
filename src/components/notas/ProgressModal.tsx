@@ -98,9 +98,12 @@ export function ProgressModal({
     const res = await notasFetch(`/api/notas/progress/notes/${noteId}`, { method: "DELETE" });
     if (res.ok) {
       setNotes((prev) => prev.filter((n) => n.id !== noteId));
-      const { progress } = await res.json().catch(() => ({ progress: null }));
-      // Sincroniza la card: el puntito eliminado desaparece del contador.
-      if (progress) window.dispatchEvent(new CustomEvent(PROGRESS_UPDATED_EVENT, { detail: progress }));
+      const json = await res.json().catch(() => null);
+      if (json?.progress) {
+        window.dispatchEvent(new CustomEvent(PROGRESS_UPDATED_EVENT, {
+          detail: { progress: json.progress, noteDotColors: json.noteDotColors ?? [] },
+        }));
+      }
     }
     setBorrando(null);
   };

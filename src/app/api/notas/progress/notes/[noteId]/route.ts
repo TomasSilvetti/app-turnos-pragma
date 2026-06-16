@@ -47,5 +47,10 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
     prisma.notaProgress.update({ where: { id: note.progressId }, data: { count: nuevoCount } }),
   ]);
 
-  return NextResponse.json({ progress });
+  const allColors = await prisma.notaProgressNote.findMany({
+    where: { progressId: note.progressId },
+    orderBy: { createdAt: "asc" },
+    select: { dotColor: true },
+  });
+  return NextResponse.json({ progress, noteDotColors: allColors.map((n) => n.dotColor) });
 }
