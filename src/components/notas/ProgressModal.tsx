@@ -9,14 +9,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
 import { Modal } from "./Modal";
-import { dotColor } from "./editor/colors";
 import { PROGRESS_UPDATED_EVENT } from "./editor/progressCard";
 
 const COLORES = ["#3b82f6", "#22c55e", "#ef4444", "#f59e0b", "#8b5cf6", "#14b8a6"];
 
 export type ProgressValues = { hasGoal: boolean; goal: number; label: string; color: string };
 
-type MiniNota = { id: string; text: string; createdAt: string };
+type MiniNota = { id: string; text: string; dotColor: string; createdAt: string };
 
 export function ProgressModal({
   open,
@@ -81,6 +80,17 @@ export function ProgressModal({
       activo = false;
     };
   }, [open, mode, progressId]);
+
+  const toggleDotColor = async (note: MiniNota) => {
+    const newColor = note.dotColor === "red" ? "green" : "red";
+    const res = await notasFetch(`/api/notas/progress/notes/${note.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ dotColor: newColor }),
+    });
+    if (res.ok) {
+      setNotes((prev) => prev.map((n) => n.id === note.id ? { ...n, dotColor: newColor } : n));
+    }
+  };
 
   const eliminarNota = async (noteId: string) => {
     if (borrando) return;
@@ -194,9 +204,13 @@ export function ProgressModal({
                     key={n.id}
                     className="flex items-start gap-2 rounded-lg border border-border bg-background px-3 py-2"
                   >
-                    <span
-                      className="mt-0.5 size-3 shrink-0 rounded-full"
-                      style={{ backgroundColor: hasGoal ? color : dotColor(i) }}
+                    <button
+                      type="button"
+                      onClick={() => toggleDotColor(n)}
+                      aria-label="Cambiar color"
+                      title="Tocá para cambiar color"
+                      className="mt-0.5 size-3 shrink-0 rounded-full transition-transform hover:scale-125"
+                      style={{ backgroundColor: n.dotColor === "red" ? "#ef4444" : "#22c55e" }}
                     />
                     <button
                       type="button"

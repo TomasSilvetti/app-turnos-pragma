@@ -429,6 +429,7 @@ model NotaProgressNote {
   id         String   @id @default(cuid())
   progressId String
   text       String   @default("")
+  dotColor   String   @default("green")
   createdAt  DateTime @default(now())
 
   progress NotaProgress @relation(fields: [progressId], references: [id], onDelete: Cascade)

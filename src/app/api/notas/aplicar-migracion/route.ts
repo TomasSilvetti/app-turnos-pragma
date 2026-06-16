@@ -135,6 +135,13 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE "nota_reminders" ADD COLUMN IF NOT EXISTS "endTime" TEXT`,
     ],
   },
+  {
+    name: "20260616000000_add_progress_note_dotcolor",
+    checksum: "67708f00eaf9513c6c0a37509e54d6f1ae246be03351e8e96420ace7c904254f",
+    statements: [
+      `ALTER TABLE "nota_progress_notes" ADD COLUMN IF NOT EXISTS "dotColor" TEXT NOT NULL DEFAULT 'green'`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

@@ -28,6 +28,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
   const [data, setData] = useState<ProgressData | null>(null);
   const [composing, setComposing] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [noteDotColor, setNoteDotColor] = useState<"green" | "red">("green");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const longPressed = useRef(false);
@@ -67,7 +68,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
     try {
       const res = await notasFetch(`/api/notas/progress/${progressId}/notes`, {
         method: "POST",
-        body: JSON.stringify({ text: noteText.trim() }),
+        body: JSON.stringify({ text: noteText.trim(), dotColor: noteDotColor }),
       });
       if (!res.ok) {
         const detalle = await res.json().catch(() => null);
@@ -77,6 +78,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
       const { progress } = await res.json();
       if (progress) setData(progress);
       setNoteText("");
+      setNoteDotColor("green");
       setComposing(false);
     } catch {
       setError("Error de conexión");
@@ -87,6 +89,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
 
   const cancelarNota = () => {
     setNoteText("");
+    setNoteDotColor("green");
     setError(null);
     setComposing(false);
   };
@@ -163,6 +166,27 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
             onPointerUp={stop}
             onPointerLeave={stop}
           >
+          <div className="mb-2 flex gap-2">
+            {(["green", "red"] as const).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setNoteDotColor(c)}
+                aria-label={c === "green" ? "Verde" : "Rojo"}
+                className="flex items-center gap-1.5 rounded-full border-2 px-2.5 py-1 text-xs font-medium transition-all"
+                style={{
+                  borderColor: noteDotColor === c ? (c === "green" ? "#22c55e" : "#ef4444") : "transparent",
+                  backgroundColor: noteDotColor === c ? (c === "green" ? "#22c55e22" : "#ef444422") : "transparent",
+                }}
+              >
+                <span
+                  className="size-2.5 rounded-full"
+                  style={{ backgroundColor: c === "green" ? "#22c55e" : "#ef4444" }}
+                />
+                {c === "green" ? "Verde" : "Rojo"}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}

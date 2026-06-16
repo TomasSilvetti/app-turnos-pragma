@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   const notes = await prisma.notaProgressNote.findMany({
     where: { progressId: id },
     orderBy: { createdAt: "asc" },
-    select: { id: true, text: true, createdAt: true },
+    select: { id: true, text: true, dotColor: true, createdAt: true },
   });
   return NextResponse.json({ notes });
 }
@@ -50,9 +50,10 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
   const body = await request.json().catch(() => ({}));
   const text = typeof body?.text === "string" ? body.text.slice(0, 280) : "";
+  const dotColor = body?.dotColor === "red" ? "red" : "green";
 
   const [note, progress] = await prisma.$transaction([
-    prisma.notaProgressNote.create({ data: { progressId: id, text } }),
+    prisma.notaProgressNote.create({ data: { progressId: id, text, dotColor } }),
     prisma.notaProgress.update({ where: { id }, data: { count: { increment: 1 } } }),
   ]);
 
