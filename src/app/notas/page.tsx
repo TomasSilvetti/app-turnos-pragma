@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Plus, Settings, Loader2, X } from "lucide-react";
+import { FileText, Plus, Settings, Loader2, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
@@ -20,6 +20,16 @@ export default function NotasListPage() {
   const [creando, setCreando] = useState(false);
   const [ajustes, setAjustes] = useState(false);
   const [avisoOculto, setAvisoOculto] = useState(false);
+  const [borrando, setBorrando] = useState<string | null>(null);
+
+  const eliminarNota = async (e: MouseEvent, notaId: string) => {
+    e.stopPropagation();
+    if (!confirm("¿Eliminar esta nota? No se puede deshacer.")) return;
+    setBorrando(notaId);
+    await notasFetch(`/api/notas/${notaId}`, { method: "DELETE" }).catch(() => {});
+    setNotas((prev) => prev.filter((n) => n.id !== notaId));
+    setBorrando(null);
+  };
 
   const cargar = useCallback(() => {
     notasFetch("/api/notas")
@@ -110,10 +120,10 @@ export default function NotasListPage() {
       ) : (
         <ul className="grid gap-3 sm:grid-cols-2">
           {notas.map((nota) => (
-            <li key={nota.id}>
+            <li key={nota.id} className="relative">
               <button
                 onClick={() => router.push(`/notas/${nota.id}`)}
-                className="flex w-full flex-col gap-2 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
+                className="flex w-full flex-col gap-2 rounded-xl border border-border bg-card p-4 pr-12 text-left transition-colors hover:border-primary/40 hover:bg-muted/40"
               >
                 <span className="line-clamp-1 font-medium">
                   {nota.title?.trim() || "Sin título"}
@@ -121,6 +131,14 @@ export default function NotasListPage() {
                 <span className="text-xs text-muted-foreground">
                   {new Date(nota.updatedAt).toLocaleDateString("es-AR")}
                 </span>
+              </button>
+              <button
+                onClick={(e) => eliminarNota(e, nota.id)}
+                disabled={borrando === nota.id}
+                aria-label="Eliminar nota"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50"
+              >
+                {borrando === nota.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
               </button>
             </li>
           ))}
