@@ -98,7 +98,7 @@ function ProgressCardView({ node, extension }: NodeViewProps) {
     } finally {
       setSaving(false);
     }
-  }, [progressId, data, noteText, saving]);
+  }, [progressId, data, noteText, noteDotColor, saving]);
 
   const cancelarNota = () => {
     setNoteText("");
