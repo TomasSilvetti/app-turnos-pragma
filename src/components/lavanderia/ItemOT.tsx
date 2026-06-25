@@ -8,7 +8,16 @@ import { cn } from "@/lib/utils";
 import { altoOT, formatoDuracion } from "@/lib/lavanderia/timeline";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
-export function ItemOT({ ot }: { ot: OTSnap }) {
+export function ItemOT({
+  ot,
+  soloLectura = false,
+  dragHandle,
+}: {
+  ot: OTSnap;
+  // En el tablero del admin las tarjetas se arrastran y no se inician/terminan.
+  soloLectura?: boolean;
+  dragHandle?: React.ReactNode;
+}) {
   const [procesando, setProcesando] = useState(false);
 
   const accion = async (accion: "empezar" | "terminar") => {
@@ -38,11 +47,14 @@ export function ItemOT({ ot }: { ot: OTSnap }) {
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{titulo}</p>
-          {ot.nombreCliente && ot.numero && (
-            <p className="truncate text-xs text-muted-foreground">{ot.nombreCliente}</p>
-          )}
+        <div className="flex min-w-0 items-start gap-1.5">
+          {dragHandle}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{titulo}</p>
+            {ot.nombreCliente && ot.numero && (
+              <p className="truncate text-xs text-muted-foreground">{ot.nombreCliente}</p>
+            )}
+          </div>
         </div>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100/80 px-2 py-0.5 text-[11px] font-medium text-slate-500">
           <Clock className="size-3" />
@@ -76,7 +88,7 @@ export function ItemOT({ ot }: { ot: OTSnap }) {
           <span />
         )}
 
-        {ot.estado === "pendiente" && ot.puedeEmpezar && (
+        {ot.estado === "pendiente" && ot.puedeEmpezar && !soloLectura && (
           <Button
             size="xs"
             onClick={() => accion("empezar")}
@@ -86,7 +98,7 @@ export function ItemOT({ ot }: { ot: OTSnap }) {
             {procesando ? <Loader2 className="animate-spin" /> : <Play />} Empezar
           </Button>
         )}
-        {ot.estado === "en_progreso" && (
+        {ot.estado === "en_progreso" && !soloLectura && (
           <Button
             size="xs"
             variant="secondary"
@@ -96,6 +108,11 @@ export function ItemOT({ ot }: { ot: OTSnap }) {
           >
             {procesando ? <Loader2 className="animate-spin" /> : <Check />} Terminar
           </Button>
+        )}
+        {ot.estado === "en_progreso" && soloLectura && (
+          <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+            <Clock className="size-3" /> En progreso
+          </span>
         )}
         {ot.estado === "terminado" && (
           <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">

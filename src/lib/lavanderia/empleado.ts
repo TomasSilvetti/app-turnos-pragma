@@ -10,12 +10,17 @@ export type EmpleadoSesion = { id: string; nombre: string; esAdmin: boolean };
 
 export async function resolveEmpleado(request: NextRequest): Promise<EmpleadoSesion | null> {
   const empleadoId = request.headers.get("x-empleado-id");
-  if (!empleadoId) return null;
-  const empleado = await prisma.lavEmpleado.findFirst({
-    where: { id: empleadoId, activo: true },
-    select: { id: true, nombre: true, esAdmin: true },
-  });
-  return empleado ?? null;
+  if (empleadoId) {
+    const empleado = await prisma.lavEmpleado.findFirst({
+      where: { id: empleadoId, activo: true },
+      select: { id: true, nombre: true, esAdmin: true },
+    });
+    if (empleado) return empleado;
+  }
+
+  // El admin entra por cookie (sin x-empleado-id): tambien es una identidad
+  // valida para los endpoints de lectura (p.ej. el tablero).
+  return requireAdmin(request);
 }
 
 // Devuelve el empleado o null. Usar cuando la accion requiere identidad.

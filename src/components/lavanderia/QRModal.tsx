@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import { X, Smartphone, Loader2 } from "lucide-react";
 
@@ -12,16 +13,18 @@ export function QRModal({ open, onClose }: { open: boolean; onClose: () => void 
 
   useEffect(() => {
     if (!open) return;
+    // Origen leido de window (sistema externo): en prod es la URL real, en dev localhost.
     const destino = `${window.location.origin}/lavanderia`;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setUrl(destino);
     QRCode.toDataURL(destino, { width: 320, margin: 2 })
       .then(setDataUrl)
       .catch(() => setDataUrl(null));
   }, [open]);
 
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
         className="w-full max-w-xs rounded-3xl border border-white/60 bg-white/90 p-6 text-center shadow-2xl backdrop-blur-xl"
@@ -51,6 +54,7 @@ export function QRModal({ open, onClose }: { open: boolean; onClose: () => void 
 
         <p className="mt-4 break-all text-xs text-slate-400">{url}</p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

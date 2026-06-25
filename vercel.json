@@ -10,10 +10,6 @@
     {
       "path": "/api/cron/whatsapp-reminders",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/keepalive",
-      "schedule": "*/5 * * * *"
     }
   ]
 }
