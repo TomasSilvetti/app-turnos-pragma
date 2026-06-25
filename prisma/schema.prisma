@@ -9,15 +9,15 @@ datasource db {
 }
 
 model ServiceProvider {
-  id                  String             @id @default(cuid())
+  id                  String               @id @default(cuid())
   name                String
-  email               String             @unique
+  email               String               @unique
   hashedPassword      String
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  isActive            Boolean            @default(true)
-  rol                 ServiceProviderRol @default(propietario)
-  attendsAppointments Boolean            @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  isActive            Boolean              @default(true)
+  rol                 ServiceProviderRol   @default(propietario)
+  attendsAppointments Boolean              @default(true)
   appointments        Appointment[]
   businessProfile     BusinessProfile?
   empresas            EmpleadoEmpresa[]
@@ -27,8 +27,8 @@ model ServiceProvider {
   passwordResetTokens PasswordResetToken[]
   scheduleConfigs     ScheduleConfig[]
   listaEspera         ListaEspera[]
-  tutorialCompleted   Boolean            @default(false)
-  modoTurno           ModoTurno          @default(FIJO)
+  tutorialCompleted   Boolean              @default(false)
+  modoTurno           ModoTurno            @default(FIJO)
 
   @@map("service_providers")
 }
@@ -158,13 +158,13 @@ model Appointment {
 }
 
 model Booking {
-  id                     String         @id @default(cuid())
-  appointmentId          String         @unique
+  id                     String              @id @default(cuid())
+  appointmentId          String              @unique
   clientName             String
   clientPhone            String
-  status                 BookingStatus  @default(pending)
-  createdAt              DateTime       @default(now())
-  updatedAt              DateTime       @updatedAt
+  status                 BookingStatus       @default(pending)
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
   previousStatus         BookingStatus?
   clienteId              String?
   whatsappReminderSentAt DateTime?
@@ -179,17 +179,17 @@ model Booking {
 }
 
 model Cliente {
-  id                      String                    @id @default(cuid())
+  id                      String                      @id @default(cuid())
   nombre                  String
   apellido                String
-  email                   String                    @unique
+  email                   String                      @unique
   hashedPassword          String
   sexo                    String?
   edad                    Int?
-  createdAt               DateTime                  @default(now())
-  updatedAt               DateTime                  @updatedAt
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
   telefono                String?
-  notificacionesActivadas Boolean                   @default(false)
+  notificacionesActivadas Boolean                     @default(false)
   bookings                Booking[]
   rescheduleRequests      RescheduleRequest[]
   pushSubscriptions       ClientePushSubscription[]
@@ -200,16 +200,16 @@ model Cliente {
 }
 
 model RescheduleRequest {
-  id            String                   @id @default(cuid())
+  id            String                  @id @default(cuid())
   bookingId     String
   clienteId     String
   requestedDate String
   requestedTime String
-  status        RescheduleRequestStatus  @default(pending)
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  booking       Booking                  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  cliente       Cliente                  @relation(fields: [clienteId], references: [id])
+  status        RescheduleRequestStatus @default(pending)
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  booking       Booking                 @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  cliente       Cliente                 @relation(fields: [clienteId], references: [id])
 
   @@map("reschedule_requests")
 }
@@ -293,22 +293,22 @@ enum EstadoListaEspera {
 }
 
 model ListaEspera {
-  id                   String                     @id @default(cuid())
+  id                   String                      @id @default(cuid())
   clienteId            String
   serviceProviderId    String
   posicion             Int
-  estado               EstadoListaEspera          @default(activa)
+  estado               EstadoListaEspera           @default(activa)
   bookingIdRespaldo    String?
-  cualquierVacante     Boolean                    @default(false)
+  cualquierVacante     Boolean                     @default(false)
   notificadaAt         DateTime?
-  notificacionToken    String?                    @unique
+  notificacionToken    String?                     @unique
   notificacionTokenExp DateTime?
   vacanteTurnoId       String?
-  createdAt            DateTime                   @default(now())
-  updatedAt            DateTime                   @updatedAt
-  cliente              Cliente                    @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  serviceProvider      ServiceProvider            @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
-  bookingRespaldo      Booking?                   @relation(fields: [bookingIdRespaldo], references: [id])
+  createdAt            DateTime                    @default(now())
+  updatedAt            DateTime                    @updatedAt
+  cliente              Cliente                     @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  serviceProvider      ServiceProvider             @relation(fields: [serviceProviderId], references: [id], onDelete: Cascade)
+  bookingRespaldo      Booking?                    @relation(fields: [bookingIdRespaldo], references: [id])
   disponibilidades     DisponibilidadListaEspera[]
 
   @@unique([clienteId, serviceProviderId])
@@ -316,13 +316,13 @@ model ListaEspera {
 }
 
 model ClientePasswordResetToken {
-  id        String   @id @default(cuid())
-  token     String   @unique
+  id        String    @id @default(cuid())
+  token     String    @unique
   clienteId String
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  cliente   Cliente  @relation(fields: [clienteId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  cliente   Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
 
   @@map("cliente_password_reset_tokens")
 }
@@ -450,4 +450,128 @@ model NotaPushSubscription {
 
   @@index([deviceId])
   @@map("nota_push_subscriptions")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Módulo Lavandería (app secundaria en /lavanderia, sin login).
+// Single-tenant. La "sesión" es el empleadoId activo guardado en
+// localStorage del navegador y enviado en el header x-empleado-id.
+// ─────────────────────────────────────────────────────────────
+
+model LavEmpleado {
+  id        String   @id @default(cuid())
+  nombre    String
+  activo    Boolean  @default(true)
+  esAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  otsCargadas   LavOT[] @relation("LavOTCarga")
+  otsTrabajadas LavOT[] @relation("LavOTTrabajo")
+
+  @@map("lav_empleados")
+}
+
+model LavProceso {
+  id        String   @id @default(cuid())
+  nombre    String
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  duraciones LavDuracion[]
+
+  @@map("lav_procesos")
+}
+
+model LavPrenda {
+  id        String   @id @default(cuid())
+  nombre    String
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  duraciones LavDuracion[]
+  items      LavOTItem[]
+
+  @@map("lav_prendas")
+}
+
+model LavDuracion {
+  id        String @id @default(cuid())
+  prendaId  String
+  procesoId String
+  minutos   Int    @default(0)
+
+  prenda  LavPrenda  @relation(fields: [prendaId], references: [id], onDelete: Cascade)
+  proceso LavProceso @relation(fields: [procesoId], references: [id], onDelete: Cascade)
+
+  @@unique([prendaId, procesoId])
+  @@index([prendaId])
+  @@index([procesoId])
+  @@map("lav_duraciones")
+}
+
+// Configuración global de turnos (single-tenant). tipo: "manana" | "tarde" | "extra".
+model LavTurnoConfig {
+  id         String  @id @default(cuid())
+  tipo       String  @unique
+  horaInicio String // "HH:mm"
+  horaFin    String // "HH:mm"
+  diasSemana Int[] // 0=Domingo .. 6=Sabado
+  habilitado Boolean @default(true)
+
+  @@map("lav_turno_config")
+}
+
+// Habilita el turno extra para un dia puntual (fecha en formato yyyy-MM-dd).
+model LavDiaExtra {
+  id         String  @id @default(cuid())
+  fecha      String  @unique
+  habilitado Boolean @default(true)
+
+  @@map("lav_dia_extra")
+}
+
+model LavOT {
+  id                String    @id @default(cuid())
+  numero            String?
+  nombreCliente     String?
+  telefono          String?
+  domicilio         String?
+  total             Float?
+  fechaTicket       String? // texto crudo del ticket
+  estado            String    @default("pendiente") // "pendiente" | "en_progreso" | "terminado"
+  fechaAsignada     String // dia del tablero, yyyy-MM-dd
+  orden             Int       @default(0) // posicion en la cola del dia
+  duracionMin       Int       @default(0)
+  aRevisar          Boolean   @default(false) // alguna prenda no se pudo mapear a la matriz
+  empleadoCargaId   String?
+  empleadoTrabajoId String?
+  empezadoEn        DateTime?
+  terminadoEn       DateTime?
+  datosIA           Json?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  empleadoCarga   LavEmpleado? @relation("LavOTCarga", fields: [empleadoCargaId], references: [id], onDelete: SetNull)
+  empleadoTrabajo LavEmpleado? @relation("LavOTTrabajo", fields: [empleadoTrabajoId], references: [id], onDelete: SetNull)
+  items           LavOTItem[]
+
+  @@index([fechaAsignada])
+  @@index([estado])
+  @@map("lav_ots")
+}
+
+model LavOTItem {
+  id          String   @id @default(cuid())
+  otId        String
+  descripcion String
+  prendaId    String?
+  cantidad    Int      @default(1)
+  procesos    String[] // nombres de procesos aplicados
+  duracionMin Int      @default(0)
+
+  ot     LavOT      @relation(fields: [otId], references: [id], onDelete: Cascade)
+  prenda LavPrenda? @relation(fields: [prendaId], references: [id], onDelete: SetNull)
+
+  @@index([otId])
+  @@map("lav_ot_items")
 }
