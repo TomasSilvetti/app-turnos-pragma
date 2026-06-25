@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shirt, ChevronDown } from "lucide-react";
+import { Shirt } from "lucide-react";
 import { useEmpleado } from "./EmpleadoProvider";
 import { BotonesApp } from "./BotonesApp";
+import { LavSelect } from "./LavSelect";
 
 export function LavNavbar() {
   const { empleados, empleadoActivo, seleccionar } = useEmpleado();
@@ -25,27 +26,15 @@ export function LavNavbar() {
 
         <div className="flex items-center gap-2">
           <BotonesApp />
-          <div className="relative">
-            <select
-              value={empleadoActivo?.id ?? ""}
-              onChange={(e) => {
-                const id = e.target.value;
-                if (id) seleccionar(id);
-              }}
-              className="h-9 appearance-none rounded-full border border-white/70 bg-white/80 pl-4 pr-9 text-sm font-medium text-slate-700 shadow-sm outline-none backdrop-blur transition-shadow focus:border-sky-300 focus:ring-2 focus:ring-sky-200"
-              aria-label="Empleado activo"
-            >
-              <option value="" disabled>
-                Elegir empleado
-              </option>
-              {empleados.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nombre}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-          </div>
+          <LavSelect
+            value={empleadoActivo?.id ?? ""}
+            onChange={(id) => id && seleccionar(id)}
+            placeholder="Elegir empleado"
+            aria-label="Empleado activo"
+            className="w-44"
+            triggerClassName="rounded-full border-white/70 bg-white/80 pl-4 pr-3 font-medium text-slate-700 shadow-sm backdrop-blur hover:border-sky-300"
+            options={empleados.map((e) => ({ value: e.id, label: e.nombre }))}
+          />
         </div>
       </div>
     </header>

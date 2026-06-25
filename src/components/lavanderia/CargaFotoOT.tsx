@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Camera, Loader2, Check, X, Plus, Trash2, AlertTriangle } from "lucide-react";
+import { Camera, Loader2, Check, X, Plus, Trash2, AlertTriangle, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LavSelect } from "./LavSelect";
 import { lavFetch } from "@/lib/lavanderia/client";
 
 type Prenda = { id: string; nombre: string };
@@ -14,6 +15,8 @@ type OTPreview = {
   domicilio: string | null;
   total: number | null;
   fechaTicket: string | null;
+  urgente: boolean;
+  fechaNecesaria: string | null;
   items: { descripcion: string; cantidad: number; prendaId: string | null; prendaNombre: string | null }[];
 };
 
@@ -82,6 +85,8 @@ export function CargaFotoOT() {
           domicilio: ot.domicilio,
           total: ot.total,
           fechaTicket: ot.fechaTicket,
+          urgente: ot.urgente,
+          fechaNecesaria: ot.fechaNecesaria,
           items: items.filter((i) => i.descripcion.trim()),
           datosIA: ot,
         }),
@@ -128,6 +133,31 @@ export function CargaFotoOT() {
           <Campo label="Teléfono" value={ot.telefono ?? ""} onChange={(v) => setOt({ ...ot, telefono: v })} />
         </div>
 
+        <div className="space-y-2 rounded-lg border border-border p-2.5">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={ot.urgente}
+              onChange={(e) => setOt({ ...ot, urgente: e.target.checked })}
+            />
+            <span className="inline-flex items-center gap-1">
+              <Flame className="size-4 text-red-500" /> Urgente — va primero hoy
+            </span>
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-muted-foreground">Necesaria para (opcional)</span>
+            <input
+              type="date"
+              value={ot.fechaNecesaria ?? ""}
+              onChange={(e) => setOt({ ...ot, fechaNecesaria: e.target.value || null })}
+              className="mt-0.5 h-9 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-primary"
+            />
+            <span className="mt-0.5 block text-[11px] text-muted-foreground">
+              Se ubica primero el último día laborable antes de esta fecha.
+            </span>
+          </label>
+        </div>
+
         <div className="space-y-2">
           <p className="text-sm font-semibold">Prendas / servicios</p>
           {items.map((it, idx) => (
@@ -150,18 +180,15 @@ export function CargaFotoOT() {
                   <Trash2 className="size-4" />
                 </button>
               </div>
-              <select
+              <LavSelect
                 value={it.prendaId ?? ""}
-                onChange={(e) => setItem(idx, { prendaId: e.target.value || null })}
-                className="h-9 w-full rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-primary"
-              >
-                <option value="">— Sin prenda (a revisar) —</option>
-                {prendas.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setItem(idx, { prendaId: v || null })}
+                aria-label="Prenda"
+                options={[
+                  { value: "", label: "— Sin prenda (a revisar) —" },
+                  ...prendas.map((p) => ({ value: p.id, label: p.nombre })),
+                ]}
+              />
               {!it.prendaId && (
                 <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="size-3" /> Sin prenda no se calcula duración

@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus, Trash2, Loader2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
+import { RenombrarModal } from "./RenombrarModal";
 
 type Item = { id: string; nombre: string };
+type Edicion = { tipo: "prendas" | "procesos"; id: string; nombre: string };
 const key = (prendaId: string, procesoId: string) => `${prendaId}:${procesoId}`;
 
 export function MatrizTrabajos() {
@@ -15,6 +17,7 @@ export function MatrizTrabajos() {
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
+  const [edicion, setEdicion] = useState<Edicion | null>(null);
 
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/trabajos")
@@ -80,9 +83,11 @@ export function MatrizTrabajos() {
     if (res.ok) setProcesos((p) => p.filter((x) => x.id !== id));
   };
 
-  const renombrar = async (tipo: "prendas" | "procesos", id: string, actual: string) => {
-    const nombre = window.prompt("Nuevo nombre", actual)?.trim();
-    if (!nombre || nombre === actual) return;
+  const confirmarRenombre = async (nombre: string) => {
+    if (!edicion) return;
+    const { tipo, id, nombre: actual } = edicion;
+    setEdicion(null);
+    if (nombre === actual) return;
     const res = await lavFetch(`/api/lavanderia/${tipo}/${id}`, { method: "PATCH", body: JSON.stringify({ nombre }) });
     if (res.ok) {
       const setter = tipo === "prendas" ? setPrendas : setProcesos;
@@ -145,7 +150,7 @@ export function MatrizTrabajos() {
               {procesos.map((proc) => (
                 <th key={proc.id} className="min-w-28 border-b border-border p-2 font-semibold">
                   <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => renombrar("procesos", proc.id, proc.nombre)} className="hover:text-primary" title="Renombrar">
+                    <button onClick={() => setEdicion({ tipo: "procesos", id: proc.id, nombre: proc.nombre })} className="hover:text-primary" title="Renombrar">
                       {proc.nombre}
                     </button>
                     <button onClick={() => eliminarProceso(proc.id, proc.nombre)} className="text-muted-foreground hover:text-destructive" title="Eliminar">
@@ -164,7 +169,7 @@ export function MatrizTrabajos() {
               <tr key={prenda.id} className="border-b border-border last:border-0">
                 <td className="sticky left-0 z-10 border-r border-border bg-card p-2 font-medium">
                   <div className="flex items-center justify-between gap-1">
-                    <button onClick={() => renombrar("prendas", prenda.id, prenda.nombre)} className="flex items-center gap-1 text-left hover:text-primary" title="Renombrar">
+                    <button onClick={() => setEdicion({ tipo: "prendas", id: prenda.id, nombre: prenda.nombre })} className="flex items-center gap-1 text-left hover:text-primary" title="Renombrar">
                       <Pencil className="size-3 shrink-0 text-muted-foreground" />
                       {prenda.nombre}
                     </button>
@@ -197,6 +202,14 @@ export function MatrizTrabajos() {
           </tbody>
         </table>
       </div>
+
+      <RenombrarModal
+        open={edicion !== null}
+        titulo={edicion?.tipo === "prendas" ? "Renombrar prenda" : "Renombrar proceso"}
+        valorInicial={edicion?.nombre ?? ""}
+        onConfirmar={confirmarRenombre}
+        onCerrar={() => setEdicion(null)}
+      />
     </div>
   );
 }
