@@ -9,7 +9,10 @@ export async function GET(request: NextRequest) {
 
   const [prendas, procesos, duraciones] = await Promise.all([
     prisma.lavPrenda.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
-    prisma.lavProceso.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
+    prisma.lavProceso.findMany({
+      orderBy: { orden: "asc" },
+      select: { id: true, nombre: true, precio: true, esExtra: true },
+    }),
     prisma.lavDuracion.findMany({ select: { prendaId: true, procesoId: true, minutos: true } }),
   ]);
 

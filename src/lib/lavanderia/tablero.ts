@@ -21,10 +21,12 @@ export type OTSnap = {
   duracionMin: number;
   orden: number;
   aRevisar: boolean;
+  urgente: boolean;
+  fechaNecesaria: string | null;
   empezadoEn: string | null;
   terminadoEn: string | null;
   empleadoTrabajo: string | null;
-  items: { descripcion: string; cantidad: number; procesos: string[]; duracionMin: number }[];
+  items: { descripcion: string; cantidad: number; procesos: string[]; duracionMin: number; monto: number }[];
   puedeEmpezar: boolean;
 };
 
@@ -87,7 +89,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
     where: { fechaAsignada: { gte: hoy, lte: hasta } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
-      items: { select: { descripcion: true, cantidad: true, procesos: true, duracionMin: true } },
+      items: { select: { descripcion: true, cantidad: true, procesos: true, duracionMin: true, monto: true } },
       empleadoTrabajo: { select: { nombre: true } },
     },
   });
@@ -129,6 +131,8 @@ export async function getTablero(): Promise<TableroSnapshot> {
       duracionMin: ot.duracionMin,
       orden: ot.orden,
       aRevisar: ot.aRevisar,
+      urgente: ot.urgente,
+      fechaNecesaria: ot.fechaNecesaria,
       empezadoEn: ot.empezadoEn?.toISOString() ?? null,
       terminadoEn: ot.terminadoEn?.toISOString() ?? null,
       empleadoTrabajo: ot.empleadoTrabajo?.nombre ?? null,
@@ -137,6 +141,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
         cantidad: it.cantidad,
         procesos: it.procesos,
         duracionMin: it.duracionMin,
+        monto: it.monto,
       })),
       // Solo puede empezar la primera OT pendiente del dia (la anterior ya debe
       // estar empezada o terminada).

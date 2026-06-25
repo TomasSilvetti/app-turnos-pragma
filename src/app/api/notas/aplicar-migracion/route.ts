@@ -165,6 +165,15 @@ const MIGRATIONS: Migration[] = [
        END IF; END $$`,
     ],
   },
+  {
+    name: "20260625120000_lav_precios",
+    checksum: "4a7154d58fd5efa28a1d8d7e4dbabdcfd22673f284294982e5c45f8b9746facd",
+    statements: [
+      `ALTER TABLE "lav_procesos" ADD COLUMN IF NOT EXISTS "precio" INTEGER NOT NULL DEFAULT 0`,
+      `ALTER TABLE "lav_procesos" ADD COLUMN IF NOT EXISTS "esExtra" BOOLEAN NOT NULL DEFAULT false`,
+      `ALTER TABLE "lav_ot_items" ADD COLUMN IF NOT EXISTS "monto" INTEGER NOT NULL DEFAULT 0`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

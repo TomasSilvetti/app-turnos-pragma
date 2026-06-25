@@ -33,8 +33,14 @@ export async function POST(request: NextRequest) {
   if (items.length === 0)
     return NextResponse.json({ error: "La OT no tiene items" }, { status: 400 });
 
+  const urgente = body.urgente === true;
+  const fechaNecesaria =
+    typeof body.fechaNecesaria === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.fechaNecesaria)
+      ? body.fechaNecesaria
+      : null;
+
   const calculo = await calcularDuracion(items);
-  const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal);
+  const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
 
   const ot = await prisma.lavOT.create({
     data: {
@@ -49,6 +55,8 @@ export async function POST(request: NextRequest) {
       orden,
       duracionMin: calculo.duracionTotal,
       aRevisar: calculo.aRevisar,
+      urgente,
+      fechaNecesaria,
       empleadoCargaId: empleado.id,
       datosIA: body.datosIA ?? null,
       items: {
@@ -58,6 +66,7 @@ export async function POST(request: NextRequest) {
           cantidad: it.cantidad,
           procesos: it.procesos,
           duracionMin: it.duracionMin,
+          monto: it.monto,
         })),
       },
     },

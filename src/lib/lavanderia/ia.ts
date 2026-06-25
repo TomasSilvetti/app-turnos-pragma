@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
+import { hoyAR } from "./fecha";
 
 // Modelo de visión configurable. Sonnet da buen balance OCR/costo para tickets.
 const MODELO = process.env.LAV_IA_MODEL || "claude-sonnet-4-6";
@@ -18,6 +19,8 @@ export type OTExtraida = {
   domicilio: string | null;
   total: number | null;
   fechaTicket: string | null;
+  urgente: boolean;
+  fechaNecesaria: string | null; // yyyy-MM-dd, de "PARA DD/MM"
   items: ItemExtraido[];
 };
 
@@ -41,6 +44,15 @@ const TOOL = {
       domicilio: { type: ["string", "null"] },
       total: { type: ["number", "null"], description: "Monto total en número, sin símbolos" },
       fechaTicket: { type: ["string", "null"], description: "Fecha/hora tal como figura en el ticket" },
+      urgente: {
+        type: "boolean",
+        description: 'true SOLO si en el ticket está escrita la palabra "URGENTE" (impresa o a mano). Si no aparece, false.',
+      },
+      fechaNecesaria: {
+        type: ["string", "null"],
+        description:
+          'Si el ticket dice "PARA <fecha>" (ej "PARA 30/06"), la fecha en formato yyyy-MM-dd. Inferí el año según la fecha de hoy indicada en el texto. Si no hay una fecha pedida, null.',
+      },
       items: {
         type: "array",
         description: "Cada prenda o servicio del ticket",
@@ -90,7 +102,10 @@ export async function escanearComanda(
             type: "text",
             text:
               "Esta es la foto de una orden de trabajo (ticket) de una lavandería. " +
-              "Extraé los datos y los items. Para cada item, si corresponde a una de estas prendas conocidas, " +
+              `Hoy es ${hoyAR()} (yyyy-MM-dd). ` +
+              "Extraé los datos y los items. Detectá también si está escrita la palabra URGENTE (urgente=true) " +
+              'y si dice "PARA <fecha>" (devolvé fechaNecesaria en yyyy-MM-dd, infiriendo el año a partir de hoy). ' +
+              "Para cada item, si corresponde a una de estas prendas conocidas, " +
               "indicá su nombre EXACTO en prendaSugerida (si no, null):\n\n" +
               (listaPrendas || "(no hay prendas configuradas)"),
           },
@@ -110,8 +125,15 @@ export async function escanearComanda(
     domicilio?: string | null;
     total?: number | null;
     fechaTicket?: string | null;
+    urgente?: boolean | null;
+    fechaNecesaria?: string | null;
     items?: { descripcion: string; cantidad: number; prendaSugerida?: string | null }[];
   };
+
+  const fechaNecesaria =
+    typeof data.fechaNecesaria === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.fechaNecesaria)
+      ? data.fechaNecesaria
+      : null;
 
   const indicePorNombre = new Map(prendas.map((p) => [normalizar(p.nombre), p]));
 
@@ -132,6 +154,8 @@ export async function escanearComanda(
     domicilio: data.domicilio ?? null,
     total: typeof data.total === "number" ? data.total : null,
     fechaTicket: data.fechaTicket ?? null,
+    urgente: data.urgente === true,
+    fechaNecesaria,
     items,
   };
 }

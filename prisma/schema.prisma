@@ -493,6 +493,8 @@ model LavProceso {
   id        String   @id @default(cuid())
   nombre    String
   orden     Int      @default(0)
+  precio    Int      @default(0) // precio del servicio, en pesos
+  esExtra   Boolean  @default(false) // servicio extra (add-on) vs servicio base
   createdAt DateTime @default(now())
 
   duraciones LavDuracion[]
@@ -561,6 +563,8 @@ model LavOT {
   orden             Int       @default(0) // posicion en la cola del dia
   duracionMin       Int       @default(0)
   aRevisar          Boolean   @default(false) // alguna prenda no se pudo mapear a la matriz
+  urgente           Boolean   @default(false) // el ticket dice "URGENTE": va primero en el dia de hoy
+  fechaNecesaria    String? // yyyy-MM-dd, de "PARA DD/MM": va primero el ultimo dia laborable previo
   empleadoCargaId   String?
   empleadoTrabajoId String?
   empezadoEn        DateTime?
@@ -586,6 +590,7 @@ model LavOTItem {
   cantidad    Int      @default(1)
   procesos    String[] // nombres de procesos aplicados
   duracionMin Int      @default(0)
+  monto       Int      @default(0) // snapshot del monto de la linea (precioUnit x cantidad)
 
   ot     LavOT      @relation(fields: [otId], references: [id], onDelete: Cascade)
   prenda LavPrenda? @relation(fields: [prendaId], references: [id], onDelete: SetNull)

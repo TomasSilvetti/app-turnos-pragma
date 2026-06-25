@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Play, Check, Loader2, AlertTriangle, Clock, User } from "lucide-react";
+import { Fragment, useState } from "react";
+import { Play, Check, Loader2, AlertTriangle, Clock, User, Flame, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import { altoOT, formatoDuracion } from "@/lib/lavanderia/timeline";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
+
+const formatoMonto = (value: number) =>
+  "$" + value.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 export function ItemOT({
   ot,
@@ -34,6 +37,14 @@ export function ItemOT({
   };
 
   const titulo = ot.numero ? `OT ${ot.numero}` : ot.nombreCliente || "OT";
+  const montoTotal = ot.items.reduce((acc, it) => acc + it.monto, 0);
+  // yyyy-MM-dd → dd/MM para mostrar al usuario.
+  const fechaNecesariaCorta = ot.fechaNecesaria
+    ? (() => {
+        const [, m, d] = ot.fechaNecesaria!.split("-");
+        return `${d}/${m}`;
+      })()
+    : null;
 
   return (
     <article
@@ -43,7 +54,8 @@ export function ItemOT({
         ot.estado === "terminado" && "border-emerald-200/70 bg-emerald-50/60 opacity-80 dark:border-emerald-500/40 dark:bg-emerald-500/5",
         ot.estado === "en_progreso" &&
           "border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-500/60 dark:bg-amber-500/10",
-        ot.estado === "pendiente" && "border-white/70 bg-white/80 backdrop-blur"
+        ot.estado === "pendiente" && "border-white/70 bg-white/80 backdrop-blur",
+        ot.urgente && ot.estado !== "terminado" && "ring-1 ring-red-300"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -62,15 +74,50 @@ export function ItemOT({
         </span>
       </div>
 
+      {(ot.urgente || fechaNecesariaCorta) && (
+        <div className="flex flex-wrap items-center gap-1">
+          {ot.urgente && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+              <Flame className="size-3" /> Urgente
+            </span>
+          )}
+          {fechaNecesariaCorta && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              <CalendarClock className="size-3" /> Para {fechaNecesariaCorta}
+            </span>
+          )}
+        </div>
+      )}
+
       {ot.items.length > 0 && (
-        <ul className="space-y-0.5 text-xs text-muted-foreground">
-          {ot.items.map((it, i) => (
-            <li key={i} className="truncate">
-              {it.cantidad > 1 ? `${it.cantidad}× ` : ""}
-              {it.descripcion}
-            </li>
-          ))}
-        </ul>
+        <div className="rounded-xl bg-slate-50/70 px-2 py-1.5 text-xs dark:bg-white/5">
+          <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2.5 gap-y-1">
+            <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Prenda</span>
+            <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Cant</span>
+            <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">T/u</span>
+            <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Monto</span>
+            {ot.items.map((it, i) => (
+              <Fragment key={i}>
+                <span className="truncate font-medium text-foreground/90" title={it.descripcion}>
+                  {it.descripcion}
+                </span>
+                <span className="text-right tabular-nums text-muted-foreground">{it.cantidad}</span>
+                <span className="text-right tabular-nums text-muted-foreground">
+                  {formatoDuracion(Math.round(it.duracionMin / it.cantidad))}
+                </span>
+                <span className="text-right tabular-nums font-medium text-foreground/90">
+                  {formatoMonto(it.monto)}
+                </span>
+              </Fragment>
+            ))}
+          </div>
+          {montoTotal > 0 && (
+            <div className="mt-1.5 flex items-center justify-between border-t border-border/60 pt-1.5 text-[11px] font-semibold">
+              <span className="text-muted-foreground">Total</span>
+              <span className="tabular-nums">{formatoMonto(montoTotal)}</span>
+            </div>
+          )}
+        </div>
       )}
 
       {ot.aRevisar && (

@@ -12,11 +12,13 @@ export type ItemCalculado = {
   cantidad: number;
   procesos: string[];
   duracionMin: number;
+  monto: number;
 };
 
 export type CalculoDuracion = {
   items: ItemCalculado[];
   duracionTotal: number;
+  montoTotal: number;
   aRevisar: boolean; // algun item no se pudo mapear a una prenda de la matriz
 };
 
@@ -29,15 +31,16 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   const duraciones = prendaIds.length
     ? await prisma.lavDuracion.findMany({
         where: { prendaId: { in: prendaIds } },
-        include: { proceso: { select: { nombre: true, orden: true } } },
+        include: { proceso: { select: { nombre: true, orden: true, precio: true } } },
       })
     : [];
 
-  // prendaId -> { minutos total, procesos ordenados }
-  const porPrenda = new Map<string, { minutos: number; procesos: string[] }>();
+  // prendaId -> { minutos total, precio total, procesos ordenados }
+  const porPrenda = new Map<string, { minutos: number; precio: number; procesos: string[] }>();
   for (const d of duraciones) {
-    const entry = porPrenda.get(d.prendaId) ?? { minutos: 0, procesos: [] };
+    const entry = porPrenda.get(d.prendaId) ?? { minutos: 0, precio: 0, procesos: [] };
     entry.minutos += d.minutos;
+    entry.precio += d.proceso.precio;
     entry.procesos.push(d.proceso.nombre);
     porPrenda.set(d.prendaId, entry);
   }
@@ -48,15 +51,18 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
     const info = i.prendaId ? porPrenda.get(i.prendaId) : undefined;
     if (!i.prendaId || !info) aRevisar = true;
     const unit = info?.minutos ?? 0;
+    const precioUnit = info?.precio ?? 0;
     return {
       prendaId: i.prendaId ?? null,
       descripcion: i.descripcion,
       cantidad,
       procesos: info?.procesos ?? [],
       duracionMin: unit * cantidad,
+      monto: precioUnit * cantidad,
     };
   });
 
   const duracionTotal = calculados.reduce((acc, i) => acc + i.duracionMin, 0);
-  return { items: calculados, duracionTotal, aRevisar };
+  const montoTotal = calculados.reduce((acc, i) => acc + i.monto, 0);
+  return { items: calculados, duracionTotal, montoTotal, aRevisar };
 }
