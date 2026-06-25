@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { ItemOT } from "@/components/lavanderia/ItemOT";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { distribuirEnTurnos, formatoDuracion, nombreTurno, type SeccionTurno } from "@/lib/lavanderia/timeline";
+import { useEsMobile } from "@/hooks/useEsMobile";
 import type { DiaSnap, OTSnap, TableroSnapshot } from "@/lib/lavanderia/tablero";
 
 // Tarjeta arrastrable: reusa el mismo diseño que el tablero del empleado (ItemOT),
@@ -166,11 +167,13 @@ function ContenidoCompleto({
 function ColumnaAdmin({
   dia,
   ancha,
+  esMobile,
   onActivarExtra,
   onDesactivarExtra,
 }: {
   dia: DiaSnap;
   ancha: boolean;
+  esMobile: boolean;
   onActivarExtra: (dia: DiaSnap) => void;
   onDesactivarExtra: (fecha: string) => void;
 }) {
@@ -217,6 +220,25 @@ function ColumnaAdmin({
     />
   );
 
+  // En mobile no hay hover: cada dia ocupa todo el ancho y se muestra expandido.
+  if (esMobile) {
+    return (
+      <section
+        className={cn(
+          "flex w-full flex-col overflow-hidden rounded-[1.25rem] border bg-white/55 shadow-[0_4px_20px_-12px_rgba(16,24,40,0.25)] backdrop-blur-sm",
+          dia.esHoy ? "border-sky-200/70 ring-1 ring-sky-300/40" : "border-white/60"
+        )}
+      >
+        {Header}
+        <SortableContext items={dia.ots.map((o) => o.id)} strategy={verticalListSortingStrategy}>
+          <div ref={setNodeRef} className={cn("min-h-20 flex-1 transition-colors", isOver && "bg-sky-100/40")}>
+            {Completo}
+          </div>
+        </SortableContext>
+      </section>
+    );
+  }
+
   // El dia actual va siempre expandido; los demas, compactos y se expanden al hover.
   if (ancha) {
     return (
@@ -251,6 +273,7 @@ export function TableroAdmin() {
   const [cargando, setCargando] = useState(true);
   const [activa, setActiva] = useState<OTSnap | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
+  const esMobile = useEsMobile();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const cargar = useCallback(() => {
@@ -344,12 +367,13 @@ export function TableroAdmin() {
         </p>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragEnd={onDragEnd}>
-        <div className="flex w-full items-stretch gap-2 pb-4">
+        <div className={cn("flex w-full gap-2 pb-4", esMobile ? "flex-col" : "items-stretch")}>
           {dias.map((dia, i) => (
             <ColumnaAdmin
               key={dia.fecha}
               dia={dia}
               ancha={anchaIdx === i}
+              esMobile={esMobile}
               onActivarExtra={setConfirmar}
               onDesactivarExtra={(fecha) => cambiarExtra(fecha, false)}
             />

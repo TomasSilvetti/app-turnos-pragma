@@ -20,7 +20,9 @@ export async function lavFetch(input: string, init: RequestInit = {}): Promise<R
   const empleadoId = getStoredEmpleadoId();
   const headers = new Headers(init.headers);
   if (empleadoId) headers.set("x-empleado-id", empleadoId);
-  if (init.body && !headers.has("Content-Type")) {
+  // No setear Content-Type cuando el body es FormData: el browser agrega el
+  // boundary del multipart automaticamente (forzarlo rompe el parseo en el server).
+  if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   return fetch(input, { ...init, headers });

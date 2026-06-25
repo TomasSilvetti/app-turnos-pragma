@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function LavanderiaLayout({ children }: { children: React.ReactNode }) {
   return (
     <EmpleadoProvider>
-      <div className="relative min-h-screen font-sans text-foreground">
+      <div className="relative min-h-screen overflow-x-hidden font-sans text-foreground">
         {/* Fondo iOS: degradado suave + halos de color tenues detrás del contenido */}
         <div className="pointer-events-none fixed inset-0 -z-10 bg-gradient-to-b from-slate-100 via-sky-50/70 to-slate-100" />
         <div className="pointer-events-none fixed -left-32 -top-32 -z-10 size-[28rem] rounded-full bg-sky-300/25 blur-3xl" />

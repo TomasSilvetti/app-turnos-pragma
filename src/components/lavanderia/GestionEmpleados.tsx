@@ -132,7 +132,7 @@ export function GestionEmpleados() {
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Nombre del empleado"
-            className={cn(inputCls, "w-56")}
+            className={cn(inputCls, "w-full sm:w-56")}
           />
           <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <input type="checkbox" checked={esAdmin} onChange={(e) => setEsAdmin(e.target.checked)} />
@@ -151,14 +151,14 @@ export function GestionEmpleados() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email del admin"
-              className={cn(inputCls, "w-56")}
+              className={cn(inputCls, "w-full sm:w-56")}
             />
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"
-              className={cn(inputCls, "w-56")}
+              className={cn(inputCls, "w-full sm:w-56")}
             />
             <span className="text-xs text-muted-foreground">Mín. 1 mayúscula y 1 carácter especial.</span>
           </div>
@@ -175,8 +175,8 @@ export function GestionEmpleados() {
         <ul className="divide-y divide-border rounded-xl border border-border">
           {rows.map((e) => (
             <li key={e.id} className={cn("p-3", !e.activo && "opacity-60")}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span className="truncate font-medium">{e.nombre}</span>
                   {e.esAdmin && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -186,7 +186,7 @@ export function GestionEmpleados() {
                   {e.email && <span className="truncate text-xs text-muted-foreground">{e.email}</span>}
                   {!e.activo && <span className="text-xs text-muted-foreground">inactivo</span>}
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
                   {e.esAdmin ? (
                     <Button size="sm" variant="ghost" onClick={() => abrirCred(e, false)}>
                       <KeyRound /> Credenciales
@@ -215,14 +215,14 @@ export function GestionEmpleados() {
                     value={credEmail}
                     onChange={(ev) => setCredEmail(ev.target.value)}
                     placeholder="Email"
-                    className={cn(inputCls, "w-52")}
+                    className={cn(inputCls, "w-full sm:w-52")}
                   />
                   <input
                     type="password"
                     value={credPassword}
                     onChange={(ev) => setCredPassword(ev.target.value)}
                     placeholder={credPromover ? "Contraseña" : "Nueva contraseña (opcional)"}
-                    className={cn(inputCls, "w-52")}
+                    className={cn(inputCls, "w-full sm:w-52")}
                   />
                   <Button size="sm" onClick={() => guardarCred(e.id)} disabled={guardandoCred}>
                     {guardandoCred ? <Loader2 className="animate-spin" /> : "Guardar"}
