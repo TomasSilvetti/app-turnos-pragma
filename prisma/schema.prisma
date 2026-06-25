@@ -465,10 +465,28 @@ model LavEmpleado {
   esAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  // Credenciales: solo los admins las tienen. El login del admin es por
+  // email + contraseña (sesion cookie propia), no por el selector del navbar.
+  email          String? @unique
+  hashedPassword String?
+
   otsCargadas   LavOT[] @relation("LavOTCarga")
   otsTrabajadas LavOT[] @relation("LavOTTrabajo")
+  resetTokens   LavPasswordResetToken[]
 
   @@map("lav_empleados")
+}
+
+model LavPasswordResetToken {
+  id         String      @id @default(cuid())
+  token      String      @unique
+  empleadoId String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime    @default(now())
+  empleado   LavEmpleado @relation(fields: [empleadoId], references: [id], onDelete: Cascade)
+
+  @@map("lav_password_reset_tokens")
 }
 
 model LavProceso {

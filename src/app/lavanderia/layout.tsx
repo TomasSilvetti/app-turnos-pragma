@@ -5,6 +5,9 @@ import { LavNavbar } from "@/components/lavanderia/LavNavbar";
 export const metadata: Metadata = {
   title: "Lavandería",
   description: "Tablero de órdenes de trabajo",
+  // Manifest propio: la PWA instalada abre directo en /lavanderia.
+  manifest: "/lavanderia.webmanifest",
+  appleWebApp: { capable: true, title: "Lavandería", statusBarStyle: "default" },
 };
 
 export default function LavanderiaLayout({ children }: { children: React.ReactNode }) {

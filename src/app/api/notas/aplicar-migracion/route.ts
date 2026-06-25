@@ -142,6 +142,29 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE "nota_progress_notes" ADD COLUMN IF NOT EXISTS "dotColor" TEXT NOT NULL DEFAULT 'green'`,
     ],
   },
+  {
+    name: "20260625000000_lav_admin_auth",
+    checksum: "fd6722c4ada0f58e4a2d45daa1faf9760ff236a02e9b9d2ffd39cf54bd8419ac",
+    statements: [
+      `ALTER TABLE "lav_empleados" ADD COLUMN IF NOT EXISTS "email" TEXT`,
+      `ALTER TABLE "lav_empleados" ADD COLUMN IF NOT EXISTS "hashedPassword" TEXT`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "lav_empleados_email_key" ON "lav_empleados"("email")`,
+      `CREATE TABLE IF NOT EXISTS "lav_password_reset_tokens" (
+        "id" TEXT NOT NULL,
+        "token" TEXT NOT NULL,
+        "empleadoId" TEXT NOT NULL,
+        "expiresAt" TIMESTAMP(3) NOT NULL,
+        "usedAt" TIMESTAMP(3),
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "lav_password_reset_tokens_pkey" PRIMARY KEY ("id")
+      )`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "lav_password_reset_tokens_token_key" ON "lav_password_reset_tokens"("token")`,
+      `DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'lav_password_reset_tokens_empleadoId_fkey') THEN
+         ALTER TABLE "lav_password_reset_tokens" ADD CONSTRAINT "lav_password_reset_tokens_empleadoId_fkey"
+         FOREIGN KEY ("empleadoId") REFERENCES "lav_empleados"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+       END IF; END $$`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

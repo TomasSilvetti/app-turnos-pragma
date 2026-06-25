@@ -7,15 +7,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { getStoredEmpleadoId, setStoredEmpleadoId, lavFetch } from "@/lib/lavanderia/client";
 
 export type Empleado = { id: string; nombre: string; esAdmin: boolean };
-type ModoVista = "empleado" | "admin";
 
 type Ctx = {
   empleados: Empleado[];
   empleadoActivo: Empleado | null;
   ready: boolean;
-  modo: ModoVista;
   seleccionar: (id: string) => void;
-  setModo: (modo: ModoVista) => void;
   recargarEmpleados: () => void;
 };
 
@@ -23,9 +20,7 @@ const EmpleadoContext = createContext<Ctx>({
   empleados: [],
   empleadoActivo: null,
   ready: false,
-  modo: "empleado",
   seleccionar: () => {},
-  setModo: () => {},
   recargarEmpleados: () => {},
 });
 
@@ -37,7 +32,6 @@ export function EmpleadoProvider({ children }: { children: React.ReactNode }) {
   const [empleados, setEmpleados] = useState<Empleado[]>([]);
   const [activoId, setActivoId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
-  const [modo, setModoState] = useState<ModoVista>("empleado");
 
   const recargarEmpleados = useCallback(() => {
     lavFetch("/api/lavanderia/empleados")
@@ -58,27 +52,16 @@ export function EmpleadoProvider({ children }: { children: React.ReactNode }) {
     setActivoId(id);
   }, []);
 
-  const setModo = useCallback((m: ModoVista) => setModoState(m), []);
-
   const empleadoActivo = useMemo(
     () => empleados.find((e) => e.id === activoId) ?? null,
     [empleados, activoId]
   );
 
-  // Si el empleado activo no es admin, forzar modo empleado.
-  useEffect(() => {
-    if (empleadoActivo && !empleadoActivo.esAdmin && modo !== "empleado") {
-      setModoState("empleado");
-    }
-  }, [empleadoActivo, modo]);
-
   const value: Ctx = {
     empleados,
     empleadoActivo,
     ready,
-    modo,
     seleccionar,
-    setModo,
     recargarEmpleados,
   };
 
