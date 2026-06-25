@@ -113,12 +113,9 @@ export async function asignarOT(
     }
   }
 
-  // URGENTE: al frente del dia de hoy (primer dia laborable).
-  if (prioridad.urgente) {
-    return { fechaAsignada: primerLaborable, orden: ordenAlFrente(primerLaborable) };
-  }
-
   // "PARA <fecha>": al frente del ultimo dia laborable anterior a esa fecha.
+  // Tiene prioridad sobre "urgente": si el ticket trae fecha limite, manda la
+  // fecha (se coloca el dia anterior al limite) aunque tambien diga URGENTE.
   if (prioridad.fechaNecesaria) {
     let target: string | null = null;
     for (let i = 0; i <= HORIZONTE_DIAS; i++) {
@@ -128,6 +125,11 @@ export async function asignarOT(
     }
     const dest = target ?? primerLaborable;
     return { fechaAsignada: dest, orden: ordenAlFrente(dest) };
+  }
+
+  // URGENTE (sin fecha limite): al frente del dia de hoy (primer dia laborable).
+  if (prioridad.urgente) {
+    return { fechaAsignada: primerLaborable, orden: ordenAlFrente(primerLaborable) };
   }
 
   // Normal: primer dia con capacidad restante, al final de la cola.

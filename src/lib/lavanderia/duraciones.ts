@@ -66,3 +66,49 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   const montoTotal = calculados.reduce((acc, i) => acc + i.monto, 0);
   return { items: calculados, duracionTotal, montoTotal, aRevisar };
 }
+
+// Reaplica la matriz actual a las OTs todavía en el tablero (no terminadas),
+// recalculando duración/procesos/monto de sus items. Se corre cuando cambian los
+// tiempos de la matriz; al tocar las filas de LavOT el tablero (SSE) se actualiza
+// solo. Si se pasan prendaIds, solo recalcula las OTs que usan esas prendas; sin
+// argumento recalcula todas las activas (p. ej. al borrar un proceso). Las OTs
+// terminadas no se tocan: su tiempo/monto quedó fijado como histórico.
+export async function recalcularOTsActivas(prendaIds?: string[]): Promise<number> {
+  const ots = await prisma.lavOT.findMany({
+    where: {
+      estado: { not: "terminado" },
+      ...(prendaIds && prendaIds.length > 0
+        ? { items: { some: { prendaId: { in: prendaIds } } } }
+        : {}),
+    },
+    include: {
+      items: { select: { id: true, prendaId: true, descripcion: true, cantidad: true } },
+    },
+  });
+  if (ots.length === 0) return 0;
+
+  const updates = [];
+  for (const ot of ots) {
+    const calculo = await calcularDuracion(
+      ot.items.map((it) => ({ prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad }))
+    );
+    // calcularDuracion preserva el orden de los items de entrada.
+    ot.items.forEach((it, i) => {
+      const c = calculo.items[i];
+      updates.push(
+        prisma.lavOTItem.update({
+          where: { id: it.id },
+          data: { duracionMin: c.duracionMin, monto: c.monto, procesos: c.procesos },
+        })
+      );
+    });
+    updates.push(
+      prisma.lavOT.update({
+        where: { id: ot.id },
+        data: { duracionMin: calculo.duracionTotal, aRevisar: calculo.aRevisar },
+      })
+    );
+  }
+  await prisma.$transaction(updates);
+  return ots.length;
+}

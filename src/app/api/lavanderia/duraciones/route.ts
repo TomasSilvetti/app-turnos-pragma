@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/lavanderia/empleado";
+import { recalcularOTsActivas } from "@/lib/lavanderia/duraciones";
 
 // PUT: upsert de una celda (prenda x proceso). minutos <= 0 elimina la celda
 // (ese proceso no aplica a esa prenda). Solo admin.
@@ -17,13 +18,17 @@ export async function PUT(request: NextRequest) {
 
   if (minutos <= 0) {
     await prisma.lavDuracion.deleteMany({ where: { prendaId, procesoId } });
-    return NextResponse.json({ prendaId, procesoId, minutos: 0 });
+  } else {
+    await prisma.lavDuracion.upsert({
+      where: { prendaId_procesoId: { prendaId, procesoId } },
+      update: { minutos },
+      create: { prendaId, procesoId, minutos },
+    });
   }
 
-  await prisma.lavDuracion.upsert({
-    where: { prendaId_procesoId: { prendaId, procesoId } },
-    update: { minutos },
-    create: { prendaId, procesoId, minutos },
-  });
+  // Reflejar el nuevo tiempo en las OTs activas que usan esta prenda: el tablero
+  // (SSE) toma el cambio solo, sin recargar.
+  await recalcularOTsActivas([prendaId]);
+
   return NextResponse.json({ prendaId, procesoId, minutos });
 }

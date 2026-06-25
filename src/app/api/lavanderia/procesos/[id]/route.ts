@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/lavanderia/empleado";
+import { recalcularOTsActivas } from "@/lib/lavanderia/duraciones";
 
 // PATCH: renombrar proceso. DELETE: eliminar columna (cascade en duraciones).
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,5 +39,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   const { id } = await params;
 
   await prisma.lavProceso.delete({ where: { id } });
+
+  // El proceso (y sus minutos) desaparece de todas las prendas: recalcular las
+  // OTs activas para que el tablero refleje los nuevos tiempos.
+  await recalcularOTsActivas();
+
   return NextResponse.json({ ok: true });
 }
