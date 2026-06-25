@@ -59,9 +59,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="md:flex">
+    // Shell de alto fijo: sidebar y header del sidebar quedan estáticos y solo
+    // el contenido scrollea. En mobile es columna (barra arriba + contenido).
+    <div className="flex h-dvh flex-col overflow-hidden md:flex-row">
       <AdminSidebar adminNombre={admin.nombre} onLogout={logout} />
-      <div className="min-w-0 flex-1 p-4 sm:p-6">{children}</div>
+      <div className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
     </div>
   );
 }

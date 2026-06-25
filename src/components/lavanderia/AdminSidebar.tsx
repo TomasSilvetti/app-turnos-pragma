@@ -51,7 +51,7 @@ export function AdminSidebar({
     <nav
       className={cn(
         "flex shrink-0 flex-row gap-1 overflow-x-auto border-b border-white/60 bg-white/60 p-2 backdrop-blur-xl",
-        "md:h-[calc(100vh-4rem)] md:flex-col md:overflow-visible md:border-b-0 md:border-r md:p-3 md:transition-[width]",
+        "md:h-full md:flex-col md:overflow-y-auto md:border-b-0 md:border-r md:p-3 md:transition-[width]",
         colapsado ? "md:w-[4.5rem]" : "md:w-56"
       )}
     >
