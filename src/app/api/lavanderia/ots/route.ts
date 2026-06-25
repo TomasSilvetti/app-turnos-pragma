@@ -20,13 +20,16 @@ export async function POST(request: NextRequest) {
   if (!empleado) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  const items: ItemEntrada[] = Array.isArray(body.items)
+  // precioDetectado: precio de la linea leido del ticket; si viene, pisa al de la matriz.
+  const items: (ItemEntrada & { precioDetectado: number | null })[] = Array.isArray(body.items)
     ? body.items
         .filter((i: unknown) => i && typeof (i as ItemEntrada).descripcion === "string")
-        .map((i: ItemEntrada) => ({
+        .map((i: ItemEntrada & { precio?: number | null }) => ({
           prendaId: i.prendaId ?? null,
           descripcion: i.descripcion,
           cantidad: Number(i.cantidad) || 1,
+          precioDetectado:
+            typeof i.precio === "number" && Number.isFinite(i.precio) ? Math.max(0, Math.round(i.precio)) : null,
         }))
     : [];
 
@@ -40,6 +43,11 @@ export async function POST(request: NextRequest) {
       : null;
 
   const calculo = await calcularDuracion(items);
+  // El monto del ticket (precio detectado) tiene prioridad sobre el de la matriz.
+  const itemsConMonto = calculo.items.map((it, idx) => ({
+    ...it,
+    monto: items[idx]?.precioDetectado ?? it.monto,
+  }));
   const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
 
   const ot = await prisma.lavOT.create({
@@ -60,7 +68,7 @@ export async function POST(request: NextRequest) {
       empleadoCargaId: empleado.id,
       datosIA: body.datosIA ?? null,
       items: {
-        create: calculo.items.map((it) => ({
+        create: itemsConMonto.map((it) => ({
           descripcion: it.descripcion,
           prendaId: it.prendaId,
           cantidad: it.cantidad,

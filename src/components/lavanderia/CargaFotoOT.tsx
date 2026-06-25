@@ -7,7 +7,7 @@ import { LavSelect } from "./LavSelect";
 import { lavFetch } from "@/lib/lavanderia/client";
 
 type Prenda = { id: string; nombre: string };
-type ItemPreview = { descripcion: string; cantidad: number; prendaId: string | null };
+type ItemPreview = { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null };
 type OTPreview = {
   numero: string | null;
   nombreCliente: string | null;
@@ -17,7 +17,7 @@ type OTPreview = {
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; prendaNombre: string | null }[];
+  items: { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null; prendaNombre: string | null }[];
 };
 
 type Estado = "inicial" | "procesando" | "preview" | "creando" | "creada";
@@ -62,7 +62,7 @@ export function CargaFotoOT() {
       }
       const extraida: OTPreview = data.ot;
       setOt(extraida);
-      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId })));
+      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, precio: i.precio, prendaId: i.prendaId })));
       setEstado("preview");
     } catch {
       setError("Error de red al procesar la foto");
@@ -175,10 +175,25 @@ export function CargaFotoOT() {
                   value={it.cantidad}
                   onChange={(e) => setItem(idx, { cantidad: Math.max(1, parseInt(e.target.value, 10) || 1) })}
                   className="h-9 w-14 rounded-md border border-border bg-background text-center text-sm outline-none focus:border-primary"
+                  aria-label="Cantidad"
                 />
                 <button onClick={() => setItems((arr) => arr.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
                   <Trash2 className="size-4" />
                 </button>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm text-muted-foreground">$</span>
+                <input
+                  type="number"
+                  min={0}
+                  value={it.precio ?? ""}
+                  onChange={(e) =>
+                    setItem(idx, { precio: e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10) || 0) })
+                  }
+                  placeholder="Precio (del ticket)"
+                  className="h-9 flex-1 rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-primary"
+                  aria-label="Precio"
+                />
               </div>
               <LavSelect
                 value={it.prendaId ?? ""}
@@ -199,7 +214,7 @@ export function CargaFotoOT() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null }])}
+            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, precio: null, prendaId: null }])}
           >
             <Plus /> Agregar item
           </Button>

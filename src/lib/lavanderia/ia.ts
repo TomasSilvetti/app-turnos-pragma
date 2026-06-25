@@ -8,6 +8,7 @@ const MODELO = process.env.LAV_IA_MODEL || "claude-sonnet-4-6";
 export type ItemExtraido = {
   descripcion: string;
   cantidad: number;
+  precio: number | null; // precio de la linea tal como figura en el ticket
   prendaId: string | null;
   prendaNombre: string | null;
 };
@@ -61,6 +62,11 @@ const TOOL = {
           properties: {
             descripcion: { type: "string", description: "Texto de la prenda/servicio tal como aparece" },
             cantidad: { type: "number" },
+            precio: {
+              type: ["number", "null"],
+              description:
+                "Precio que figura en esa línea del ticket, en número sin símbolos ni puntos de miles (ej '$ 18.600,00' → 18600). Si la línea no muestra precio, null.",
+            },
             prendaSugerida: {
               type: ["string", "null"],
               description: "Nombre EXACTO de la lista de prendas conocidas que corresponde, o null",
@@ -105,6 +111,7 @@ export async function escanearComanda(
               `Hoy es ${hoyAR()} (yyyy-MM-dd). ` +
               "Extraé los datos y los items. Detectá también si está escrita la palabra URGENTE (urgente=true) " +
               'y si dice "PARA <fecha>" (devolvé fechaNecesaria en yyyy-MM-dd, infiriendo el año a partir de hoy). ' +
+              "Para cada item, detectá el precio que figura en su línea (campo precio, número sin símbolos). " +
               "Para cada item, si corresponde a una de estas prendas conocidas, " +
               "indicá su nombre EXACTO en prendaSugerida (si no, null):\n\n" +
               (listaPrendas || "(no hay prendas configuradas)"),
@@ -127,7 +134,7 @@ export async function escanearComanda(
     fechaTicket?: string | null;
     urgente?: boolean | null;
     fechaNecesaria?: string | null;
-    items?: { descripcion: string; cantidad: number; prendaSugerida?: string | null }[];
+    items?: { descripcion: string; cantidad: number; precio?: number | null; prendaSugerida?: string | null }[];
   };
 
   const fechaNecesaria =
@@ -142,6 +149,7 @@ export async function escanearComanda(
     return {
       descripcion: it.descripcion,
       cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
+      precio: typeof it.precio === "number" && Number.isFinite(it.precio) ? Math.max(0, Math.round(it.precio)) : null,
       prendaId: match?.id ?? null,
       prendaNombre: match?.nombre ?? null,
     };
