@@ -15,11 +15,14 @@ export function ItemOT({
   ot,
   soloLectura = false,
   dragHandle,
+  onAbrir,
 }: {
   ot: OTSnap;
   // En el tablero del admin las tarjetas se arrastran y no se inician/terminan.
   soloLectura?: boolean;
   dragHandle?: React.ReactNode;
+  // Click en la tarjeta (fuera del handle y los botones) abre el detalle.
+  onAbrir?: () => void;
 }) {
   const [procesando, setProcesando] = useState(false);
 
@@ -48,9 +51,11 @@ export function ItemOT({
 
   return (
     <article
+      onClick={onAbrir}
       style={{ minHeight: altoOT(ot.duracionMin) }}
       className={cn(
         "flex flex-col gap-1.5 overflow-hidden rounded-2xl border p-2.5 text-left shadow-[0_2px_10px_-4px_rgba(16,24,40,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(16,24,40,0.28)]",
+        onAbrir && "cursor-pointer",
         ot.estado === "terminado" && "border-emerald-200/70 bg-emerald-50/60 opacity-80 dark:border-emerald-500/40 dark:bg-emerald-500/5",
         ot.estado === "en_progreso" &&
           "border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-500/60 dark:bg-amber-500/10",
@@ -60,7 +65,7 @@ export function ItemOT({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-1.5">
-          {dragHandle}
+          {dragHandle && <span onClick={(e) => e.stopPropagation()}>{dragHandle}</span>}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">{titulo}</p>
             {ot.nombreCliente && ot.numero && (
@@ -138,7 +143,10 @@ export function ItemOT({
         {ot.estado === "pendiente" && ot.puedeEmpezar && !soloLectura && (
           <Button
             size="xs"
-            onClick={() => accion("empezar")}
+            onClick={(e) => {
+              e.stopPropagation();
+              accion("empezar");
+            }}
             disabled={procesando}
             className="rounded-full border-0 bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-[0_4px_12px_-3px_rgba(56,120,255,0.6)] hover:from-sky-600 hover:to-indigo-600"
           >
@@ -149,7 +157,10 @@ export function ItemOT({
           <Button
             size="xs"
             variant="secondary"
-            onClick={() => accion("terminar")}
+            onClick={(e) => {
+              e.stopPropagation();
+              accion("terminar");
+            }}
             disabled={procesando}
             className="rounded-full border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-[0_4px_12px_-3px_rgba(16,185,129,0.55)] hover:from-emerald-600 hover:to-teal-600"
           >

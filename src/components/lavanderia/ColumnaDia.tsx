@@ -29,7 +29,17 @@ function LineaAhora({ ahoraMin }: { ahoraMin: number }) {
 }
 
 // Contenido detallado (tarjetas) — para la columna de hoy y al expandir.
-function ContenidoCompleto({ dia, secciones, sinTurnos }: { dia: DiaSnap; secciones: SeccionTurno[]; sinTurnos: OTSnap[] }) {
+function ContenidoCompleto({
+  dia,
+  secciones,
+  sinTurnos,
+  onAbrirOT,
+}: {
+  dia: DiaSnap;
+  secciones: SeccionTurno[];
+  sinTurnos: OTSnap[];
+  onAbrirOT?: (ot: OTSnap) => void;
+}) {
   return (
     <div className="flex flex-col gap-2 p-2">
       {secciones.map((sec) => (
@@ -47,7 +57,7 @@ function ContenidoCompleto({ dia, secciones, sinTurnos }: { dia: DiaSnap; seccio
                 {dia.esHoy && sec.ahora !== null && i === Math.floor(sec.ahora * sec.ots.length) && (
                   <LineaAhora ahoraMin={dia.ahoraMin!} />
                 )}
-                <ItemOT ot={ot} />
+                <ItemOT ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} />
               </div>
             ))}
           </div>
@@ -57,7 +67,7 @@ function ContenidoCompleto({ dia, secciones, sinTurnos }: { dia: DiaSnap; seccio
       {sinTurnos.length > 0 && (
         <div className="space-y-2">
           {sinTurnos.map((ot) => (
-            <ItemOT key={ot.id} ot={ot} />
+            <ItemOT key={ot.id} ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} />
           ))}
         </div>
       )}
@@ -98,7 +108,7 @@ function ContenidoCompacto({ secciones }: { secciones: SeccionTurno[] }) {
   );
 }
 
-export function ColumnaDia({ dia, ancha }: { dia: DiaSnap; ancha: boolean }) {
+export function ColumnaDia({ dia, ancha, onAbrirOT }: { dia: DiaSnap; ancha: boolean; onAbrirOT?: (ot: OTSnap) => void }) {
   const { secciones, sinTurnos } = distribuirEnTurnos(dia);
   const cap = dia.capacidadMin;
   const ocup = dia.ocupacionMin;
@@ -137,7 +147,7 @@ export function ColumnaDia({ dia, ancha }: { dia: DiaSnap; ancha: boolean }) {
     return (
       <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm">
         {Header}
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} />
+        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} />
       </section>
     );
   }
@@ -149,7 +159,7 @@ export function ColumnaDia({ dia, ancha }: { dia: DiaSnap; ancha: boolean }) {
         <ContenidoCompacto secciones={secciones} />
       </div>
       <div className="hidden group-hover/col:block">
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} />
+        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} />
       </div>
     </section>
   );

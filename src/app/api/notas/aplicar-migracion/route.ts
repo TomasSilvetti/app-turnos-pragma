@@ -174,6 +174,15 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE "lav_ot_items" ADD COLUMN IF NOT EXISTS "monto" INTEGER NOT NULL DEFAULT 0`,
     ],
   },
+  {
+    name: "20260626120000_lav_precio_por_celda",
+    checksum: "45697c3bc76d2cb3debac1bdae843ac5985ed338bde71b7146af2e2c08a029ba",
+    statements: [
+      `ALTER TABLE "lav_duraciones" ADD COLUMN IF NOT EXISTS "precio" INTEGER NOT NULL DEFAULT 0`,
+      // Preserva los precios actuales: copia el precio del proceso a cada celda existente.
+      `UPDATE "lav_duraciones" d SET "precio" = p."precio" FROM "lav_procesos" p WHERE d."procesoId" = p."id" AND d."precio" = 0`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

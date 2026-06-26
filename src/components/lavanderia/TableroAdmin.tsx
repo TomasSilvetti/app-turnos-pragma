@@ -5,11 +5,14 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCorners,
+  pointerWithin,
+  rectIntersection,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -18,6 +21,7 @@ import { Loader2, GripVertical, Sparkles, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ItemOT } from "@/components/lavanderia/ItemOT";
+import { OTModal } from "@/components/lavanderia/OTModal";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { distribuirEnTurnos, formatoDuracion, nombreTurno, type SeccionTurno } from "@/lib/lavanderia/timeline";
 import { useEsMobile } from "@/hooks/useEsMobile";
@@ -25,7 +29,7 @@ import type { DiaSnap, OTSnap, TableroSnapshot } from "@/lib/lavanderia/tablero"
 
 // Tarjeta arrastrable: reusa el mismo diseño que el tablero del empleado (ItemOT),
 // agregando un handle de arrastre y ocultando las acciones de empleado.
-function TarjetaArrastrable({ ot }: { ot: OTSnap }) {
+function TarjetaArrastrable({ ot, onAbrir }: { ot: OTSnap; onAbrir?: (ot: OTSnap) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: ot.id });
   return (
     <div
@@ -35,7 +39,7 @@ function TarjetaArrastrable({ ot }: { ot: OTSnap }) {
     >
       <ItemOT
         ot={ot}
-        soloLectura
+        onAbrir={onAbrir ? () => onAbrir(ot) : undefined}
         dragHandle={
           <button
             {...attributes}
@@ -110,12 +114,14 @@ function ContenidoCompleto({
   sinTurnos,
   onActivarExtra,
   onDesactivarExtra,
+  onAbrirOT,
 }: {
   dia: DiaSnap;
   secciones: SeccionTurno[];
   sinTurnos: OTSnap[];
   onActivarExtra: (dia: DiaSnap) => void;
   onDesactivarExtra: (fecha: string) => void;
+  onAbrirOT?: (ot: OTSnap) => void;
 }) {
   const cap = dia.capacidadMin;
   const mostrarGap = dia.extra?.disponible && !dia.extra.activo;
@@ -142,7 +148,7 @@ function ContenidoCompleto({
             </span>
           </div>
           {sec.ots.map((ot) => (
-            <TarjetaArrastrable key={ot.id} ot={ot} />
+            <TarjetaArrastrable key={ot.id} ot={ot} onAbrir={onAbrirOT} />
           ))}
           {sec.ots.length === 0 && <p className="px-1 py-1 text-[11px] text-muted-foreground/60">Sin trabajos</p>}
 
@@ -154,7 +160,7 @@ function ContenidoCompleto({
       ))}
 
       {sinTurnos.map((ot) => (
-        <TarjetaArrastrable key={ot.id} ot={ot} />
+        <TarjetaArrastrable key={ot.id} ot={ot} onAbrir={onAbrirOT} />
       ))}
 
       {secciones.length === 0 && sinTurnos.length === 0 && (
@@ -168,14 +174,20 @@ function ColumnaAdmin({
   dia,
   ancha,
   esMobile,
+  arrastrando,
+  sobre,
   onActivarExtra,
   onDesactivarExtra,
+  onAbrirOT,
 }: {
   dia: DiaSnap;
   ancha: boolean;
   esMobile: boolean;
+  arrastrando: boolean;
+  sobre: boolean;
   onActivarExtra: (dia: DiaSnap) => void;
   onDesactivarExtra: (fecha: string) => void;
+  onAbrirOT?: (ot: OTSnap) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${dia.fecha}` });
   const { secciones, sinTurnos } = distribuirEnTurnos(dia);
@@ -217,6 +229,7 @@ function ColumnaAdmin({
       sinTurnos={sinTurnos}
       onActivarExtra={onActivarExtra}
       onDesactivarExtra={onDesactivarExtra}
+      onAbrirOT={onAbrirOT}
     />
   );
 
@@ -253,15 +266,36 @@ function ColumnaAdmin({
     );
   }
 
+  // Durante el arrastre, la expansión la maneja dnd-kit (columna sobre la que está
+  // el mouse), porque el `:hover` de CSS no es confiable mientras se arrastra.
+  // Sin arrastre, se expande con el hover normal del mouse.
+  const expandido = arrastrando && sobre;
   return (
-    <section className="group/col flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/45 shadow-[0_4px_20px_-12px_rgba(16,24,40,0.25)] backdrop-blur-sm transition-all duration-300 ease-in-out hover:flex-[3] hover:bg-white/60 hover:shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]">
+    <section
+      className={cn(
+        "flex min-w-0 flex-col overflow-hidden rounded-[1.25rem] border border-white/60 backdrop-blur-sm transition-all duration-300 ease-in-out",
+        expandido
+          ? "flex-[3] bg-white/60 shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]"
+          : "flex-1 bg-white/45 shadow-[0_4px_20px_-12px_rgba(16,24,40,0.25)]",
+        !arrastrando &&
+          "group/col hover:flex-[3] hover:bg-white/60 hover:shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]"
+      )}
+    >
       {Header}
       <SortableContext items={dia.ots.map((o) => o.id)} strategy={verticalListSortingStrategy}>
         <div ref={setNodeRef} className={cn("min-h-20 flex-1 transition-colors", isOver && "bg-sky-100/40")}>
-          <div className="group-hover/col:hidden">
+          {expandido ? (
+            Completo
+          ) : arrastrando ? (
             <ContenidoCompacto secciones={secciones} />
-          </div>
-          <div className="hidden group-hover/col:block">{Completo}</div>
+          ) : (
+            <>
+              <div className="group-hover/col:hidden">
+                <ContenidoCompacto secciones={secciones} />
+              </div>
+              <div className="hidden group-hover/col:block">{Completo}</div>
+            </>
+          )}
         </div>
       </SortableContext>
     </section>
@@ -272,7 +306,9 @@ export function TableroAdmin() {
   const [dias, setDias] = useState<DiaSnap[]>([]);
   const [cargando, setCargando] = useState(true);
   const [activa, setActiva] = useState<OTSnap | null>(null);
+  const [sobreFecha, setSobreFecha] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
+  const [otModal, setOtModal] = useState<OTSnap | null>(null);
   const esMobile = useEsMobile();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
@@ -297,6 +333,16 @@ export function TableroAdmin() {
 
   const fechaDeOT = (id: string) => dias.find((d) => d.ots.some((o) => o.id === id))?.fecha;
 
+  // Detecta el droppable bajo el puntero del mouse (no bajo el centro del ticket).
+  // Si el puntero no toca ningún droppable, cae a intersección de rectángulos.
+  const collisionDetection: CollisionDetection = (args) => {
+    const porPuntero = pointerWithin(args);
+    return porPuntero.length > 0 ? porPuntero : rectIntersection(args);
+  };
+
+  const fechaDeOver = (overId: string) =>
+    overId.startsWith("col:") ? overId.slice(4) : fechaDeOT(overId) ?? null;
+
   const onDragStart = (e: DragStartEvent) => {
     const id = String(e.active.id);
     for (const d of dias) {
@@ -305,8 +351,13 @@ export function TableroAdmin() {
     }
   };
 
+  const onDragOver = (e: DragOverEvent) => {
+    setSobreFecha(e.over ? fechaDeOver(String(e.over.id)) : null);
+  };
+
   const onDragEnd = (e: DragEndEvent) => {
     setActiva(null);
+    setSobreFecha(null);
     const { active, over } = e;
     if (!over) return;
     const activeId = String(active.id);
@@ -366,7 +417,13 @@ export function TableroAdmin() {
           Arrastrá las OTs para reordenarlas o moverlas entre días. Tocá el espacio entre turnos para activar el turno extra.
         </p>
       </div>
-      <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={onDragStart} onDragEnd={onDragEnd}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={collisionDetection}
+        onDragStart={onDragStart}
+        onDragOver={onDragOver}
+        onDragEnd={onDragEnd}
+      >
         <div className={cn("flex w-full gap-2 pb-4", esMobile ? "flex-col" : "items-stretch")}>
           {dias.map((dia, i) => (
             <ColumnaAdmin
@@ -374,8 +431,11 @@ export function TableroAdmin() {
               dia={dia}
               ancha={anchaIdx === i}
               esMobile={esMobile}
+              arrastrando={activa !== null}
+              sobre={sobreFecha === dia.fecha}
               onActivarExtra={setConfirmar}
               onDesactivarExtra={(fecha) => cambiarExtra(fecha, false)}
+              onAbrirOT={setOtModal}
             />
           ))}
         </div>
@@ -387,6 +447,17 @@ export function TableroAdmin() {
           )}
         </DragOverlay>
       </DndContext>
+
+      {otModal && (
+        <OTModal
+          ot={otModal}
+          onCerrar={() => setOtModal(null)}
+          onActualizar={() => {
+            setOtModal(null);
+            cargar();
+          }}
+        />
+      )}
 
       {confirmar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setConfirmar(null)}>

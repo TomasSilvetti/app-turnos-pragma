@@ -17,6 +17,7 @@ export type OTSnap = {
   numero: string | null;
   nombreCliente: string | null;
   telefono: string | null;
+  domicilio: string | null;
   estado: string;
   duracionMin: number;
   orden: number;
@@ -26,7 +27,7 @@ export type OTSnap = {
   empezadoEn: string | null;
   terminadoEn: string | null;
   empleadoTrabajo: string | null;
-  items: { descripcion: string; cantidad: number; procesos: string[]; duracionMin: number; monto: number }[];
+  items: { descripcion: string; cantidad: number; prendaId: string | null; procesos: string[]; duracionMin: number; monto: number }[];
   puedeEmpezar: boolean;
 };
 
@@ -89,7 +90,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
     where: { fechaAsignada: { gte: hoy, lte: hasta } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
-      items: { select: { descripcion: true, cantidad: true, procesos: true, duracionMin: true, monto: true } },
+      items: { select: { descripcion: true, cantidad: true, prendaId: true, procesos: true, duracionMin: true, monto: true } },
       empleadoTrabajo: { select: { nombre: true } },
     },
   });
@@ -127,6 +128,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
       numero: ot.numero,
       nombreCliente: ot.nombreCliente,
       telefono: ot.telefono,
+      domicilio: ot.domicilio,
       estado: ot.estado,
       duracionMin: ot.duracionMin,
       orden: ot.orden,
@@ -139,6 +141,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
       items: ot.items.map((it) => ({
         descripcion: it.descripcion,
         cantidad: it.cantidad,
+        prendaId: it.prendaId,
         procesos: it.procesos,
         duracionMin: it.duracionMin,
         monto: it.monto,

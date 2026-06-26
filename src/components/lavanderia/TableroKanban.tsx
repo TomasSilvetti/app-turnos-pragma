@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { Loader2, WifiOff } from "lucide-react";
 import { useTableroStream } from "@/hooks/useTableroStream";
 import { ColumnaDia } from "./ColumnaDia";
+import { OTModal } from "./OTModal";
+import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const { snapshot, conectado } = useTableroStream(empleadoId);
+  const [otModal, setOtModal] = useState<OTSnap | null>(null);
 
   if (!snapshot) {
     return (
@@ -38,9 +42,13 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
       </div>
       <div className="flex w-full items-stretch gap-2 pb-4">
         {snapshot.dias.map((dia, i) => (
-          <ColumnaDia key={dia.fecha} dia={dia} ancha={anchaIdx === i} />
+          <ColumnaDia key={dia.fecha} dia={dia} ancha={anchaIdx === i} onAbrirOT={setOtModal} />
         ))}
       </div>
+      {otModal && (
+        // El SSE refresca el snapshot solo; al actualizar solo cerramos el modal.
+        <OTModal ot={otModal} onCerrar={() => setOtModal(null)} onActualizar={() => setOtModal(null)} />
+      )}
     </div>
   );
 }

@@ -76,7 +76,8 @@ export type PrioridadOT = {
 //   en ningun dia del horizonte, al primer dia con turnos (overflow controlado).
 export async function asignarOT(
   duracionMin: number,
-  prioridad: PrioridadOT = {}
+  prioridad: PrioridadOT = {},
+  excluirId?: string // al reasignar una OT editada, no contarla en la ocupacion
 ): Promise<{ fechaAsignada: string; orden: number }> {
   const hoy = hoyAR();
   const hasta = sumarDias(hoy, HORIZONTE_DIAS);
@@ -85,7 +86,7 @@ export async function asignarOT(
   // Ocupacion, cantidad y menor orden actual por dia.
   const grupos = await prisma.lavOT.groupBy({
     by: ["fechaAsignada"],
-    where: { fechaAsignada: { gte: hoy, lte: hasta } },
+    where: { fechaAsignada: { gte: hoy, lte: hasta }, ...(excluirId ? { id: { not: excluirId } } : {}) },
     _sum: { duracionMin: true },
     _count: { _all: true },
     _min: { orden: true },
