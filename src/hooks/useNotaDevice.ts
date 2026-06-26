@@ -20,30 +20,43 @@ export function useNotaDevice() {
 
     const init = async () => {
       let id = getStoredDeviceId();
-      if (!id) {
-        // Sin device en este navegador → crear uno nuevo.
-        const creado = await fetch("/api/notas/device", { method: "POST" })
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null);
+
+      // Validar el device guardado contra el server. Si responde 401 el device
+      // ya no existe en la BD (p.ej. migración/reseteo de base) y el id quedó
+      // "fantasma": hay que descartarlo y recrear, porque si no toda escritura
+      // siguiente (crear nota, recordatorios, etc.) falla con 401.
+      if (id) {
+        const res = await notasFetch("/api/notas/device").catch(() => null);
         if (cancelado) return;
-        if (!creado?.id) {
-          // Si la creación falla (p.ej. migración pendiente en prod), marcar ready
-          // igualmente para que la UI muestre el estado vacío en vez de loading infinito.
-          setEstado({ deviceId: null, ready: true, hasPassword: false });
+        if (res?.ok) {
+          const info = await res.json().catch(() => null);
+          setEstado({ deviceId: id, ready: true, hasPassword: Boolean(info?.hasPassword) });
           return;
         }
-        id = creado.id as string;
-        setStoredDeviceId(id);
+        if (res?.status === 401) {
+          // Device inexistente en la BD → descartar id local y recrear abajo.
+          id = null;
+        } else {
+          // Error transitorio (red/server): conservar el id sin recrear.
+          setEstado({ deviceId: id, ready: true, hasPassword: false });
+          return;
+        }
       }
 
-      // Consultar si el device ya tiene contraseña definida.
-      // Si falla (p.ej. columna passwordHash no existe todavía en prod), seguimos
-      // con hasPassword: false — la función de notas sigue operativa.
-      const info = await notasFetch("/api/notas/device")
+      // Sin device válido en este navegador → crear uno nuevo.
+      const creado = await fetch("/api/notas/device", { method: "POST" })
         .then((r) => (r.ok ? r.json() : null))
         .catch(() => null);
       if (cancelado) return;
-      setEstado({ deviceId: id, ready: true, hasPassword: Boolean(info?.hasPassword) });
+      if (!creado?.id) {
+        // Si la creación falla (p.ej. migración pendiente en prod), marcar ready
+        // igualmente para que la UI muestre el estado vacío en vez de loading infinito.
+        setEstado({ deviceId: null, ready: true, hasPassword: false });
+        return;
+      }
+      id = creado.id as string;
+      setStoredDeviceId(id);
+      setEstado({ deviceId: id, ready: true, hasPassword: false });
     };
 
     init();
