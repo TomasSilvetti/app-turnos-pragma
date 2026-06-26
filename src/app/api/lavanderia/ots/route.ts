@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
           prendaId: i.prendaId ?? null,
           descripcion: i.descripcion,
           cantidad: Number(i.cantidad) || 1,
+          servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
           precioDetectado:
             typeof i.precio === "number" && Number.isFinite(i.precio) ? Math.max(0, Math.round(i.precio)) : null,
         }))
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
           descripcion: it.descripcion,
           prendaId: it.prendaId,
           cantidad: it.cantidad,
-          procesos: it.procesos,
+          servicioIds: it.servicioIds,
           duracionMin: it.duracionMin,
           monto: it.monto,
         })),

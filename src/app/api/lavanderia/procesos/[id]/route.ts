@@ -10,22 +10,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
 
   const body = await request.json().catch(() => ({}));
-  const data: { nombre?: string; esExtra?: boolean } = {};
-
-  if (body.nombre !== undefined) {
-    const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
-    if (!nombre) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
-    data.nombre = nombre;
-  }
-  if (body.esExtra !== undefined) data.esExtra = body.esExtra === true;
-
-  if (Object.keys(data).length === 0)
-    return NextResponse.json({ error: "Nada para actualizar" }, { status: 400 });
+  const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
+  if (!nombre) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
   const proceso = await prisma.lavProceso.update({
     where: { id },
-    data,
-    select: { id: true, nombre: true, esExtra: true },
+    data: { nombre },
+    select: { id: true, nombre: true },
   });
   return NextResponse.json({ proceso });
 }

@@ -27,7 +27,7 @@ export type OTSnap = {
   empezadoEn: string | null;
   terminadoEn: string | null;
   empleadoTrabajo: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; procesos: string[]; duracionMin: number; monto: number }[];
+  items: { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[]; servicios: string[]; duracionMin: number; monto: number }[];
   puedeEmpezar: boolean;
 };
 
@@ -90,10 +90,14 @@ export async function getTablero(): Promise<TableroSnapshot> {
     where: { fechaAsignada: { gte: hoy, lte: hasta } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
-      items: { select: { descripcion: true, cantidad: true, prendaId: true, procesos: true, duracionMin: true, monto: true } },
+      items: { select: { descripcion: true, cantidad: true, prendaId: true, servicioIds: true, duracionMin: true, monto: true } },
       empleadoTrabajo: { select: { nombre: true } },
     },
   });
+
+  // Resolver nombres de servicios para mostrar en las tarjetas.
+  const servicios = await prisma.lavServicio.findMany({ select: { id: true, nombre: true } });
+  const nombreServicio = new Map(servicios.map((s) => [s.id, s.nombre]));
 
   const porDia = new Map<string, typeof ots>();
   for (const ot of ots) {
@@ -142,7 +146,8 @@ export async function getTablero(): Promise<TableroSnapshot> {
         descripcion: it.descripcion,
         cantidad: it.cantidad,
         prendaId: it.prendaId,
-        procesos: it.procesos,
+        servicioIds: it.servicioIds,
+        servicios: it.servicioIds.map((id) => nombreServicio.get(id) ?? "").filter(Boolean),
         duracionMin: it.duracionMin,
         monto: it.monto,
       })),

@@ -489,17 +489,47 @@ model LavPasswordResetToken {
   @@map("lav_password_reset_tokens")
 }
 
+// Proceso granular (lavado, secado, planchado...). Suma minutos que dependen
+// de la prenda (matriz Tiempos = prenda x proceso).
 model LavProceso {
   id        String   @id @default(cuid())
   nombre    String
   orden     Int      @default(0)
-  precio    Int      @default(0) // precio del servicio, en pesos
-  esExtra   Boolean  @default(false) // servicio extra (add-on) vs servicio base
   createdAt DateTime @default(now())
 
   duraciones LavDuracion[]
+  servicios  LavServicioProceso[]
 
   @@map("lav_procesos")
+}
+
+// Servicio (LIMPIEZA, etc.): nombre + conjunto fijo de procesos. El precio lo
+// pone el servicio por prenda (matriz Precios = prenda x servicio).
+model LavServicio {
+  id        String   @id @default(cuid())
+  nombre    String
+  orden     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  procesos LavServicioProceso[]
+  precios  LavPrecio[]
+
+  @@map("lav_servicios")
+}
+
+// Composición global de un servicio: qué procesos lo integran.
+model LavServicioProceso {
+  id         String @id @default(cuid())
+  servicioId String
+  procesoId  String
+
+  servicio LavServicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+  proceso  LavProceso  @relation(fields: [procesoId], references: [id], onDelete: Cascade)
+
+  @@unique([servicioId, procesoId])
+  @@index([servicioId])
+  @@index([procesoId])
+  @@map("lav_servicio_procesos")
 }
 
 model LavPrenda {
@@ -509,17 +539,18 @@ model LavPrenda {
   createdAt DateTime @default(now())
 
   duraciones LavDuracion[]
+  precios    LavPrecio[]
   items      LavOTItem[]
 
   @@map("lav_prendas")
 }
 
+// Tiempos: minutos de un proceso para una prenda (matriz prenda x proceso).
 model LavDuracion {
   id        String @id @default(cuid())
   prendaId  String
   procesoId String
   minutos   Int    @default(0)
-  precio    Int    @default(0) // precio del proceso para esta prenda, en pesos
 
   prenda  LavPrenda  @relation(fields: [prendaId], references: [id], onDelete: Cascade)
   proceso LavProceso @relation(fields: [procesoId], references: [id], onDelete: Cascade)
@@ -528,6 +559,22 @@ model LavDuracion {
   @@index([prendaId])
   @@index([procesoId])
   @@map("lav_duraciones")
+}
+
+// Precios: precio de un servicio para una prenda (matriz prenda x servicio).
+model LavPrecio {
+  id         String @id @default(cuid())
+  prendaId   String
+  servicioId String
+  precio     Int    @default(0)
+
+  prenda   LavPrenda   @relation(fields: [prendaId], references: [id], onDelete: Cascade)
+  servicio LavServicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
+
+  @@unique([prendaId, servicioId])
+  @@index([prendaId])
+  @@index([servicioId])
+  @@map("lav_precios")
 }
 
 // Configuración global de turnos (single-tenant). tipo: "manana" | "tarde" | "extra".
@@ -589,7 +636,7 @@ model LavOTItem {
   descripcion String
   prendaId    String?
   cantidad    Int      @default(1)
-  procesos    String[] // nombres de procesos aplicados
+  servicioIds String[] // ids de los servicios aplicados a la prenda
   duracionMin Int      @default(0)
   monto       Int      @default(0) // snapshot del monto de la linea (precioUnit x cantidad)
 

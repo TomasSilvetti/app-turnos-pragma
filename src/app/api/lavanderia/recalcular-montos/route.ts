@@ -1,38 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/lavanderia/empleado";
+import { recalcularOTsActivas } from "@/lib/lavanderia/duraciones";
 
-// POST: recalcula el monto de todos los items de OT aplicando los precios
-// actuales de la matriz. Se corre tras cargar/cambiar precios. Solo admin.
+// POST: recalcula duración y monto de todas las OTs activas con la matriz actual
+// (tiempos/precios/servicios). Solo admin.
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  // prendaId -> precio unitario (suma de precios de las celdas que aplican)
-  const duraciones = await prisma.lavDuracion.findMany({
-    select: { prendaId: true, precio: true },
-  });
-  const precioPorPrenda = new Map<string, number>();
-  for (const d of duraciones) {
-    precioPorPrenda.set(d.prendaId, (precioPorPrenda.get(d.prendaId) ?? 0) + d.precio);
-  }
-
-  const items = await prisma.lavOTItem.findMany({
-    select: { id: true, prendaId: true, cantidad: true, monto: true },
-  });
-
-  let actualizados = 0;
-  await prisma.$transaction(
-    items
-      .map((it) => {
-        const precioUnit = it.prendaId ? precioPorPrenda.get(it.prendaId) ?? 0 : 0;
-        const monto = precioUnit * it.cantidad;
-        if (monto === it.monto) return null;
-        actualizados++;
-        return prisma.lavOTItem.update({ where: { id: it.id }, data: { monto } });
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null)
-  );
-
-  return NextResponse.json({ ok: true, total: items.length, actualizados });
+  const actualizados = await recalcularOTsActivas();
+  return NextResponse.json({ ok: true, actualizados });
 }

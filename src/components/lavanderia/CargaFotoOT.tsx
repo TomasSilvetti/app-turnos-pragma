@@ -5,9 +5,11 @@ import { Camera, Loader2, Check, X, Plus, Trash2, AlertTriangle, Flame } from "l
 import { Button } from "@/components/ui/button";
 import { LavSelect } from "./LavSelect";
 import { lavFetch } from "@/lib/lavanderia/client";
+import { cn } from "@/lib/utils";
 
 type Prenda = { id: string; nombre: string };
-type ItemPreview = { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null };
+type Servicio = { id: string; nombre: string };
+type ItemPreview = { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null; servicioIds: string[] };
 type OTPreview = {
   numero: string | null;
   nombreCliente: string | null;
@@ -17,7 +19,7 @@ type OTPreview = {
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null;
-  items: { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null; prendaNombre: string | null }[];
+  items: { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null; prendaNombre: string | null; servicioIds: string[] }[];
 };
 
 type Estado = "inicial" | "procesando" | "preview" | "creando" | "creada";
@@ -26,6 +28,7 @@ export function CargaFotoOT() {
   const [estado, setEstado] = useState<Estado>("inicial");
   const [error, setError] = useState<string | null>(null);
   const [prendas, setPrendas] = useState<Prenda[]>([]);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
   const [ot, setOt] = useState<OTPreview | null>(null);
   const [items, setItems] = useState<ItemPreview[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,6 +37,10 @@ export function CargaFotoOT() {
     lavFetch("/api/lavanderia/prendas")
       .then((r) => (r.ok ? r.json() : { prendas: [] }))
       .then((d: { prendas: Prenda[] }) => setPrendas(d.prendas ?? []))
+      .catch(() => {});
+    lavFetch("/api/lavanderia/servicios")
+      .then((r) => (r.ok ? r.json() : { servicios: [] }))
+      .then((d: { servicios: Servicio[] }) => setServicios(d.servicios ?? []))
       .catch(() => {});
   }, []);
 
@@ -62,7 +69,7 @@ export function CargaFotoOT() {
       }
       const extraida: OTPreview = data.ot;
       setOt(extraida);
-      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, precio: i.precio, prendaId: i.prendaId })));
+      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, precio: i.precio, prendaId: i.prendaId, servicioIds: i.servicioIds ?? [] })));
       setEstado("preview");
     } catch {
       setError("Error de red al procesar la foto");
@@ -87,7 +94,7 @@ export function CargaFotoOT() {
           fechaTicket: ot.fechaTicket,
           urgente: ot.urgente,
           fechaNecesaria: ot.fechaNecesaria,
-          items: items.filter((i) => i.descripcion.trim()),
+          items: items.filter((i) => i.prendaId || i.descripcion.trim()),
           datosIA: ot,
         }),
       });
@@ -105,6 +112,20 @@ export function CargaFotoOT() {
 
   const setItem = (idx: number, cambios: Partial<ItemPreview>) =>
     setItems((arr) => arr.map((it, i) => (i === idx ? { ...it, ...cambios } : it)));
+
+  const elegirPrenda = (idx: number, prendaId: string) => {
+    const prenda = prendas.find((p) => p.id === prendaId);
+    setItem(idx, { prendaId: prendaId || null, descripcion: prenda?.nombre ?? "" });
+  };
+
+  const toggleServicio = (idx: number, servicioId: string) =>
+    setItems((arr) =>
+      arr.map((it, i) => {
+        if (i !== idx) return it;
+        const tiene = it.servicioIds.includes(servicioId);
+        return { ...it, servicioIds: tiene ? it.servicioIds.filter((s) => s !== servicioId) : [...it.servicioIds, servicioId] };
+      })
+    );
 
   if (estado === "creada") {
     return (
@@ -163,11 +184,13 @@ export function CargaFotoOT() {
           {items.map((it, idx) => (
             <div key={idx} className="space-y-2 rounded-lg border border-border p-2.5">
               <div className="flex items-center gap-2">
-                <input
-                  value={it.descripcion}
-                  onChange={(e) => setItem(idx, { descripcion: e.target.value })}
-                  className="h-9 flex-1 rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-primary"
-                  placeholder="Descripción"
+                <LavSelect
+                  className="flex-1"
+                  value={it.prendaId ?? ""}
+                  onChange={(v) => elegirPrenda(idx, v)}
+                  aria-label="Prenda"
+                  placeholder="Elegí la prenda…"
+                  options={prendas.map((p) => ({ value: p.id, label: p.nombre }))}
                 />
                 <input
                   type="number"
@@ -181,6 +204,28 @@ export function CargaFotoOT() {
                   <Trash2 className="size-4" />
                 </button>
               </div>
+
+              {/* Servicios como chips toggle */}
+              <div className="flex flex-wrap gap-1.5">
+                {servicios.map((s) => {
+                  const activo = it.servicioIds.includes(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => toggleServicio(idx, s.id)}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                        activo ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"
+                      )}
+                    >
+                      {s.nombre}
+                    </button>
+                  );
+                })}
+                {servicios.length === 0 && <span className="text-[11px] text-muted-foreground">No hay servicios configurados</span>}
+              </div>
+
               <div className="flex items-center gap-1.5">
                 <span className="text-sm text-muted-foreground">$</span>
                 <input
@@ -195,15 +240,6 @@ export function CargaFotoOT() {
                   aria-label="Precio"
                 />
               </div>
-              <LavSelect
-                value={it.prendaId ?? ""}
-                onChange={(v) => setItem(idx, { prendaId: v || null })}
-                aria-label="Prenda"
-                options={[
-                  { value: "", label: "— Sin prenda (a revisar) —" },
-                  ...prendas.map((p) => ({ value: p.id, label: p.nombre })),
-                ]}
-              />
               {!it.prendaId && (
                 <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                   <AlertTriangle className="size-3" /> Sin prenda no se calcula duración
@@ -214,7 +250,7 @@ export function CargaFotoOT() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, precio: null, prendaId: null }])}
+            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, precio: null, prendaId: null, servicioIds: [] }])}
           >
             <Plus /> Agregar item
           </Button>

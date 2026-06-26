@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireEmpleado } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
 
-// POST: dado un conjunto de items, devuelve duración y monto (de la matriz) por
-// item y totales. Lo usa el modal de edición para previsualizar / recalcular.
+// POST: dado un conjunto de items (prenda + servicios), devuelve duración y monto
+// por item y totales (de la matriz). Lo usa el modal de edición / carga.
 export async function POST(request: NextRequest) {
   const empleado = await requireEmpleado(request);
   if (!empleado) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
           prendaId: i.prendaId ?? null,
           descripcion: i.descripcion,
           cantidad: Number(i.cantidad) || 1,
+          servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
         }))
     : [];
 

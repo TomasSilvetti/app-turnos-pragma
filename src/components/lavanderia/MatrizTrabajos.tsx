@@ -6,78 +6,79 @@ import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import { RenombrarModal } from "./RenombrarModal";
+import { ServicioModal } from "./ServicioModal";
 
 type Item = { id: string; nombre: string };
-type Proceso = Item & { esExtra: boolean };
+type Servicio = Item & { procesoIds: string[] };
 type Vista = "tiempos" | "precios";
 type Edicion = { tipo: "prendas" | "procesos"; id: string; nombre: string };
-const key = (prendaId: string, procesoId: string) => `${prendaId}:${procesoId}`;
+const key = (a: string, b: string) => `${a}:${b}`;
 
 export function MatrizTrabajos() {
   const [prendas, setPrendas] = useState<Item[]>([]);
-  const [procesos, setProcesos] = useState<Proceso[]>([]);
-  const [dur, setDur] = useState<Record<string, number>>({});
-  const [precios, setPrecios] = useState<Record<string, number>>({});
+  const [procesos, setProcesos] = useState<Item[]>([]);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [tiempos, setTiempos] = useState<Record<string, number>>({}); // prenda:proceso → minutos
+  const [precios, setPrecios] = useState<Record<string, number>>({}); // prenda:servicio → precio
   const [vista, setVista] = useState<Vista>("tiempos");
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
-  const [nuevoEsExtra, setNuevoEsExtra] = useState(false);
   const [recalculando, setRecalculando] = useState(false);
   const [edicion, setEdicion] = useState<Edicion | null>(null);
+  // null = modal cerrado; objeto = editar; "nuevo" = crear.
+  const [servicioModal, setServicioModal] = useState<Servicio | "nuevo" | null>(null);
 
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/trabajos")
-      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], duraciones: [] }))
-      .then((d: { prendas: Item[]; procesos: Proceso[]; duraciones: { prendaId: string; procesoId: string; minutos: number; precio: number }[] }) => {
-        setPrendas(d.prendas ?? []);
-        setProcesos(d.procesos ?? []);
-        const mapaDur: Record<string, number> = {};
-        const mapaPre: Record<string, number> = {};
-        for (const c of d.duraciones ?? []) {
-          mapaDur[key(c.prendaId, c.procesoId)] = c.minutos;
-          mapaPre[key(c.prendaId, c.procesoId)] = c.precio;
+      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], servicios: [], tiempos: [], precios: [] }))
+      .then(
+        (d: {
+          prendas: Item[];
+          procesos: Item[];
+          servicios: Servicio[];
+          tiempos: { prendaId: string; procesoId: string; minutos: number }[];
+          precios: { prendaId: string; servicioId: string; precio: number }[];
+        }) => {
+          setPrendas(d.prendas ?? []);
+          setProcesos(d.procesos ?? []);
+          setServicios(d.servicios ?? []);
+          const mapaT: Record<string, number> = {};
+          for (const c of d.tiempos ?? []) mapaT[key(c.prendaId, c.procesoId)] = c.minutos;
+          setTiempos(mapaT);
+          const mapaP: Record<string, number> = {};
+          for (const c of d.precios ?? []) mapaP[key(c.prendaId, c.servicioId)] = c.precio;
+          setPrecios(mapaP);
         }
-        setDur(mapaDur);
-        setPrecios(mapaPre);
-      })
+      )
       .catch(() => {})
       .finally(() => setCargando(false));
   }, []);
 
   useEffect(() => cargar(), [cargar]);
 
-  const guardarCelda = async (prendaId: string, procesoId: string, valor: string) => {
+  const guardarTiempo = async (prendaId: string, procesoId: string, valor: string) => {
     const minutos = Math.max(0, parseInt(valor, 10) || 0);
     const k = key(prendaId, procesoId);
-    setDur((prev) => {
+    setTiempos((prev) => {
       const next = { ...prev };
       if (minutos > 0) next[k] = minutos;
       else delete next[k];
       return next;
     });
-    // El precio acompaña a la celda: si deja de aplicar, se borra; si recién
-    // aparece, arranca en 0.
-    setPrecios((prev) => {
-      const next = { ...prev };
-      if (minutos > 0) {
-        if (next[k] === undefined) next[k] = 0;
-      } else delete next[k];
-      return next;
-    });
-    await lavFetch("/api/lavanderia/duraciones", {
-      method: "PUT",
-      body: JSON.stringify({ prendaId, procesoId, minutos }),
-    });
+    await lavFetch("/api/lavanderia/duraciones", { method: "PUT", body: JSON.stringify({ prendaId, procesoId, minutos }) });
   };
 
-  const guardarPrecio = async (prendaId: string, procesoId: string, valor: string) => {
+  const guardarPrecio = async (prendaId: string, servicioId: string, valor: string) => {
     const precio = Math.max(0, parseInt(valor, 10) || 0);
-    setPrecios((prev) => ({ ...prev, [key(prendaId, procesoId)]: precio }));
-    await lavFetch("/api/lavanderia/duraciones", {
-      method: "PUT",
-      body: JSON.stringify({ prendaId, procesoId, precio }),
+    const k = key(prendaId, servicioId);
+    setPrecios((prev) => {
+      const next = { ...prev };
+      if (precio > 0) next[k] = precio;
+      else delete next[k];
+      return next;
     });
+    await lavFetch("/api/lavanderia/precios", { method: "PUT", body: JSON.stringify({ prendaId, servicioId, precio }) });
   };
 
   const agregarPrenda = async () => {
@@ -94,49 +95,60 @@ export function MatrizTrabajos() {
   const agregarProceso = async () => {
     const nombre = nuevoProceso.trim();
     if (!nombre) return;
-    const res = await lavFetch("/api/lavanderia/procesos", {
-      method: "POST",
-      body: JSON.stringify({ nombre, esExtra: nuevoEsExtra }),
-    });
+    const res = await lavFetch("/api/lavanderia/procesos", { method: "POST", body: JSON.stringify({ nombre }) });
     if (res.ok) {
       const { proceso } = await res.json();
       setProcesos((p) => [...p, proceso]);
       setNuevoProceso("");
-      setNuevoEsExtra(false);
     }
   };
 
-  const guardarProceso = async (id: string, campos: { esExtra?: boolean }) => {
-    setProcesos((p) => p.map((x) => (x.id === id ? { ...x, ...campos } : x)));
-    await lavFetch(`/api/lavanderia/procesos/${id}`, { method: "PATCH", body: JSON.stringify(campos) });
+  const guardarServicio = async (data: { id?: string; nombre: string; procesoIds: string[] }) => {
+    const url = data.id ? `/api/lavanderia/servicios/${data.id}` : "/api/lavanderia/servicios";
+    const res = await lavFetch(url, {
+      method: data.id ? "PATCH" : "POST",
+      body: JSON.stringify({ nombre: data.nombre, procesoIds: data.procesoIds }),
+    });
+    if (res.ok) {
+      const { servicio } = await res.json();
+      setServicios((arr) => (data.id ? arr.map((s) => (s.id === servicio.id ? servicio : s)) : [...arr, servicio]));
+      setServicioModal(null);
+    }
   };
 
-  const recalcularMontos = async () => {
-    if (!confirm("¿Recalcular el monto de todas las OTs con los precios actuales?")) return;
+  const recalcular = async () => {
+    if (!confirm("¿Recalcular duración y monto de todas las OTs con la matriz actual?")) return;
     setRecalculando(true);
     try {
       const res = await lavFetch("/api/lavanderia/recalcular-montos", { method: "POST" });
       if (res.ok) {
-        const { actualizados, total } = await res.json();
-        alert(`Listo: ${actualizados} de ${total} items actualizados.`);
-      } else {
-        alert("No se pudo recalcular.");
-      }
+        const { actualizados } = await res.json();
+        alert(`Listo: ${actualizados} OTs recalculadas.`);
+      } else alert("No se pudo recalcular.");
     } finally {
       setRecalculando(false);
     }
   };
 
   const eliminarPrenda = async (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar la prenda "${nombre}" y sus duraciones?`)) return;
+    if (!confirm(`¿Eliminar la prenda "${nombre}"?`)) return;
     const res = await lavFetch(`/api/lavanderia/prendas/${id}`, { method: "DELETE" });
     if (res.ok) setPrendas((p) => p.filter((x) => x.id !== id));
   };
 
   const eliminarProceso = async (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar el proceso "${nombre}" y sus duraciones?`)) return;
+    if (!confirm(`¿Eliminar el proceso "${nombre}"?`)) return;
     const res = await lavFetch(`/api/lavanderia/procesos/${id}`, { method: "DELETE" });
-    if (res.ok) setProcesos((p) => p.filter((x) => x.id !== id));
+    if (res.ok) {
+      setProcesos((p) => p.filter((x) => x.id !== id));
+      setServicios((arr) => arr.map((s) => ({ ...s, procesoIds: s.procesoIds.filter((pid) => pid !== id) })));
+    }
+  };
+
+  const eliminarServicio = async (id: string, nombre: string) => {
+    if (!confirm(`¿Eliminar el servicio "${nombre}" y sus precios?`)) return;
+    const res = await lavFetch(`/api/lavanderia/servicios/${id}`, { method: "DELETE" });
+    if (res.ok) setServicios((arr) => arr.filter((x) => x.id !== id));
   };
 
   const confirmarRenombre = async (nombre: string) => {
@@ -146,11 +158,8 @@ export function MatrizTrabajos() {
     if (nombre === actual) return;
     const res = await lavFetch(`/api/lavanderia/${tipo}/${id}`, { method: "PATCH", body: JSON.stringify({ nombre }) });
     if (res.ok) {
-      if (tipo === "prendas") {
-        setPrendas((arr) => arr.map((x) => (x.id === id ? { ...x, nombre } : x)));
-      } else {
-        setProcesos((arr) => arr.map((x) => (x.id === id ? { ...x, nombre } : x)));
-      }
+      const setter = tipo === "prendas" ? setPrendas : setProcesos;
+      setter((arr) => arr.map((x) => (x.id === id ? { ...x, nombre } : x)));
     }
   };
 
@@ -163,6 +172,7 @@ export function MatrizTrabajos() {
   }
 
   const esTiempos = vista === "tiempos";
+  const columnas: Item[] = esTiempos ? procesos : servicios;
 
   return (
     <div className="space-y-5">
@@ -171,12 +181,12 @@ export function MatrizTrabajos() {
           <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
           <p className="text-sm text-muted-foreground">
             {esTiempos
-              ? "Duración (en minutos) de cada proceso por prenda. La duración de una OT es la suma de los procesos de sus prendas."
-              : "Precio (en pesos) de cada proceso por prenda. El monto de una OT es la suma de los procesos de sus prendas."}
+              ? "Minutos de cada proceso por prenda. La duración de un ítem es la suma de los procesos de sus servicios."
+              : "Precio de cada servicio por prenda. El monto de un ítem es la suma de los servicios aplicados."}
           </p>
         </div>
-        <Button size="sm" variant="outline" onClick={recalcularMontos} disabled={recalculando}>
-          {recalculando ? <Loader2 className="animate-spin" /> : <Calculator />} Recalcular montos
+        <Button size="sm" variant="outline" onClick={recalcular} disabled={recalculando}>
+          {recalculando ? <Loader2 className="animate-spin" /> : <Calculator />} Recalcular OTs
         </Button>
       </div>
 
@@ -215,27 +225,24 @@ export function MatrizTrabajos() {
             <Plus /> Prenda
           </Button>
         </div>
-        <div className="flex items-center gap-2">
-          <input
-            value={nuevoProceso}
-            onChange={(e) => setNuevoProceso(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
-            placeholder="Nuevo proceso"
-            className="h-9 w-44 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-          />
-          <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        {esTiempos ? (
+          <div className="flex items-center gap-2">
             <input
-              type="checkbox"
-              checked={nuevoEsExtra}
-              onChange={(e) => setNuevoEsExtra(e.target.checked)}
-              className="size-4 rounded border-border"
+              value={nuevoProceso}
+              onChange={(e) => setNuevoProceso(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
+              placeholder="Nuevo proceso"
+              className="h-9 w-44 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
             />
-            Extra
-          </label>
-          <Button size="sm" variant="outline" onClick={agregarProceso}>
-            <Plus /> Proceso
+            <Button size="sm" variant="outline" onClick={agregarProceso}>
+              <Plus /> Proceso
+            </Button>
+          </div>
+        ) : (
+          <Button size="sm" variant="outline" onClick={() => setServicioModal("nuevo")}>
+            <Plus /> Servicio
           </Button>
-        </div>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border">
@@ -243,33 +250,36 @@ export function MatrizTrabajos() {
           <thead>
             <tr className="bg-muted/50">
               <th className="sticky left-0 z-10 min-w-44 border-b border-r border-border bg-muted/50 p-2 text-left font-semibold">
-                Prenda / Proceso
+                {esTiempos ? "Prenda / Proceso" : "Prenda / Servicio"}
               </th>
-              {procesos.map((proc) => (
-                <th key={proc.id} className="min-w-28 border-b border-border p-2 font-semibold">
-                  <div className="flex flex-col items-center gap-1">
-                    <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => setEdicion({ tipo: "procesos", id: proc.id, nombre: proc.nombre })} className="hover:text-primary" title="Renombrar">
-                        {proc.nombre}
-                      </button>
-                      <button onClick={() => eliminarProceso(proc.id, proc.nombre)} className="text-muted-foreground hover:text-destructive" title="Eliminar">
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
-                    <label className="flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
-                      <input
-                        type="checkbox"
-                        checked={proc.esExtra}
-                        onChange={(e) => guardarProceso(proc.id, { esExtra: e.target.checked })}
-                        className="size-3.5 rounded border-border"
-                      />
-                      Extra
-                    </label>
+              {columnas.map((col) => (
+                <th key={col.id} className="min-w-28 border-b border-border p-2 font-semibold">
+                  <div className="flex items-center justify-center gap-1">
+                    <button
+                      onClick={() =>
+                        esTiempos
+                          ? setEdicion({ tipo: "procesos", id: col.id, nombre: col.nombre })
+                          : setServicioModal(servicios.find((s) => s.id === col.id)!)
+                      }
+                      className="hover:text-primary"
+                      title={esTiempos ? "Renombrar" : "Editar servicio"}
+                    >
+                      {col.nombre}
+                    </button>
+                    <button
+                      onClick={() => (esTiempos ? eliminarProceso(col.id, col.nombre) : eliminarServicio(col.id, col.nombre))}
+                      className="text-muted-foreground hover:text-destructive"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
                   </div>
                 </th>
               ))}
-              {procesos.length === 0 && (
-                <th className="p-3 text-center font-normal text-muted-foreground">Agregá un proceso</th>
+              {columnas.length === 0 && (
+                <th className="p-3 text-center font-normal text-muted-foreground">
+                  {esTiempos ? "Agregá un proceso" : "Agregá un servicio"}
+                </th>
               )}
             </tr>
           </thead>
@@ -287,22 +297,21 @@ export function MatrizTrabajos() {
                     </button>
                   </div>
                 </td>
-                {procesos.map((proc) => {
-                  const k = key(prenda.id, proc.id);
-                  const aplica = dur[k] !== undefined;
+                {columnas.map((col) => {
+                  const k = key(prenda.id, col.id);
                   return (
-                    <td key={proc.id} className="p-1 text-center">
+                    <td key={col.id} className="p-1 text-center">
                       {esTiempos ? (
                         <input
                           key={`t-${k}`}
                           type="number"
                           min={0}
-                          defaultValue={dur[k] ?? ""}
-                          onBlur={(e) => guardarCelda(prenda.id, proc.id, e.target.value)}
+                          defaultValue={tiempos[k] ?? ""}
+                          onBlur={(e) => guardarTiempo(prenda.id, col.id, e.target.value)}
                           placeholder="—"
                           className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
                         />
-                      ) : aplica ? (
+                      ) : (
                         <div className="flex items-center justify-center gap-0.5">
                           <span className="text-xs text-muted-foreground">$</span>
                           <input
@@ -310,13 +319,11 @@ export function MatrizTrabajos() {
                             type="number"
                             min={0}
                             defaultValue={precios[k] ?? ""}
-                            onBlur={(e) => guardarPrecio(prenda.id, proc.id, e.target.value)}
+                            onBlur={(e) => guardarPrecio(prenda.id, col.id, e.target.value)}
                             placeholder="0"
                             className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
                           />
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
                       )}
                     </td>
                   );
@@ -325,7 +332,7 @@ export function MatrizTrabajos() {
             ))}
             {prendas.length === 0 && (
               <tr>
-                <td colSpan={Math.max(1, procesos.length + 1)} className="p-6 text-center text-muted-foreground">
+                <td colSpan={Math.max(1, columnas.length + 1)} className="p-6 text-center text-muted-foreground">
                   Agregá una prenda para empezar.
                 </td>
               </tr>
@@ -334,12 +341,6 @@ export function MatrizTrabajos() {
         </table>
       </div>
 
-      {!esTiempos && (
-        <p className="text-xs text-muted-foreground">
-          El precio solo se carga donde el proceso aplica a la prenda (tiene tiempo). Cargá el tiempo en la pestaña “Tiempos” para habilitar la celda.
-        </p>
-      )}
-
       <RenombrarModal
         open={edicion !== null}
         titulo={edicion?.tipo === "prendas" ? "Renombrar prenda" : "Renombrar proceso"}
@@ -347,6 +348,16 @@ export function MatrizTrabajos() {
         onConfirmar={confirmarRenombre}
         onCerrar={() => setEdicion(null)}
       />
+
+      {servicioModal !== null && (
+        <ServicioModal
+          servicio={servicioModal === "nuevo" ? null : servicioModal}
+          procesos={procesos}
+          onProcesoCreado={(p) => setProcesos((arr) => [...arr, p])}
+          onGuardar={guardarServicio}
+          onCerrar={() => setServicioModal(null)}
+        />
+      )}
     </div>
   );
 }

@@ -103,8 +103,15 @@ export function ItemOT({
             <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Monto</span>
             {ot.items.map((it, i) => (
               <Fragment key={i}>
-                <span className="truncate font-medium text-foreground/90" title={it.descripcion}>
-                  {it.descripcion}
+                <span className="min-w-0">
+                  <span className="block truncate font-medium text-foreground/90" title={it.descripcion}>
+                    {it.descripcion}
+                  </span>
+                  {it.servicios.length > 0 && (
+                    <span className="block truncate text-[10px] text-muted-foreground" title={it.servicios.join(", ")}>
+                      {it.servicios.join(" · ")}
+                    </span>
+                  )}
                 </span>
                 <span className="text-right tabular-nums text-muted-foreground">{it.cantidad}</span>
                 <span className="text-right tabular-nums text-muted-foreground">

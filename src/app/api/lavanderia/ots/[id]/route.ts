@@ -70,7 +70,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   if (accion === "editar") {
-    // precioDetectado/manual: el monto del body pisa al de la matriz cuando viene.
+    // montoManual: el monto del body pisa al de la matriz cuando viene.
     const itemsEntrada: (ItemEntrada & { montoManual: number | null })[] = Array.isArray(body.items)
       ? body.items
           .filter((i: unknown) => i && typeof (i as ItemEntrada).descripcion === "string")
@@ -78,6 +78,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             prendaId: i.prendaId ?? null,
             descripcion: i.descripcion,
             cantidad: Number(i.cantidad) || 1,
+            servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
             montoManual:
               typeof i.monto === "number" && Number.isFinite(i.monto) ? Math.max(0, Math.round(i.monto)) : null,
           }))
@@ -121,7 +122,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
               descripcion: it.descripcion,
               prendaId: it.prendaId,
               cantidad: it.cantidad,
-              procesos: it.procesos,
+              servicioIds: it.servicioIds,
               duracionMin: it.duracionMin,
               monto: it.monto,
             })),

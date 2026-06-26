@@ -11,6 +11,8 @@ export type ItemExtraido = {
   precio: number | null; // precio de la linea tal como figura en el ticket
   prendaId: string | null;
   prendaNombre: string | null;
+  servicioIds: string[]; // servicios detectados, mapeados a los conocidos
+  servicios: string[]; // nombres de esos servicios
 };
 
 export type OTExtraida = {
@@ -71,6 +73,12 @@ const TOOL = {
               type: ["string", "null"],
               description: "Nombre EXACTO de la lista de prendas conocidas que corresponde, o null",
             },
+            serviciosSugeridos: {
+              type: "array",
+              items: { type: "string" },
+              description:
+                "Servicios aplicados a esa prenda (ej. LIMPIEZA, PLANCHADO). Usá los nombres EXACTOS de la lista de servicios conocidos cuando coincidan; si no hay coincidencia, dejá el texto tal como aparece.",
+            },
           },
           required: ["descripcion", "cantidad"],
         },
@@ -90,8 +98,12 @@ export async function escanearComanda(
     throw new Error("Falta ANTHROPIC_API_KEY: configurá la API key de Claude para escanear comandas.");
   }
 
-  const prendas = await prisma.lavPrenda.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } });
+  const [prendas, servicios] = await Promise.all([
+    prisma.lavPrenda.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
+    prisma.lavServicio.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
+  ]);
   const listaPrendas = prendas.map((p) => `- ${p.nombre}`).join("\n");
+  const listaServicios = servicios.map((s) => `- ${s.nombre}`).join("\n");
 
   const client = new Anthropic();
   const res = await client.messages.create({
@@ -112,9 +124,13 @@ export async function escanearComanda(
               "Extraé los datos y los items. Detectá también si está escrita la palabra URGENTE (urgente=true) " +
               'y si dice "PARA <fecha>" (devolvé fechaNecesaria en yyyy-MM-dd, infiriendo el año a partir de hoy). ' +
               "Para cada item, detectá el precio que figura en su línea (campo precio, número sin símbolos). " +
-              "Para cada item, si corresponde a una de estas prendas conocidas, " +
-              "indicá su nombre EXACTO en prendaSugerida (si no, null):\n\n" +
-              (listaPrendas || "(no hay prendas configuradas)"),
+              "Cada item es una PRENDA con uno o más SERVICIOS aplicados. " +
+              "Indicá la prenda en prendaSugerida (nombre EXACTO de la lista de prendas, o null) y " +
+              "los servicios en serviciosSugeridos (nombres EXACTOS de la lista de servicios cuando coincidan).\n\n" +
+              "PRENDAS conocidas:\n" +
+              (listaPrendas || "(no hay prendas configuradas)") +
+              "\n\nSERVICIOS conocidos:\n" +
+              (listaServicios || "(no hay servicios configurados)"),
           },
         ],
       },
@@ -134,7 +150,13 @@ export async function escanearComanda(
     fechaTicket?: string | null;
     urgente?: boolean | null;
     fechaNecesaria?: string | null;
-    items?: { descripcion: string; cantidad: number; precio?: number | null; prendaSugerida?: string | null }[];
+    items?: {
+      descripcion: string;
+      cantidad: number;
+      precio?: number | null;
+      prendaSugerida?: string | null;
+      serviciosSugeridos?: string[] | null;
+    }[];
   };
 
   const fechaNecesaria =
@@ -143,15 +165,21 @@ export async function escanearComanda(
       : null;
 
   const indicePorNombre = new Map(prendas.map((p) => [normalizar(p.nombre), p]));
+  const servicioPorNombre = new Map(servicios.map((s) => [normalizar(s.nombre), s]));
 
   const items: ItemExtraido[] = (data.items ?? []).map((it) => {
     const match = it.prendaSugerida ? indicePorNombre.get(normalizar(it.prendaSugerida)) : undefined;
+    const servMatches = (it.serviciosSugeridos ?? [])
+      .map((nombre) => servicioPorNombre.get(normalizar(nombre)))
+      .filter((s): s is { id: string; nombre: string } => Boolean(s));
     return {
       descripcion: it.descripcion,
       cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
       precio: typeof it.precio === "number" && Number.isFinite(it.precio) ? Math.max(0, Math.round(it.precio)) : null,
       prendaId: match?.id ?? null,
       prendaNombre: match?.nombre ?? null,
+      servicioIds: servMatches.map((s) => s.id),
+      servicios: servMatches.map((s) => s.nombre),
     };
   });
 
