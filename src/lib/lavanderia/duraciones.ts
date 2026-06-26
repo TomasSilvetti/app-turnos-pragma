@@ -31,7 +31,7 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   const duraciones = prendaIds.length
     ? await prisma.lavDuracion.findMany({
         where: { prendaId: { in: prendaIds } },
-        include: { proceso: { select: { nombre: true, orden: true, precio: true } } },
+        include: { proceso: { select: { nombre: true, orden: true } } },
       })
     : [];
 
@@ -40,7 +40,7 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   for (const d of duraciones) {
     const entry = porPrenda.get(d.prendaId) ?? { minutos: 0, precio: 0, procesos: [] };
     entry.minutos += d.minutos;
-    entry.precio += d.proceso.precio;
+    entry.precio += d.precio;
     entry.procesos.push(d.proceso.nombre);
     porPrenda.set(d.prendaId, entry);
   }

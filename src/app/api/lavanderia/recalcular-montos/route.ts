@@ -8,13 +8,13 @@ export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  // prendaId -> precio unitario (suma de precios de los procesos que aplican)
+  // prendaId -> precio unitario (suma de precios de las celdas que aplican)
   const duraciones = await prisma.lavDuracion.findMany({
-    select: { prendaId: true, proceso: { select: { precio: true } } },
+    select: { prendaId: true, precio: true },
   });
   const precioPorPrenda = new Map<string, number>();
   for (const d of duraciones) {
-    precioPorPrenda.set(d.prendaId, (precioPorPrenda.get(d.prendaId) ?? 0) + d.proceso.precio);
+    precioPorPrenda.set(d.prendaId, (precioPorPrenda.get(d.prendaId) ?? 0) + d.precio);
   }
 
   const items = await prisma.lavOTItem.findMany({

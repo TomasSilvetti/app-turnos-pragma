@@ -1,13 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Loader2, Pencil, Calculator } from "lucide-react";
+import { Plus, Trash2, Loader2, Pencil, Calculator, Clock, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
+import { cn } from "@/lib/utils";
 import { RenombrarModal } from "./RenombrarModal";
 
 type Item = { id: string; nombre: string };
-type Proceso = Item & { precio: number; esExtra: boolean };
+type Proceso = Item & { esExtra: boolean };
+type Vista = "tiempos" | "precios";
 type Edicion = { tipo: "prendas" | "procesos"; id: string; nombre: string };
 const key = (prendaId: string, procesoId: string) => `${prendaId}:${procesoId}`;
 
@@ -15,10 +17,11 @@ export function MatrizTrabajos() {
   const [prendas, setPrendas] = useState<Item[]>([]);
   const [procesos, setProcesos] = useState<Proceso[]>([]);
   const [dur, setDur] = useState<Record<string, number>>({});
+  const [precios, setPrecios] = useState<Record<string, number>>({});
+  const [vista, setVista] = useState<Vista>("tiempos");
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
-  const [nuevoPrecio, setNuevoPrecio] = useState("");
   const [nuevoEsExtra, setNuevoEsExtra] = useState(false);
   const [recalculando, setRecalculando] = useState(false);
   const [edicion, setEdicion] = useState<Edicion | null>(null);
@@ -26,12 +29,17 @@ export function MatrizTrabajos() {
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/trabajos")
       .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], duraciones: [] }))
-      .then((d: { prendas: Item[]; procesos: Proceso[]; duraciones: { prendaId: string; procesoId: string; minutos: number }[] }) => {
+      .then((d: { prendas: Item[]; procesos: Proceso[]; duraciones: { prendaId: string; procesoId: string; minutos: number; precio: number }[] }) => {
         setPrendas(d.prendas ?? []);
         setProcesos(d.procesos ?? []);
-        const mapa: Record<string, number> = {};
-        for (const c of d.duraciones ?? []) mapa[key(c.prendaId, c.procesoId)] = c.minutos;
-        setDur(mapa);
+        const mapaDur: Record<string, number> = {};
+        const mapaPre: Record<string, number> = {};
+        for (const c of d.duraciones ?? []) {
+          mapaDur[key(c.prendaId, c.procesoId)] = c.minutos;
+          mapaPre[key(c.prendaId, c.procesoId)] = c.precio;
+        }
+        setDur(mapaDur);
+        setPrecios(mapaPre);
       })
       .catch(() => {})
       .finally(() => setCargando(false));
@@ -41,15 +49,34 @@ export function MatrizTrabajos() {
 
   const guardarCelda = async (prendaId: string, procesoId: string, valor: string) => {
     const minutos = Math.max(0, parseInt(valor, 10) || 0);
+    const k = key(prendaId, procesoId);
     setDur((prev) => {
       const next = { ...prev };
-      if (minutos > 0) next[key(prendaId, procesoId)] = minutos;
-      else delete next[key(prendaId, procesoId)];
+      if (minutos > 0) next[k] = minutos;
+      else delete next[k];
+      return next;
+    });
+    // El precio acompaña a la celda: si deja de aplicar, se borra; si recién
+    // aparece, arranca en 0.
+    setPrecios((prev) => {
+      const next = { ...prev };
+      if (minutos > 0) {
+        if (next[k] === undefined) next[k] = 0;
+      } else delete next[k];
       return next;
     });
     await lavFetch("/api/lavanderia/duraciones", {
       method: "PUT",
       body: JSON.stringify({ prendaId, procesoId, minutos }),
+    });
+  };
+
+  const guardarPrecio = async (prendaId: string, procesoId: string, valor: string) => {
+    const precio = Math.max(0, parseInt(valor, 10) || 0);
+    setPrecios((prev) => ({ ...prev, [key(prendaId, procesoId)]: precio }));
+    await lavFetch("/api/lavanderia/duraciones", {
+      method: "PUT",
+      body: JSON.stringify({ prendaId, procesoId, precio }),
     });
   };
 
@@ -67,21 +94,19 @@ export function MatrizTrabajos() {
   const agregarProceso = async () => {
     const nombre = nuevoProceso.trim();
     if (!nombre) return;
-    const precio = Math.max(0, parseInt(nuevoPrecio, 10) || 0);
     const res = await lavFetch("/api/lavanderia/procesos", {
       method: "POST",
-      body: JSON.stringify({ nombre, precio, esExtra: nuevoEsExtra }),
+      body: JSON.stringify({ nombre, esExtra: nuevoEsExtra }),
     });
     if (res.ok) {
       const { proceso } = await res.json();
       setProcesos((p) => [...p, proceso]);
       setNuevoProceso("");
-      setNuevoPrecio("");
       setNuevoEsExtra(false);
     }
   };
 
-  const guardarProceso = async (id: string, campos: { precio?: number; esExtra?: boolean }) => {
+  const guardarProceso = async (id: string, campos: { esExtra?: boolean }) => {
     setProcesos((p) => p.map((x) => (x.id === id ? { ...x, ...campos } : x)));
     await lavFetch(`/api/lavanderia/procesos/${id}`, { method: "PATCH", body: JSON.stringify(campos) });
   };
@@ -137,19 +162,44 @@ export function MatrizTrabajos() {
     );
   }
 
+  const esTiempos = vista === "tiempos";
+
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
           <p className="text-sm text-muted-foreground">
-            Duración (en minutos) de cada proceso por prenda y precio de cada servicio. La duración y
-            el monto de una OT son la suma de los procesos de sus prendas.
+            {esTiempos
+              ? "Duración (en minutos) de cada proceso por prenda. La duración de una OT es la suma de los procesos de sus prendas."
+              : "Precio (en pesos) de cada proceso por prenda. El monto de una OT es la suma de los procesos de sus prendas."}
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={recalcularMontos} disabled={recalculando}>
           {recalculando ? <Loader2 className="animate-spin" /> : <Calculator />} Recalcular montos
         </Button>
+      </div>
+
+      {/* Toggle Tiempos / Precios */}
+      <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5">
+        <button
+          onClick={() => setVista("tiempos")}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-[0.6rem] px-3 py-1.5 text-sm font-medium transition-colors",
+            esTiempos ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <Clock className="size-4" /> Tiempos
+        </button>
+        <button
+          onClick={() => setVista("precios")}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-[0.6rem] px-3 py-1.5 text-sm font-medium transition-colors",
+            !esTiempos ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+          )}
+        >
+          <DollarSign className="size-4" /> Precios
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -172,15 +222,6 @@ export function MatrizTrabajos() {
             onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
             placeholder="Nuevo proceso"
             className="h-9 w-44 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-          />
-          <input
-            value={nuevoPrecio}
-            onChange={(e) => setNuevoPrecio(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
-            type="number"
-            min={0}
-            placeholder="$ precio"
-            className="h-9 w-28 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
           />
           <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <input
@@ -215,17 +256,6 @@ export function MatrizTrabajos() {
                         <Trash2 className="size-3.5" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-1 text-xs font-normal text-muted-foreground">
-                      <span>$</span>
-                      <input
-                        type="number"
-                        min={0}
-                        defaultValue={proc.precio || ""}
-                        onBlur={(e) => guardarProceso(proc.id, { precio: Math.max(0, parseInt(e.target.value, 10) || 0) })}
-                        placeholder="0"
-                        className="h-7 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
-                      />
-                    </div>
                     <label className="flex items-center gap-1 text-[11px] font-normal text-muted-foreground">
                       <input
                         type="checkbox"
@@ -257,18 +287,40 @@ export function MatrizTrabajos() {
                     </button>
                   </div>
                 </td>
-                {procesos.map((proc) => (
-                  <td key={proc.id} className="p-1 text-center">
-                    <input
-                      type="number"
-                      min={0}
-                      defaultValue={dur[key(prenda.id, proc.id)] ?? ""}
-                      onBlur={(e) => guardarCelda(prenda.id, proc.id, e.target.value)}
-                      placeholder="—"
-                      className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
-                    />
-                  </td>
-                ))}
+                {procesos.map((proc) => {
+                  const k = key(prenda.id, proc.id);
+                  const aplica = dur[k] !== undefined;
+                  return (
+                    <td key={proc.id} className="p-1 text-center">
+                      {esTiempos ? (
+                        <input
+                          key={`t-${k}`}
+                          type="number"
+                          min={0}
+                          defaultValue={dur[k] ?? ""}
+                          onBlur={(e) => guardarCelda(prenda.id, proc.id, e.target.value)}
+                          placeholder="—"
+                          className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
+                        />
+                      ) : aplica ? (
+                        <div className="flex items-center justify-center gap-0.5">
+                          <span className="text-xs text-muted-foreground">$</span>
+                          <input
+                            key={`p-${k}`}
+                            type="number"
+                            min={0}
+                            defaultValue={precios[k] ?? ""}
+                            onBlur={(e) => guardarPrecio(prenda.id, proc.id, e.target.value)}
+                            placeholder="0"
+                            className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
             {prendas.length === 0 && (
@@ -281,6 +333,12 @@ export function MatrizTrabajos() {
           </tbody>
         </table>
       </div>
+
+      {!esTiempos && (
+        <p className="text-xs text-muted-foreground">
+          El precio solo se carga donde el proceso aplica a la prenda (tiene tiempo). Cargá el tiempo en la pestaña “Tiempos” para habilitar la celda.
+        </p>
+      )}
 
       <RenombrarModal
         open={edicion !== null}

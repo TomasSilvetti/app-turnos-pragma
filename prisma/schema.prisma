@@ -519,6 +519,7 @@ model LavDuracion {
   prendaId  String
   procesoId String
   minutos   Int    @default(0)
+  precio    Int    @default(0) // precio del proceso para esta prenda, en pesos
 
   prenda  LavPrenda  @relation(fields: [prendaId], references: [id], onDelete: Cascade)
   proceso LavProceso @relation(fields: [procesoId], references: [id], onDelete: Cascade)

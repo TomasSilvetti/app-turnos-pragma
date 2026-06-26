@@ -10,15 +10,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params;
 
   const body = await request.json().catch(() => ({}));
-  const data: { nombre?: string; precio?: number; esExtra?: boolean } = {};
+  const data: { nombre?: string; esExtra?: boolean } = {};
 
   if (body.nombre !== undefined) {
     const nombre = typeof body.nombre === "string" ? body.nombre.trim() : "";
     if (!nombre) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
     data.nombre = nombre;
-  }
-  if (body.precio !== undefined) {
-    data.precio = Number.isFinite(body.precio) ? Math.max(0, Math.round(body.precio)) : 0;
   }
   if (body.esExtra !== undefined) data.esExtra = body.esExtra === true;
 
@@ -28,7 +25,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const proceso = await prisma.lavProceso.update({
     where: { id },
     data,
-    select: { id: true, nombre: true, precio: true, esExtra: true },
+    select: { id: true, nombre: true, esExtra: true },
   });
   return NextResponse.json({ proceso });
 }

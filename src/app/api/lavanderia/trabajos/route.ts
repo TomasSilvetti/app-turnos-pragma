@@ -11,9 +11,9 @@ export async function GET(request: NextRequest) {
     prisma.lavPrenda.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
     prisma.lavProceso.findMany({
       orderBy: { orden: "asc" },
-      select: { id: true, nombre: true, precio: true, esExtra: true },
+      select: { id: true, nombre: true, esExtra: true },
     }),
-    prisma.lavDuracion.findMany({ select: { prendaId: true, procesoId: true, minutos: true } }),
+    prisma.lavDuracion.findMany({ select: { prendaId: true, procesoId: true, minutos: true, precio: true } }),
   ]);
 
   return NextResponse.json({ prendas, procesos, duraciones });
