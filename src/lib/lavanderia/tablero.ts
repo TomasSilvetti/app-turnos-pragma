@@ -123,7 +123,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
         }
       : null;
 
-    const otsSnap: OTSnap[] = delDia.map((ot, idx) => ({
+    const otsSnap: OTSnap[] = delDia.map((ot) => ({
       id: ot.id,
       numero: ot.numero,
       nombreCliente: ot.nombreCliente,
@@ -146,9 +146,9 @@ export async function getTablero(): Promise<TableroSnapshot> {
         duracionMin: it.duracionMin,
         monto: it.monto,
       })),
-      // Solo puede empezar la primera OT pendiente del dia (la anterior ya debe
-      // estar empezada o terminada).
-      puedeEmpezar: ot.estado === "pendiente" && (idx === 0 || delDia[idx - 1].estado !== "pendiente"),
+      // Cualquier OT pendiente puede empezarse (varias en simultaneo, en cualquier
+      // dia). Al empezarla se reubica en la columna de hoy.
+      puedeEmpezar: ot.estado === "pendiente",
     }));
 
     dias.push({

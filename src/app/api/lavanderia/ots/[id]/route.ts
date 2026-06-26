@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireEmpleado, requireAdmin } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
-import { asignarOT } from "@/lib/lavanderia/capacidad";
+import { asignarOT, primerDiaLaborable } from "@/lib/lavanderia/capacidad";
 
 // PATCH: acciones sobre una OT.
-//  - { accion: "empezar" }  empleado: la marca en progreso (respeta el orden).
+//  - { accion: "empezar" }  empleado: la marca en progreso y la manda al frente
+//    de la columna de hoy, debajo del ultimo trabajo ya empezado.
 //  - { accion: "terminar" } empleado: la marca terminada.
 //  - { accion: "mover", fechaAsignada, orden } admin: reubica en el tablero.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,18 +23,37 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (accion === "empezar") {
     if (ot.estado !== "pendiente")
       return NextResponse.json({ error: "La OT ya fue iniciada" }, { status: 409 });
-    // Debe respetar el orden: no puede haber una OT pendiente anterior en el mismo dia.
-    const anteriorPendiente = await prisma.lavOT.findFirst({
-      where: { fechaAsignada: ot.fechaAsignada, estado: "pendiente", orden: { lt: ot.orden } },
-      select: { id: true },
-    });
-    if (anteriorPendiente)
-      return NextResponse.json({ error: "Hay un trabajo anterior sin empezar" }, { status: 409 });
 
-    const actualizada = await prisma.lavOT.update({
-      where: { id },
-      data: { estado: "en_progreso", empezadoEn: new Date(), empleadoTrabajoId: empleado.id },
-      select: { id: true, estado: true },
+    // Cualquier OT pendiente puede empezarse (varias en simultaneo). Al empezarla,
+    // se manda a la columna de hoy y se reordena: los trabajos ya empezados quedan
+    // arriba en orden de inicio (el recien empezado, ultimo del grupo); los
+    // pendientes quedan debajo conservando su orden.
+    const target = await primerDiaLaborable();
+    const actualizada = await prisma.$transaction(async (tx) => {
+      const upd = await tx.lavOT.update({
+        where: { id },
+        data: { estado: "en_progreso", empezadoEn: new Date(), empleadoTrabajoId: empleado.id, fechaAsignada: target },
+        select: { id: true, estado: true },
+      });
+
+      const delDia = await tx.lavOT.findMany({
+        where: { fechaAsignada: target },
+        select: { id: true, estado: true, empezadoEn: true, orden: true },
+      });
+      const yaEmpezado = (e: string) => e === "en_progreso" || e === "terminado";
+      const empezados = delDia
+        .filter((o) => yaEmpezado(o.estado))
+        .sort((a, b) => (a.empezadoEn?.getTime() ?? 0) - (b.empezadoEn?.getTime() ?? 0) || a.orden - b.orden);
+      const pendientes = delDia.filter((o) => !yaEmpezado(o.estado)).sort((a, b) => a.orden - b.orden);
+
+      const ordenadas = [...empezados, ...pendientes];
+      await Promise.all(
+        ordenadas
+          .map((o, i) => ({ o, i }))
+          .filter(({ o, i }) => o.orden !== i)
+          .map(({ o, i }) => tx.lavOT.update({ where: { id: o.id }, data: { orden: i } }))
+      );
+      return upd;
     });
     return NextResponse.json({ ot: actualizada });
   }

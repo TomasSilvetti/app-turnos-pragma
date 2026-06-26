@@ -48,6 +48,19 @@ export function capacidadDia(turnos: TurnoAplicable[]): number {
   return turnos.reduce((acc, t) => acc + t.minutos, 0);
 }
 
+// Primer dia laborable desde hoy (la columna "hoy" del tablero). Es a donde se
+// manda una OT cuando se la empieza.
+export async function primerDiaLaborable(): Promise<string> {
+  const hoy = hoyAR();
+  const hasta = sumarDias(hoy, HORIZONTE_DIAS);
+  const { config, diasExtra } = await cargarConfigTurnos(hoy, hasta);
+  for (let i = 0; i <= HORIZONTE_DIAS; i++) {
+    const f = sumarDias(hoy, i);
+    if (capacidadDia(turnosDelDia(f, config, diasExtra)) > 0) return f;
+  }
+  return hoy;
+}
+
 // Carga la config de turnos y los dias extra habilitados en un rango.
 export async function cargarConfigTurnos(fechaDesde: string, fechaHasta: string) {
   const [config, extras] = await Promise.all([
