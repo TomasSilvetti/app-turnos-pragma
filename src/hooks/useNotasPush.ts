@@ -16,19 +16,6 @@ export function useNotasPush(deviceReady: boolean) {
   const [activadas, setActivadas] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!deviceReady) return;
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
-    }
-    notasFetch("/api/notas/push")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: { activadas: boolean } | null) => {
-        if (data) setActivadas(data.activadas);
-      })
-      .catch(() => {});
-  }, [deviceReady]);
-
   const guardarSuscripcion = useCallback(async (sub: PushSubscription) => {
     const json = sub.toJSON();
     await notasFetch("/api/notas/push", {
@@ -39,6 +26,47 @@ export function useNotasPush(deviceReady: boolean) {
       }),
     });
   }, []);
+
+  useEffect(() => {
+    if (!deviceReady) return;
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+
+    let cancelado = false;
+    (async () => {
+      const data = await notasFetch("/api/notas/push")
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+      if (cancelado) return;
+
+      const enDB: boolean = Boolean(data?.activadas);
+
+      // Auto-reparación: si el navegador todavía tiene una suscripción válida pero
+      // la DB no la conoce (p.ej. se perdió al recrear/restaurar la base), la
+      // volvemos a registrar sola. Así las push siguen funcionando sin que el
+      // usuario tenga que reactivar la campanita.
+      if (!enDB && "serviceWorker" in navigator && "PushManager" in window) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          const existente = await registration.pushManager.getSubscription();
+          if (existente && !cancelado) {
+            await guardarSuscripcion(existente);
+            if (!cancelado) setActivadas(true);
+            return;
+          }
+        } catch {
+          /* sin permisos o sin SW: queda como estaba */
+        }
+      }
+
+      if (!cancelado) setActivadas(enDB);
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [deviceReady, guardarSuscripcion]);
 
   const activar = useCallback(async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
