@@ -17,10 +17,12 @@ export function OTModal({
   ot,
   onCerrar,
   onActualizar,
+  admin = false,
 }: {
   ot: OTSnap;
   onCerrar: () => void;
   onActualizar: () => void;
+  admin?: boolean;
 }) {
   const [prendas, setPrendas] = useState<Prenda[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
@@ -40,6 +42,8 @@ export function OTModal({
   );
   const [guardando, setGuardando] = useState(false);
   const [accionando, setAccionando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -130,6 +134,27 @@ export function OTModal({
       setError("Error de red");
     } finally {
       setAccionando(false);
+    }
+  };
+
+  const eliminar = async () => {
+    setEliminando(true);
+    setError(null);
+    try {
+      const res = await lavFetch(`/api/lavanderia/ots/${ot.id}`, { method: "DELETE" });
+      if (res.ok) {
+        onActualizar();
+        onCerrar();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setError(d.error || "No se pudo eliminar");
+        setConfirmandoEliminar(false);
+      }
+    } catch {
+      setError("Error de red al eliminar");
+      setConfirmandoEliminar(false);
+    } finally {
+      setEliminando(false);
     }
   };
 
@@ -255,6 +280,26 @@ export function OTModal({
         </div>
 
         <div className="flex flex-wrap items-center gap-2 border-t border-border px-5 py-3">
+          {admin &&
+            (confirmandoEliminar ? (
+              <span className="inline-flex items-center gap-2">
+                <Button variant="destructive" onClick={eliminar} disabled={eliminando}>
+                  {eliminando ? <Loader2 className="animate-spin" /> : <Trash2 />} Confirmar
+                </Button>
+                <Button variant="outline" onClick={() => setConfirmandoEliminar(false)} disabled={eliminando}>
+                  No
+                </Button>
+              </span>
+            ) : (
+              <Button
+                variant="ghost"
+                onClick={() => setConfirmandoEliminar(true)}
+                disabled={guardando || accionando}
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 /> Eliminar
+              </Button>
+            ))}
           {ot.estado === "pendiente" && ot.puedeEmpezar && (
             <Button
               onClick={() => accion("empezar")}

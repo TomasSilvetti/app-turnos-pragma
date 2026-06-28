@@ -9,7 +9,7 @@ import { TableroAccionesProvider } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
-  const { snapshot, conectado, refrescar } = useTableroStream(empleadoId);
+  const { snapshot, conectado, refrescar, aplicarLocal } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
 
   if (!snapshot) {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { lavFetch } from "@/lib/lavanderia/client";
-import type { TableroSnapshot } from "@/lib/lavanderia/tablero";
+import type { OTSnap, TableroSnapshot } from "@/lib/lavanderia/tablero";
 
 // Intervalo de chequeo de version. Cada tick es un GET liviano (1 aggregate);
 // solo traemos el tablero completo cuando la version cambio.
@@ -16,6 +16,7 @@ export function useTableroStream(empleadoId: string | null): {
   snapshot: TableroSnapshot | null;
   conectado: boolean;
   refrescar: () => Promise<void>;
+  aplicarLocal: (otId: string, patch: Partial<OTSnap>) => void;
 } {
   const [snapshot, setSnapshot] = useState<TableroSnapshot | null>(null);
   const [conectado, setConectado] = useState(false);
@@ -29,6 +30,23 @@ export function useTableroStream(empleadoId: string | null): {
     const d: TableroSnapshot = await r.json();
     versionRef.current = d.version;
     setSnapshot(d);
+  }, []);
+
+  // Parche optimista: actualiza una OT en el snapshot en memoria para que la
+  // tarjeta cambie al instante (p. ej. el boton Empezar -> Terminar), sin esperar
+  // al PATCH ni al refetch. El refrescar posterior reconcilia el estado real.
+  const aplicarLocal = useCallback((otId: string, patch: Partial<OTSnap>) => {
+    setSnapshot((prev) =>
+      prev
+        ? {
+            ...prev,
+            dias: prev.dias.map((d) => ({
+              ...d,
+              ots: d.ots.map((o) => (o.id === otId ? { ...o, ...patch } : o)),
+            })),
+          }
+        : prev
+    );
   }, []);
 
   // Refetch puntual tras una accion (empezar/terminar/cargar) para ver el cambio
@@ -94,5 +112,5 @@ export function useTableroStream(empleadoId: string | null): {
     };
   }, [empleadoId, refrescar, traerTablero]);
 
-  return { snapshot, conectado, refrescar };
+  return { snapshot, conectado, refrescar, aplicarLocal };
 }

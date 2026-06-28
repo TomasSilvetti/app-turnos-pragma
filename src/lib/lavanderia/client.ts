@@ -25,5 +25,7 @@ export async function lavFetch(input: string, init: RequestInit = {}): Promise<R
   if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  return fetch(input, { ...init, headers });
+  // no-store: sin esto el navegador puede servir del cache el GET del tablero y
+  // quien acaba de mutar (empezar/terminar) ve datos viejos hasta refrescar.
+  return fetch(input, { ...init, headers, cache: "no-store" });
 }

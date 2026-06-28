@@ -451,6 +451,7 @@ export function TableroAdmin() {
       {otModal && (
         <OTModal
           ot={otModal}
+          admin
           onCerrar={() => setOtModal(null)}
           onActualizar={() => {
             setOtModal(null);
