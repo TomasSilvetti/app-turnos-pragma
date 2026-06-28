@@ -249,6 +249,19 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE "lav_ots" DROP COLUMN IF EXISTS "total"`,
     ],
   },
+  {
+    name: "20260628140000_lav_ot_item_procesos",
+    checksum: "fe6d71d4256c8ac60cbf54d25cf9096cfe9936d2f215ba72e50142f9255cc675",
+    statements: [
+      `DO $$ BEGIN
+         IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lav_ot_items' AND column_name = 'servicioIds')
+            AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'lav_ot_items' AND column_name = 'procesoIds') THEN
+           ALTER TABLE "lav_ot_items" RENAME COLUMN "servicioIds" TO "procesoIds";
+         END IF;
+       END $$`,
+      `ALTER TABLE "lav_ot_items" ADD COLUMN IF NOT EXISTS "procesoIds" TEXT[] NOT NULL DEFAULT '{}'`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

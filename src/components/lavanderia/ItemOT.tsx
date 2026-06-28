@@ -110,9 +110,9 @@ export function ItemOT({
                   <span className="block truncate font-medium text-foreground/90" title={it.descripcion}>
                     {it.descripcion}
                   </span>
-                  {it.servicios.length > 0 && (
-                    <span className="block truncate text-[10px] text-muted-foreground" title={it.servicios.join(", ")}>
-                      {it.servicios.join(" · ")}
+                  {it.procesos.length > 0 && (
+                    <span className="block truncate text-[10px] text-muted-foreground" title={it.procesos.join(", ")}>
+                      {it.procesos.join(" · ")}
                     </span>
                   )}
                 </span>

@@ -16,8 +16,9 @@ const normalizar = (s: string) =>
     .trim();
 
 type Prenda = { id: string; nombre: string };
-type Servicio = { id: string; nombre: string };
-type ItemPreview = { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[]; esNueva: boolean };
+type Proceso = { id: string; nombre: string };
+type Tiempo = { prendaId: string; procesoId: string; minutos: number };
+type ItemPreview = { descripcion: string; cantidad: number; prendaId: string | null; procesoIds: string[]; esNueva: boolean };
 type OTPreview = {
   numero: string | null;
   nombreCliente: string | null;
@@ -26,7 +27,7 @@ type OTPreview = {
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; prendaNombre: string | null; servicioIds: string[]; esNueva: boolean }[];
+  items: { descripcion: string; cantidad: number; prendaId: string | null; prendaNombre: string | null; procesoIds: string[]; esNueva: boolean }[];
 };
 
 type Estado = "inicial" | "procesando" | "preview" | "creando" | "creada";
@@ -35,7 +36,8 @@ export function CargaFotoOT() {
   const [estado, setEstado] = useState<Estado>("inicial");
   const [error, setError] = useState<string | null>(null);
   const [prendas, setPrendas] = useState<Prenda[]>([]);
-  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [procesos, setProcesos] = useState<Proceso[]>([]);
+  const [tiempos, setTiempos] = useState<Map<string, number>>(new Map()); // prenda:proceso → minutos
   const [ot, setOt] = useState<OTPreview | null>(null);
   const [items, setItems] = useState<ItemPreview[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -45,11 +47,21 @@ export function CargaFotoOT() {
       .then((r) => (r.ok ? r.json() : { prendas: [] }))
       .then((d: { prendas: Prenda[] }) => setPrendas(d.prendas ?? []))
       .catch(() => {});
-    lavFetch("/api/lavanderia/servicios")
-      .then((r) => (r.ok ? r.json() : { servicios: [] }))
-      .then((d: { servicios: Servicio[] }) => setServicios(d.servicios ?? []))
+    lavFetch("/api/lavanderia/procesos")
+      .then((r) => (r.ok ? r.json() : { procesos: [], tiempos: [] }))
+      .then((d: { procesos: Proceso[]; tiempos: Tiempo[] }) => {
+        setProcesos(d.procesos ?? []);
+        setTiempos(new Map((d.tiempos ?? []).map((t) => [`${t.prendaId}:${t.procesoId}`, t.minutos])));
+      })
       .catch(() => {});
   }, []);
+
+  // Duración por unidad de un item (suma de minutos de sus procesos para la prenda).
+  const minutosUnit = useCallback(
+    (it: ItemPreview) =>
+      it.prendaId ? it.procesoIds.reduce((acc, pid) => acc + (tiempos.get(`${it.prendaId}:${pid}`) ?? 0), 0) : 0,
+    [tiempos]
+  );
 
   const reiniciar = useCallback(() => {
     setEstado("inicial");
@@ -76,7 +88,7 @@ export function CargaFotoOT() {
       }
       const extraida: OTPreview = data.ot;
       setOt(extraida);
-      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, servicioIds: i.servicioIds ?? [], esNueva: i.esNueva === true })));
+      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, procesoIds: i.procesoIds ?? [], esNueva: i.esNueva === true })));
       setEstado("preview");
     } catch {
       setError("Error de red al procesar la foto");
@@ -133,14 +145,21 @@ export function CargaFotoOT() {
   };
   const hayNuevaSinResolver = items.some(nombreNuevaPendiente);
 
-  const toggleServicio = (idx: number, servicioId: string) =>
+  const toggleProceso = (idx: number, procesoId: string) =>
     setItems((arr) =>
       arr.map((it, i) => {
         if (i !== idx) return it;
-        const tiene = it.servicioIds.includes(servicioId);
-        return { ...it, servicioIds: tiene ? it.servicioIds.filter((s) => s !== servicioId) : [...it.servicioIds, servicioId] };
+        const tiene = it.procesoIds.includes(procesoId);
+        return { ...it, procesoIds: tiene ? it.procesoIds.filter((p) => p !== procesoId) : [...it.procesoIds, procesoId] };
       })
     );
+
+  // Items que la IA no pudo cargar bien: prenda existente pero sin tiempos en la
+  // matriz para los procesos elegidos (o sin procesos). No bloquean la carga, pero
+  // avisan al empleado. Los "varios" sin renombrar se controlan aparte.
+  const itemsSinTiempos = items.filter(
+    (it) => it.prendaId && !nombreNuevaPendiente(it) && minutosUnit(it) === 0
+  );
 
   if (estado === "creada") {
     return (
@@ -194,11 +213,31 @@ export function CargaFotoOT() {
           </label>
         </div>
 
+        {(itemsSinTiempos.length > 0 || items.some((it) => !it.prendaId && !it.esNueva)) && (
+          <div className="flex items-start gap-2 rounded-lg border border-yellow-400 bg-yellow-50/70 p-2.5 text-[13px] leading-snug text-yellow-800 dark:border-yellow-500/60 dark:bg-yellow-500/10 dark:text-yellow-200">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <div className="space-y-0.5">
+              <p className="font-medium">Revisá estos ítems antes de cargar</p>
+              <ul className="list-disc pl-4">
+                {items.some((it) => !it.prendaId && !it.esNueva) && <li>Hay prendas que no se reconocieron: elegilas a mano.</li>}
+                {itemsSinTiempos.length > 0 && (
+                  <li>
+                    Sin tiempo en la matriz: {itemsSinTiempos.map((it) => it.descripcion || "ítem").join(", ")}. Confirmá la prenda y
+                    los procesos (o cargalos igual y el admin completa los minutos).
+                  </li>
+                )}
+              </ul>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <p className="text-sm font-semibold">Prendas / servicios</p>
+          <p className="text-sm font-semibold">Prendas / procesos</p>
           {items.map((it, idx) => {
             const nueva = it.esNueva && !it.prendaId;
             const sinInterpretar = !it.prendaId && !it.esNueva;
+            const dur = minutosUnit(it);
+            const sinTiempos = Boolean(it.prendaId) && !nueva && dur === 0;
             return (
             <div
               key={idx}
@@ -258,33 +297,45 @@ export function CargaFotoOT() {
                 </button>
               </div>
 
-              {/* Servicios como chips toggle */}
+              {/* Procesos como chips toggle */}
               <div className="flex flex-wrap gap-1.5">
-                {servicios.map((s) => {
-                  const activo = it.servicioIds.includes(s.id);
+                {procesos.map((p) => {
+                  const activo = it.procesoIds.includes(p.id);
                   return (
                     <button
-                      key={s.id}
+                      key={p.id}
                       type="button"
-                      onClick={() => toggleServicio(idx, s.id)}
+                      onClick={() => toggleProceso(idx, p.id)}
                       className={cn(
                         "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                         activo ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:border-primary/50"
                       )}
                     >
-                      {s.nombre}
+                      {p.nombre}
                     </button>
                   );
                 })}
-                {servicios.length === 0 && <span className="text-[11px] text-muted-foreground">No hay servicios configurados</span>}
+                {procesos.length === 0 && <span className="text-[11px] text-muted-foreground">No hay procesos configurados</span>}
               </div>
+
+              {it.prendaId && (
+                sinTiempos ? (
+                  <p className="flex items-center gap-1 text-[11px] font-medium text-yellow-700 dark:text-yellow-300">
+                    <AlertTriangle className="size-3" /> Sin tiempo cargado para esta prenda/proceso
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    {dur} min × {it.cantidad} = <span className="font-medium text-foreground/80">{dur * it.cantidad} min</span>
+                  </p>
+                )
+              )}
             </div>
             );
           })}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, servicioIds: [], esNueva: false }])}
+            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, procesoIds: [], esNueva: false }])}
           >
             <Plus /> Agregar item
           </Button>

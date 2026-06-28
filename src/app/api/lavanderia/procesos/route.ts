@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAdmin } from "@/lib/lavanderia/empleado";
+import { requireAdmin, requireEmpleado } from "@/lib/lavanderia/empleado";
+
+// GET: procesos (columnas de la matriz) + tiempos por prenda × proceso. Lo usa la
+// carga/edición de OT para mostrar los chips y calcular la duración en vivo.
+export async function GET(request: NextRequest) {
+  const empleado = await requireEmpleado(request);
+  if (!empleado) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const [procesos, tiempos] = await Promise.all([
+    prisma.lavProceso.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
+    prisma.lavDuracion.findMany({ select: { prendaId: true, procesoId: true, minutos: true } }),
+  ]);
+  return NextResponse.json({ procesos, tiempos });
+}
 
 // POST: crea un proceso granular (columna de la matriz Tiempos). Solo admin.
 export async function POST(request: NextRequest) {

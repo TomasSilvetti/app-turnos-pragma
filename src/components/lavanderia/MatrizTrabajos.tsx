@@ -6,39 +6,32 @@ import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import { RenombrarModal } from "./RenombrarModal";
-import { ServicioModal } from "./ServicioModal";
 
 type Item = { id: string; nombre: string; incompleta?: boolean };
-type Servicio = Item & { procesoIds: string[] };
 type Edicion = { tipo: "prendas" | "procesos"; id: string; nombre: string };
 const key = (a: string, b: string) => `${a}:${b}`;
 
 export function MatrizTrabajos() {
   const [prendas, setPrendas] = useState<Item[]>([]);
   const [procesos, setProcesos] = useState<Item[]>([]);
-  const [servicios, setServicios] = useState<Servicio[]>([]);
   const [tiempos, setTiempos] = useState<Record<string, number>>({}); // prenda:proceso → minutos
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
   const [recalculando, setRecalculando] = useState(false);
   const [edicion, setEdicion] = useState<Edicion | null>(null);
-  // null = modal cerrado; objeto = editar; "nuevo" = crear.
-  const [servicioModal, setServicioModal] = useState<Servicio | "nuevo" | null>(null);
 
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/trabajos")
-      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], servicios: [], tiempos: [] }))
+      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], tiempos: [] }))
       .then(
         (d: {
           prendas: Item[];
           procesos: Item[];
-          servicios: Servicio[];
           tiempos: { prendaId: string; procesoId: string; minutos: number }[];
         }) => {
           setPrendas(d.prendas ?? []);
           setProcesos(d.procesos ?? []);
-          setServicios(d.servicios ?? []);
           const mapaT: Record<string, number> = {};
           for (const c of d.tiempos ?? []) mapaT[key(c.prendaId, c.procesoId)] = c.minutos;
           setTiempos(mapaT);
@@ -86,19 +79,6 @@ export function MatrizTrabajos() {
     }
   };
 
-  const guardarServicio = async (data: { id?: string; nombre: string; procesoIds: string[] }) => {
-    const url = data.id ? `/api/lavanderia/servicios/${data.id}` : "/api/lavanderia/servicios";
-    const res = await lavFetch(url, {
-      method: data.id ? "PATCH" : "POST",
-      body: JSON.stringify({ nombre: data.nombre, procesoIds: data.procesoIds }),
-    });
-    if (res.ok) {
-      const { servicio } = await res.json();
-      setServicios((arr) => (data.id ? arr.map((s) => (s.id === servicio.id ? servicio : s)) : [...arr, servicio]));
-      setServicioModal(null);
-    }
-  };
-
   const recalcular = async () => {
     if (!confirm("¿Recalcular la duración de todas las OTs con la matriz actual?")) return;
     setRecalculando(true);
@@ -122,16 +102,7 @@ export function MatrizTrabajos() {
   const eliminarProceso = async (id: string, nombre: string) => {
     if (!confirm(`¿Eliminar el proceso "${nombre}"?`)) return;
     const res = await lavFetch(`/api/lavanderia/procesos/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setProcesos((p) => p.filter((x) => x.id !== id));
-      setServicios((arr) => arr.map((s) => ({ ...s, procesoIds: s.procesoIds.filter((pid) => pid !== id) })));
-    }
-  };
-
-  const eliminarServicio = async (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar el servicio "${nombre}"?`)) return;
-    const res = await lavFetch(`/api/lavanderia/servicios/${id}`, { method: "DELETE" });
-    if (res.ok) setServicios((arr) => arr.filter((x) => x.id !== id));
+    if (res.ok) setProcesos((p) => p.filter((x) => x.id !== id));
   };
 
   const confirmarRenombre = async (nombre: string) => {
@@ -160,7 +131,7 @@ export function MatrizTrabajos() {
         <div>
           <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
           <p className="text-sm text-muted-foreground">
-            Minutos de cada proceso por prenda. La duración de un ítem es la suma de los procesos de sus servicios.
+            Minutos de cada proceso por prenda. La duración de un ítem es la suma de los minutos de los procesos que se le aplican.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={recalcular} disabled={recalculando}>
@@ -289,38 +260,6 @@ export function MatrizTrabajos() {
         </table>
       </div>
 
-      {/* Servicios: agrupan procesos y se aplican a los ítems para calcular su duración. */}
-      <div className="space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-base font-semibold">Servicios</h2>
-            <p className="text-sm text-muted-foreground">
-              Cada servicio agrupa procesos. Al aplicarlo a un ítem suma los minutos de esos procesos.
-            </p>
-          </div>
-          <Button size="sm" variant="outline" onClick={() => setServicioModal("nuevo")}>
-            <Plus /> Servicio
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {servicios.map((s) => (
-            <span key={s.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pl-3 pr-1.5 text-sm">
-              <button onClick={() => setServicioModal(s)} className="font-medium hover:text-primary" title="Editar servicio">
-                {s.nombre}
-              </button>
-              <button
-                onClick={() => eliminarServicio(s.id, s.nombre)}
-                className="rounded-full p-0.5 text-muted-foreground hover:text-destructive"
-                title="Eliminar"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            </span>
-          ))}
-          {servicios.length === 0 && <p className="text-sm text-muted-foreground">Todavía no hay servicios. Agregá uno.</p>}
-        </div>
-      </div>
-
       <RenombrarModal
         open={edicion !== null}
         titulo={edicion?.tipo === "prendas" ? "Renombrar prenda" : "Renombrar proceso"}
@@ -328,16 +267,6 @@ export function MatrizTrabajos() {
         onConfirmar={confirmarRenombre}
         onCerrar={() => setEdicion(null)}
       />
-
-      {servicioModal !== null && (
-        <ServicioModal
-          servicio={servicioModal === "nuevo" ? null : servicioModal}
-          procesos={procesos}
-          onProcesoCreado={(p) => setProcesos((arr) => [...arr, p])}
-          onGuardar={guardarServicio}
-          onCerrar={() => setServicioModal(null)}
-        />
-      )}
     </div>
   );
 }

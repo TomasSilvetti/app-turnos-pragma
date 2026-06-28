@@ -77,7 +77,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             prendaId: i.prendaId ?? null,
             descripcion: i.descripcion,
             cantidad: Number(i.cantidad) || 1,
-            servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
+            procesoIds: Array.isArray(i.procesoIds) ? i.procesoIds.filter((x): x is string => typeof x === "string") : [],
           }))
       : [];
 
@@ -114,7 +114,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
               descripcion: it.descripcion,
               prendaId: it.prendaId,
               cantidad: it.cantidad,
-              servicioIds: it.servicioIds,
+              procesoIds: it.procesoIds,
               duracionMin: it.duracionMin,
             })),
           },

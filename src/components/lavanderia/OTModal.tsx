@@ -10,8 +10,9 @@ import { cn } from "@/lib/utils";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 type Prenda = { id: string; nombre: string };
-type Servicio = { id: string; nombre: string };
-type ItemEdit = { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[] };
+type Proceso = { id: string; nombre: string };
+type Tiempo = { prendaId: string; procesoId: string; minutos: number };
+type ItemEdit = { descripcion: string; cantidad: number; prendaId: string | null; procesoIds: string[] };
 
 export function OTModal({
   ot,
@@ -25,7 +26,8 @@ export function OTModal({
   admin?: boolean;
 }) {
   const [prendas, setPrendas] = useState<Prenda[]>([]);
-  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [procesos, setProcesos] = useState<Proceso[]>([]);
+  const [tiempos, setTiempos] = useState<Map<string, number>>(new Map());
   const [numero, setNumero] = useState(ot.numero ?? "");
   const [cliente, setCliente] = useState(ot.nombreCliente ?? "");
   const [telefono, setTelefono] = useState(ot.telefono ?? "");
@@ -37,7 +39,7 @@ export function OTModal({
       descripcion: it.descripcion,
       cantidad: it.cantidad,
       prendaId: it.prendaId,
-      servicioIds: it.servicioIds,
+      procesoIds: it.procesoIds,
     }))
   );
   const [guardando, setGuardando] = useState(false);
@@ -51,11 +53,17 @@ export function OTModal({
       .then((r) => (r.ok ? r.json() : { prendas: [] }))
       .then((d: { prendas: Prenda[] }) => setPrendas(d.prendas ?? []))
       .catch(() => {});
-    lavFetch("/api/lavanderia/servicios")
-      .then((r) => (r.ok ? r.json() : { servicios: [] }))
-      .then((d: { servicios: Servicio[] }) => setServicios(d.servicios ?? []))
+    lavFetch("/api/lavanderia/procesos")
+      .then((r) => (r.ok ? r.json() : { procesos: [], tiempos: [] }))
+      .then((d: { procesos: Proceso[]; tiempos: Tiempo[] }) => {
+        setProcesos(d.procesos ?? []);
+        setTiempos(new Map((d.tiempos ?? []).map((t) => [`${t.prendaId}:${t.procesoId}`, t.minutos])));
+      })
       .catch(() => {});
   }, []);
+
+  const minutosUnit = (it: ItemEdit) =>
+    it.prendaId ? it.procesoIds.reduce((acc, pid) => acc + (tiempos.get(`${it.prendaId}:${pid}`) ?? 0), 0) : 0;
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onCerrar();
@@ -73,12 +81,12 @@ export function OTModal({
     setItem(idx, { prendaId: prendaId || null, descripcion: prenda?.nombre ?? "" });
   };
 
-  const toggleServicio = (idx: number, servicioId: string) =>
+  const toggleProceso = (idx: number, procesoId: string) =>
     setItems((arr) =>
       arr.map((it, i) => {
         if (i !== idx) return it;
-        const tiene = it.servicioIds.includes(servicioId);
-        return { ...it, servicioIds: tiene ? it.servicioIds.filter((s) => s !== servicioId) : [...it.servicioIds, servicioId] };
+        const tiene = it.procesoIds.includes(procesoId);
+        return { ...it, procesoIds: tiene ? it.procesoIds.filter((p) => p !== procesoId) : [...it.procesoIds, procesoId] };
       })
     );
 
@@ -98,7 +106,7 @@ export function OTModal({
           fechaNecesaria: fechaNecesaria || null,
           items: items
             .filter((i) => i.prendaId || i.descripcion.trim())
-            .map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, servicioIds: i.servicioIds })),
+            .map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, procesoIds: i.procesoIds })),
         }),
       });
       if (res.ok) {
@@ -214,8 +222,11 @@ export function OTModal({
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-semibold">Prendas / servicios</p>
-            {items.map((it, idx) => (
+            <p className="text-sm font-semibold">Prendas / procesos</p>
+            {items.map((it, idx) => {
+              const dur = minutosUnit(it);
+              const sinTiempos = Boolean(it.prendaId) && it.procesoIds.length > 0 && dur === 0;
+              return (
               <div key={idx} className="space-y-2 rounded-lg border border-border p-2.5">
                 <div className="flex items-center gap-2">
                   <LavSelect
@@ -239,15 +250,15 @@ export function OTModal({
                   </button>
                 </div>
 
-                {/* Servicios como chips toggle */}
+                {/* Procesos como chips toggle */}
                 <div className="flex flex-wrap gap-1.5">
-                  {servicios.map((s) => {
-                    const activo = it.servicioIds.includes(s.id);
+                  {procesos.map((p) => {
+                    const activo = it.procesoIds.includes(p.id);
                     return (
                       <button
-                        key={s.id}
+                        key={p.id}
                         type="button"
-                        onClick={() => toggleServicio(idx, s.id)}
+                        onClick={() => toggleProceso(idx, p.id)}
                         className={cn(
                           "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
                           activo
@@ -255,24 +266,33 @@ export function OTModal({
                             : "border-border text-muted-foreground hover:border-primary/50"
                         )}
                       >
-                        {s.nombre}
+                        {p.nombre}
                       </button>
                     );
                   })}
-                  {servicios.length === 0 && <span className="text-[11px] text-muted-foreground">No hay servicios configurados</span>}
+                  {procesos.length === 0 && <span className="text-[11px] text-muted-foreground">No hay procesos configurados</span>}
                 </div>
 
-                {!it.prendaId && (
+                {!it.prendaId ? (
                   <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                     <AlertTriangle className="size-3" /> Sin prenda no se calcula duración
                   </p>
+                ) : sinTiempos ? (
+                  <p className="flex items-center gap-1 text-[11px] font-medium text-yellow-700 dark:text-yellow-300">
+                    <AlertTriangle className="size-3" /> Sin tiempo cargado para esta prenda/proceso
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    {dur} min × {it.cantidad} = <span className="font-medium text-foreground/80">{dur * it.cantidad} min</span>
+                  </p>
                 )}
               </div>
-            ))}
+              );
+            })}
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, servicioIds: [] }])}
+              onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, procesoIds: [] }])}
             >
               <Plus /> Agregar item
             </Button>

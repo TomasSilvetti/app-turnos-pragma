@@ -4,78 +4,72 @@ export type ItemEntrada = {
   prendaId?: string | null;
   descripcion: string;
   cantidad: number;
-  servicioIds?: string[];
+  procesoIds?: string[];
 };
 
 export type ItemCalculado = {
   prendaId: string | null;
   descripcion: string;
   cantidad: number;
-  servicioIds: string[];
-  servicios: string[]; // nombres de los servicios aplicados (para mostrar)
+  procesoIds: string[];
+  procesos: string[]; // nombres de los procesos aplicados (para mostrar)
   duracionMin: number;
+  sinTiempos: boolean; // tiene prenda y procesos, pero la matriz no les cargó minutos
 };
 
 export type CalculoDuracion = {
   items: ItemCalculado[];
   duracionTotal: number;
-  aRevisar: boolean; // algun item no se pudo mapear a una prenda de la matriz
+  aRevisar: boolean; // algún item no se pudo mapear a la matriz o no tiene tiempos cargados
 };
 
-// Calcula la duración de cada item a partir de la prenda y los servicios
-// aplicados:
-//  - duración = Σ servicios (Σ minutos de sus procesos para esa prenda) × cantidad
-// Items sin prenda reconocida quedan en 0 y marcan la OT como "a revisar".
+// Calcula la duración de cada item directo de la matriz prenda × proceso:
+//  - duración = Σ minutos[prenda][proceso] de los procesos aplicados × cantidad
+// Items sin prenda, sin procesos o sin minutos cargados quedan en 0 y marcan la
+// OT como "a revisar".
 export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDuracion> {
   const prendaIds = [...new Set(items.map((i) => i.prendaId).filter((x): x is string => Boolean(x)))];
-  const servicioIds = [...new Set(items.flatMap((i) => i.servicioIds ?? []))];
+  const procesoIds = [...new Set(items.flatMap((i) => i.procesoIds ?? []))];
 
-  const [tiempos, servicioProcesos, servicios] = await Promise.all([
+  const [tiempos, procesos] = await Promise.all([
     prendaIds.length
       ? prisma.lavDuracion.findMany({ where: { prendaId: { in: prendaIds } }, select: { prendaId: true, procesoId: true, minutos: true } })
       : Promise.resolve([]),
-    servicioIds.length
-      ? prisma.lavServicioProceso.findMany({ where: { servicioId: { in: servicioIds } }, select: { servicioId: true, procesoId: true } })
-      : Promise.resolve([]),
-    servicioIds.length
-      ? prisma.lavServicio.findMany({ where: { id: { in: servicioIds } }, select: { id: true, nombre: true } })
+    procesoIds.length
+      ? prisma.lavProceso.findMany({ where: { id: { in: procesoIds } }, select: { id: true, nombre: true } })
       : Promise.resolve([]),
   ]);
 
   // (prendaId, procesoId) -> minutos
   const minutosCelda = new Map<string, number>();
   for (const t of tiempos) minutosCelda.set(`${t.prendaId}:${t.procesoId}`, t.minutos);
-  // servicioId -> procesoIds
-  const procesosDeServicio = new Map<string, string[]>();
-  for (const sp of servicioProcesos) {
-    const arr = procesosDeServicio.get(sp.servicioId) ?? [];
-    arr.push(sp.procesoId);
-    procesosDeServicio.set(sp.servicioId, arr);
-  }
-  const nombreServicio = new Map(servicios.map((s) => [s.id, s.nombre]));
+  const nombreProceso = new Map(procesos.map((p) => [p.id, p.nombre]));
 
   let aRevisar = false;
   const calculados: ItemCalculado[] = items.map((i) => {
     const cantidad = Math.max(1, Math.round(i.cantidad || 1));
-    const ids = (i.servicioIds ?? []).filter((id) => nombreServicio.has(id));
-    if (!i.prendaId) aRevisar = true;
+    const ids = (i.procesoIds ?? []).filter((id) => nombreProceso.has(id));
 
     let minutosUnit = 0;
-    for (const servicioId of ids) {
-      if (i.prendaId) {
-        for (const procesoId of procesosDeServicio.get(servicioId) ?? []) {
-          minutosUnit += minutosCelda.get(`${i.prendaId}:${procesoId}`) ?? 0;
-        }
+    if (i.prendaId) {
+      for (const procesoId of ids) {
+        minutosUnit += minutosCelda.get(`${i.prendaId}:${procesoId}`) ?? 0;
       }
     }
+
+    // "Sin tiempos": la prenda existe y se le aplicaron procesos, pero la matriz
+    // no tiene minutos cargados para esa combinación (suma 0).
+    const sinTiempos = Boolean(i.prendaId) && ids.length > 0 && minutosUnit === 0;
+    if (!i.prendaId || ids.length === 0 || sinTiempos) aRevisar = true;
 
     return {
       prendaId: i.prendaId ?? null,
       descripcion: i.descripcion,
       cantidad,
-      servicioIds: ids,
-      servicios: ids.map((id) => nombreServicio.get(id) ?? "").filter(Boolean),
+      procesoIds: ids,
+      procesos: ids.map((id) => nombreProceso.get(id) ?? "").filter(Boolean),
       duracionMin: minutosUnit * cantidad,
+      sinTiempos,
     };
   });
 
@@ -84,9 +78,9 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
 }
 
 // Reaplica la matriz actual a las OTs todavía en el tablero (no terminadas),
-// recalculando duración/servicios de sus items. Se corre cuando cambian
-// tiempos/servicios de la matriz; al tocar las filas de LavOT el tablero
-// (SSE) se actualiza solo. Las OTs terminadas no se tocan (histórico).
+// recalculando duración/procesos de sus items. Se corre cuando cambian los
+// tiempos de la matriz; al tocar las filas de LavOT el tablero (SSE) se
+// actualiza solo. Las OTs terminadas no se tocan (histórico).
 export async function recalcularOTsActivas(prendaIds?: string[]): Promise<number> {
   const ots = await prisma.lavOT.findMany({
     where: {
@@ -94,7 +88,7 @@ export async function recalcularOTsActivas(prendaIds?: string[]): Promise<number
       ...(prendaIds && prendaIds.length > 0 ? { items: { some: { prendaId: { in: prendaIds } } } } : {}),
     },
     include: {
-      items: { select: { id: true, prendaId: true, descripcion: true, cantidad: true, servicioIds: true } },
+      items: { select: { id: true, prendaId: true, descripcion: true, cantidad: true, procesoIds: true } },
     },
   });
   if (ots.length === 0) return 0;
@@ -102,7 +96,7 @@ export async function recalcularOTsActivas(prendaIds?: string[]): Promise<number
   const updates = [];
   for (const ot of ots) {
     const calculo = await calcularDuracion(
-      ot.items.map((it) => ({ prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, servicioIds: it.servicioIds }))
+      ot.items.map((it) => ({ prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, procesoIds: it.procesoIds }))
     );
     // calcularDuracion preserva el orden de los items de entrada.
     ot.items.forEach((it, i) => {
@@ -110,7 +104,7 @@ export async function recalcularOTsActivas(prendaIds?: string[]): Promise<number
       updates.push(
         prisma.lavOTItem.update({
           where: { id: it.id },
-          data: { duracionMin: c.duracionMin, servicioIds: c.servicioIds },
+          data: { duracionMin: c.duracionMin, procesoIds: c.procesoIds },
         })
       );
     });

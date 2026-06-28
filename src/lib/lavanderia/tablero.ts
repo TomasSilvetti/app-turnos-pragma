@@ -27,7 +27,7 @@ export type OTSnap = {
   empezadoEn: string | null;
   terminadoEn: string | null;
   empleadoTrabajo: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[]; servicios: string[]; duracionMin: number }[];
+  items: { descripcion: string; cantidad: number; prendaId: string | null; procesoIds: string[]; procesos: string[]; duracionMin: number }[];
   puedeEmpezar: boolean;
 };
 
@@ -90,14 +90,14 @@ export async function getTablero(): Promise<TableroSnapshot> {
     where: { fechaAsignada: { gte: hoy, lte: hasta } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
-      items: { select: { descripcion: true, cantidad: true, prendaId: true, servicioIds: true, duracionMin: true } },
+      items: { select: { descripcion: true, cantidad: true, prendaId: true, procesoIds: true, duracionMin: true } },
       empleadoTrabajo: { select: { nombre: true } },
     },
   });
 
-  // Resolver nombres de servicios para mostrar en las tarjetas.
-  const servicios = await prisma.lavServicio.findMany({ select: { id: true, nombre: true } });
-  const nombreServicio = new Map(servicios.map((s) => [s.id, s.nombre]));
+  // Resolver nombres de procesos para mostrar en las tarjetas.
+  const procesos = await prisma.lavProceso.findMany({ select: { id: true, nombre: true } });
+  const nombreProceso = new Map(procesos.map((p) => [p.id, p.nombre]));
 
   const porDia = new Map<string, typeof ots>();
   for (const ot of ots) {
@@ -146,8 +146,8 @@ export async function getTablero(): Promise<TableroSnapshot> {
         descripcion: it.descripcion,
         cantidad: it.cantidad,
         prendaId: it.prendaId,
-        servicioIds: it.servicioIds,
-        servicios: it.servicioIds.map((id) => nombreServicio.get(id) ?? "").filter(Boolean),
+        procesoIds: it.procesoIds,
+        procesos: it.procesoIds.map((id) => nombreProceso.get(id) ?? "").filter(Boolean),
         duracionMin: it.duracionMin,
       })),
       // Cualquier OT pendiente puede empezarse (varias en simultaneo, en cualquier

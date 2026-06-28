@@ -10,8 +10,8 @@ export type ItemExtraido = {
   cantidad: number;
   prendaId: string | null;
   prendaNombre: string | null;
-  servicioIds: string[]; // servicios detectados, mapeados a los conocidos
-  servicios: string[]; // nombres de esos servicios
+  procesoIds: string[]; // procesos detectados, mapeados a los conocidos
+  procesos: string[]; // nombres de esos procesos
   esNueva: boolean; // el ticket dice "varios": prenda nueva que todavía no está en el sistema
 };
 
@@ -71,11 +71,11 @@ const TOOL = {
               type: ["string", "null"],
               description: "Nombre EXACTO de la lista de prendas conocidas que corresponde, o null",
             },
-            serviciosSugeridos: {
+            procesosSugeridos: {
               type: "array",
               items: { type: "string" },
               description:
-                "Servicios aplicados a esa prenda (ej. LIMPIEZA, PLANCHADO). Usá los nombres EXACTOS de la lista de servicios conocidos cuando coincidan; si no hay coincidencia, dejá el texto tal como aparece.",
+                "Procesos/tratamientos aplicados a esa prenda (ej. LIMPIEZA, PLANCHA, MANCHA). Usá los nombres EXACTOS de la lista de procesos conocidos cuando coincidan; si no hay coincidencia, dejá el texto tal como aparece.",
             },
           },
           required: ["descripcion", "cantidad"],
@@ -96,12 +96,12 @@ export async function escanearComanda(
     throw new Error("Falta ANTHROPIC_API_KEY: configurá la API key de Claude para escanear comandas.");
   }
 
-  const [prendas, servicios] = await Promise.all([
+  const [prendas, procesos] = await Promise.all([
     prisma.lavPrenda.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
-    prisma.lavServicio.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
+    prisma.lavProceso.findMany({ orderBy: { orden: "asc" }, select: { id: true, nombre: true } }),
   ]);
   const listaPrendas = prendas.map((p) => `- ${p.nombre}`).join("\n");
-  const listaServicios = servicios.map((s) => `- ${s.nombre}`).join("\n");
+  const listaProcesos = procesos.map((p) => `- ${p.nombre}`).join("\n");
 
   const client = new Anthropic();
   const res = await client.messages.create({
@@ -121,15 +121,17 @@ export async function escanearComanda(
               `Hoy es ${hoyAR()} (yyyy-MM-dd). ` +
               "Extraé los datos y los items. Detectá también si está escrita la palabra URGENTE (urgente=true) " +
               'y si dice "PARA <fecha>" (devolvé fechaNecesaria en yyyy-MM-dd, infiriendo el año a partir de hoy). ' +
-              "Cada item es una PRENDA con uno o más SERVICIOS aplicados. " +
+              "Cada item es una PRENDA con uno o más PROCESOS aplicados. " +
               "Indicá la prenda en prendaSugerida (nombre EXACTO de la lista de prendas, o null) y " +
-              "los servicios en serviciosSugeridos (nombres EXACTOS de la lista de servicios cuando coincidan).\n" +
+              "los procesos en procesosSugeridos (nombres EXACTOS de la lista de procesos cuando coincidan). " +
+              "Matcheá con cuidado lo que dice el ticket: si algo no coincide claramente con una prenda o " +
+              "un proceso conocido, dejalo en null / fuera de la lista en vez de inventar.\n" +
               'Si una línea dice "VARIOS", es una prenda que todavía NO está en el sistema: dejá ' +
               'prendaSugerida en null y poné descripcion="varios".\n\n' +
               "PRENDAS conocidas:\n" +
               (listaPrendas || "(no hay prendas configuradas)") +
-              "\n\nSERVICIOS conocidos:\n" +
-              (listaServicios || "(no hay servicios configurados)"),
+              "\n\nPROCESOS conocidos:\n" +
+              (listaProcesos || "(no hay procesos configurados)"),
           },
         ],
       },
@@ -152,7 +154,7 @@ export async function escanearComanda(
       descripcion: string;
       cantidad: number;
       prendaSugerida?: string | null;
-      serviciosSugeridos?: string[] | null;
+      procesosSugeridos?: string[] | null;
     }[];
   };
 
@@ -162,20 +164,20 @@ export async function escanearComanda(
       : null;
 
   const indicePorNombre = new Map(prendas.map((p) => [normalizar(p.nombre), p]));
-  const servicioPorNombre = new Map(servicios.map((s) => [normalizar(s.nombre), s]));
+  const procesoPorNombre = new Map(procesos.map((p) => [normalizar(p.nombre), p]));
 
   const items: ItemExtraido[] = (data.items ?? []).map((it) => {
     const match = it.prendaSugerida ? indicePorNombre.get(normalizar(it.prendaSugerida)) : undefined;
-    const servMatches = (it.serviciosSugeridos ?? [])
-      .map((nombre) => servicioPorNombre.get(normalizar(nombre)))
-      .filter((s): s is { id: string; nombre: string } => Boolean(s));
+    const procMatches = (it.procesosSugeridos ?? [])
+      .map((nombre) => procesoPorNombre.get(normalizar(nombre)))
+      .filter((p): p is { id: string; nombre: string } => Boolean(p));
     return {
       descripcion: it.descripcion,
       cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
       prendaId: match?.id ?? null,
       prendaNombre: match?.nombre ?? null,
-      servicioIds: servMatches.map((s) => s.id),
-      servicios: servMatches.map((s) => s.nombre),
+      procesoIds: procMatches.map((p) => p.id),
+      procesos: procMatches.map((p) => p.nombre),
       esNueva: !match && (esVarios(it.descripcion) || esVarios(it.prendaSugerida)),
     };
   });

@@ -618,7 +618,7 @@ model LavOTItem {
   descripcion String
   prendaId    String?
   cantidad    Int      @default(1)
-  servicioIds String[] // ids de los servicios aplicados a la prenda
+  procesoIds  String[] // ids de los procesos aplicados a la prenda (columnas de la matriz)
   duracionMin Int      @default(0)
 
   ot     LavOT      @relation(fields: [otId], references: [id], onDelete: Cascade)
