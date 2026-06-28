@@ -25,6 +25,8 @@ export async function PUT(request: NextRequest) {
       update: { minutos },
       create: { prendaId, procesoId, minutos },
     });
+    // Cargarle minutos a una prenda nueva la deja de marcar como incompleta.
+    await prisma.lavPrenda.updateMany({ where: { id: prendaId, incompleta: true }, data: { incompleta: false } });
   }
 
   // Reflejar el cambio de tiempo en las OTs activas que usan esta prenda.

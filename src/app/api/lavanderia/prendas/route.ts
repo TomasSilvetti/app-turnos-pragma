@@ -6,7 +6,7 @@ import { requireAdmin } from "@/lib/lavanderia/empleado";
 export async function GET() {
   const prendas = await prisma.lavPrenda.findMany({
     orderBy: { orden: "asc" },
-    select: { id: true, nombre: true },
+    select: { id: true, nombre: true, incompleta: true },
   });
   return NextResponse.json({ prendas });
 }
