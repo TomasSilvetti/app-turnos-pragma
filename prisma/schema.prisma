@@ -503,8 +503,8 @@ model LavProceso {
   @@map("lav_procesos")
 }
 
-// Servicio (LIMPIEZA, etc.): nombre + conjunto fijo de procesos. El precio lo
-// pone el servicio por prenda (matriz Precios = prenda x servicio).
+// Servicio (LIMPIEZA, etc.): nombre + conjunto fijo de procesos. La duración de
+// un item es la suma de los minutos de los procesos de sus servicios.
 model LavServicio {
   id        String   @id @default(cuid())
   nombre    String
@@ -512,7 +512,6 @@ model LavServicio {
   createdAt DateTime @default(now())
 
   procesos LavServicioProceso[]
-  precios  LavPrecio[]
 
   @@map("lav_servicios")
 }
@@ -533,13 +532,13 @@ model LavServicioProceso {
 }
 
 model LavPrenda {
-  id        String   @id @default(cuid())
-  nombre    String
-  orden     Int      @default(0)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  nombre     String
+  orden      Int      @default(0)
+  incompleta Boolean  @default(false) // creada desde la carga por foto ("varios"): falta cargarle los minutos
+  createdAt  DateTime @default(now())
 
   duraciones LavDuracion[]
-  precios    LavPrecio[]
   items      LavOTItem[]
 
   @@map("lav_prendas")
@@ -559,22 +558,6 @@ model LavDuracion {
   @@index([prendaId])
   @@index([procesoId])
   @@map("lav_duraciones")
-}
-
-// Precios: precio de un servicio para una prenda (matriz prenda x servicio).
-model LavPrecio {
-  id         String @id @default(cuid())
-  prendaId   String
-  servicioId String
-  precio     Int    @default(0)
-
-  prenda   LavPrenda   @relation(fields: [prendaId], references: [id], onDelete: Cascade)
-  servicio LavServicio @relation(fields: [servicioId], references: [id], onDelete: Cascade)
-
-  @@unique([prendaId, servicioId])
-  @@index([prendaId])
-  @@index([servicioId])
-  @@map("lav_precios")
 }
 
 // Configuración global de turnos (single-tenant). tipo: "manana" | "tarde" | "extra".
@@ -604,7 +587,6 @@ model LavOT {
   nombreCliente     String?
   telefono          String?
   domicilio         String?
-  total             Float?
   fechaTicket       String? // texto crudo del ticket
   estado            String    @default("pendiente") // "pendiente" | "en_progreso" | "terminado"
   fechaAsignada     String // dia del tablero, yyyy-MM-dd
@@ -638,7 +620,6 @@ model LavOTItem {
   cantidad    Int      @default(1)
   servicioIds String[] // ids de los servicios aplicados a la prenda
   duracionMin Int      @default(0)
-  monto       Int      @default(0) // snapshot del monto de la linea (precioUnit x cantidad)
 
   ot     LavOT      @relation(fields: [otId], references: [id], onDelete: Cascade)
   prenda LavPrenda? @relation(fields: [prendaId], references: [id], onDelete: SetNull)

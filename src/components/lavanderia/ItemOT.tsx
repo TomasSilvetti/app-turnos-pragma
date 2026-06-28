@@ -9,9 +9,6 @@ import { altoOT, formatoDuracion } from "@/lib/lavanderia/timeline";
 import { useTableroAcciones } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
-const formatoMonto = (value: number) =>
-  "$" + value.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-
 export function ItemOT({
   ot,
   soloLectura = false,
@@ -43,7 +40,6 @@ export function ItemOT({
   };
 
   const titulo = ot.numero ? `OT ${ot.numero}` : ot.nombreCliente || "OT";
-  const montoTotal = ot.items.reduce((acc, it) => acc + it.monto, 0);
   // yyyy-MM-dd → dd/MM para mostrar al usuario.
   const fechaNecesariaCorta = ot.fechaNecesaria
     ? (() => {
@@ -99,11 +95,10 @@ export function ItemOT({
 
       {ot.items.length > 0 && (
         <div className="rounded-xl bg-slate-50/70 px-2 py-1.5 text-xs dark:bg-white/5">
-          <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-2.5 gap-y-1">
+          <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-2.5 gap-y-1">
             <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Prenda</span>
             <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Cant</span>
             <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">T/u</span>
-            <span className="text-right text-[10px] font-medium uppercase tracking-wide text-muted-foreground/70">Monto</span>
             {ot.items.map((it, i) => (
               <Fragment key={i}>
                 <span className="min-w-0">
@@ -120,18 +115,9 @@ export function ItemOT({
                 <span className="text-right tabular-nums text-muted-foreground">
                   {formatoDuracion(Math.round(it.duracionMin / it.cantidad))}
                 </span>
-                <span className="text-right tabular-nums font-medium text-foreground/90">
-                  {formatoMonto(it.monto)}
-                </span>
               </Fragment>
             ))}
           </div>
-          {montoTotal > 0 && (
-            <div className="mt-1.5 flex items-center justify-between border-t border-border/60 pt-1.5 text-[11px] font-semibold">
-              <span className="text-muted-foreground">Total</span>
-              <span className="tabular-nums">{formatoMonto(montoTotal)}</span>
-            </div>
-          )}
         </div>
       )}
 

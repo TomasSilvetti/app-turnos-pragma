@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Plus, Trash2, Loader2, Check, Play, Calculator, AlertTriangle, Flame } from "lucide-react";
+import { X, Plus, Trash2, Loader2, Check, Play, AlertTriangle, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LavSelect } from "./LavSelect";
 import { lavFetch } from "@/lib/lavanderia/client";
@@ -11,10 +11,7 @@ import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 type Prenda = { id: string; nombre: string };
 type Servicio = { id: string; nombre: string };
-type ItemEdit = { descripcion: string; cantidad: number; precio: number | null; prendaId: string | null; servicioIds: string[] };
-
-const formatoMonto = (value: number) =>
-  "$" + value.toLocaleString("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+type ItemEdit = { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[] };
 
 export function OTModal({
   ot,
@@ -37,7 +34,6 @@ export function OTModal({
     ot.items.map((it) => ({
       descripcion: it.descripcion,
       cantidad: it.cantidad,
-      precio: it.monto,
       prendaId: it.prendaId,
       servicioIds: it.servicioIds,
     }))
@@ -82,21 +78,6 @@ export function OTModal({
       })
     );
 
-  const montoTotal = items.reduce((acc, it) => acc + (it.precio ?? 0), 0);
-
-  const recalcularMontos = async () => {
-    const res = await lavFetch("/api/lavanderia/calcular", {
-      method: "POST",
-      body: JSON.stringify({
-        items: items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, servicioIds: i.servicioIds })),
-      }),
-    });
-    if (res.ok) {
-      const data: { items: { monto: number }[] } = await res.json();
-      setItems((arr) => arr.map((it, i) => ({ ...it, precio: data.items[i]?.monto ?? it.precio })));
-    }
-  };
-
   const guardar = async () => {
     setGuardando(true);
     setError(null);
@@ -113,7 +94,7 @@ export function OTModal({
           fechaNecesaria: fechaNecesaria || null,
           items: items
             .filter((i) => i.prendaId || i.descripcion.trim())
-            .map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, servicioIds: i.servicioIds, monto: i.precio })),
+            .map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, servicioIds: i.servicioIds })),
         }),
       });
       if (res.ok) {
@@ -208,12 +189,7 @@ export function OTModal({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold">Prendas / servicios</p>
-              <Button size="xs" variant="outline" onClick={recalcularMontos}>
-                <Calculator className="size-3.5" /> Recalcular montos
-              </Button>
-            </div>
+            <p className="text-sm font-semibold">Prendas / servicios</p>
             {items.map((it, idx) => (
               <div key={idx} className="space-y-2 rounded-lg border border-border p-2.5">
                 <div className="flex items-center gap-2">
@@ -261,19 +237,6 @@ export function OTModal({
                   {servicios.length === 0 && <span className="text-[11px] text-muted-foreground">No hay servicios configurados</span>}
                 </div>
 
-                <div className="flex items-center justify-end gap-1">
-                  <span className="text-sm text-muted-foreground">$</span>
-                  <input
-                    type="number"
-                    min={0}
-                    value={it.precio ?? ""}
-                    onChange={(e) => setItem(idx, { precio: e.target.value === "" ? null : Math.max(0, parseInt(e.target.value, 10) || 0) })}
-                    placeholder="Monto"
-                    className="h-9 w-28 rounded-md border border-border bg-background px-2 text-sm outline-none focus:border-primary"
-                    aria-label="Monto"
-                  />
-                </div>
-
                 {!it.prendaId && (
                   <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                     <AlertTriangle className="size-3" /> Sin prenda no se calcula duración
@@ -281,16 +244,13 @@ export function OTModal({
                 )}
               </div>
             ))}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, precio: null, prendaId: null, servicioIds: [] }])}
-              >
-                <Plus /> Agregar item
-              </Button>
-              <span className="text-sm font-semibold tabular-nums">Total: {formatoMonto(montoTotal)}</span>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, servicioIds: [] }])}
+            >
+              <Plus /> Agregar item
+            </Button>
           </div>
         </div>
 

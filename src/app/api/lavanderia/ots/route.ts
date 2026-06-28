@@ -20,22 +20,43 @@ export async function POST(request: NextRequest) {
   if (!empleado) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  // precioDetectado: precio de la linea leido del ticket; si viene, pisa al de la matriz.
-  const items: (ItemEntrada & { precioDetectado: number | null })[] = Array.isArray(body.items)
+  // esNueva: prenda "varios" renombrada por el empleado; se da de alta incompleta abajo.
+  const items: (ItemEntrada & { esNueva: boolean })[] = Array.isArray(body.items)
     ? body.items
         .filter((i: unknown) => i && typeof (i as ItemEntrada).descripcion === "string")
-        .map((i: ItemEntrada & { precio?: number | null }) => ({
+        .map((i: ItemEntrada & { esNueva?: boolean }) => ({
           prendaId: i.prendaId ?? null,
           descripcion: i.descripcion,
           cantidad: Number(i.cantidad) || 1,
           servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
-          precioDetectado:
-            typeof i.precio === "number" && Number.isFinite(i.precio) ? Math.max(0, Math.round(i.precio)) : null,
+          esNueva: i.esNueva === true,
         }))
     : [];
 
   if (items.length === 0)
     return NextResponse.json({ error: "La OT no tiene items" }, { status: 400 });
+
+  // Alta de prendas nuevas (caso "varios"): se crean incompletas para que el admin
+  // les cargue los minutos. Se reutiliza una existente del mismo nombre si la hay.
+  for (const it of items) {
+    if (!it.esNueva || it.prendaId) continue;
+    const nombre = it.descripcion.trim();
+    if (!nombre) continue;
+    const existente = await prisma.lavPrenda.findFirst({
+      where: { nombre: { equals: nombre, mode: "insensitive" } },
+      select: { id: true },
+    });
+    if (existente) {
+      it.prendaId = existente.id;
+    } else {
+      const max = await prisma.lavPrenda.aggregate({ _max: { orden: true } });
+      const prenda = await prisma.lavPrenda.create({
+        data: { nombre, orden: (max._max.orden ?? -1) + 1, incompleta: true },
+        select: { id: true },
+      });
+      it.prendaId = prenda.id;
+    }
+  }
 
   const urgente = body.urgente === true;
   const fechaNecesaria =
@@ -44,11 +65,6 @@ export async function POST(request: NextRequest) {
       : null;
 
   const calculo = await calcularDuracion(items);
-  // El monto del ticket (precio detectado) tiene prioridad sobre el de la matriz.
-  const itemsConMonto = calculo.items.map((it, idx) => ({
-    ...it,
-    monto: items[idx]?.precioDetectado ?? it.monto,
-  }));
   const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
 
   const ot = await prisma.lavOT.create({
@@ -57,7 +73,6 @@ export async function POST(request: NextRequest) {
       nombreCliente: typeof body.nombreCliente === "string" ? body.nombreCliente : null,
       telefono: typeof body.telefono === "string" ? body.telefono : null,
       domicilio: typeof body.domicilio === "string" ? body.domicilio : null,
-      total: Number.isFinite(body.total) ? body.total : null,
       fechaTicket: typeof body.fechaTicket === "string" ? body.fechaTicket : null,
       estado: "pendiente",
       fechaAsignada,
@@ -69,13 +84,12 @@ export async function POST(request: NextRequest) {
       empleadoCargaId: empleado.id,
       datosIA: body.datosIA ?? null,
       items: {
-        create: itemsConMonto.map((it) => ({
+        create: calculo.items.map((it) => ({
           descripcion: it.descripcion,
           prendaId: it.prendaId,
           cantidad: it.cantidad,
           servicioIds: it.servicioIds,
           duracionMin: it.duracionMin,
-          monto: it.monto,
         })),
       },
     },

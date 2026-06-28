@@ -27,7 +27,7 @@ export type OTSnap = {
   empezadoEn: string | null;
   terminadoEn: string | null;
   empleadoTrabajo: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[]; servicios: string[]; duracionMin: number; monto: number }[];
+  items: { descripcion: string; cantidad: number; prendaId: string | null; servicioIds: string[]; servicios: string[]; duracionMin: number }[];
   puedeEmpezar: boolean;
 };
 
@@ -90,7 +90,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
     where: { fechaAsignada: { gte: hoy, lte: hasta } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
-      items: { select: { descripcion: true, cantidad: true, prendaId: true, servicioIds: true, duracionMin: true, monto: true } },
+      items: { select: { descripcion: true, cantidad: true, prendaId: true, servicioIds: true, duracionMin: true } },
       empleadoTrabajo: { select: { nombre: true } },
     },
   });
@@ -149,7 +149,6 @@ export async function getTablero(): Promise<TableroSnapshot> {
         servicioIds: it.servicioIds,
         servicios: it.servicioIds.map((id) => nombreServicio.get(id) ?? "").filter(Boolean),
         duracionMin: it.duracionMin,
-        monto: it.monto,
       })),
       // Cualquier OT pendiente puede empezarse (varias en simultaneo, en cualquier
       // dia). Al empezarla se reubica en la columna de hoy.

@@ -10,8 +10,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ servicios });
 }
 
-// POST: crea un servicio (columna de la matriz Precios) con su conjunto de
-// procesos. Solo admin.
+// POST: crea un servicio con su conjunto de procesos. Solo admin.
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });

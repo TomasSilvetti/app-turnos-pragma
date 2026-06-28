@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/lavanderia/empleado";
 import { recalcularOTsActivas } from "@/lib/lavanderia/duraciones";
 
-// POST: recalcula duración y monto de todas las OTs activas con la matriz actual
-// (tiempos/precios/servicios). Solo admin.
+// POST: recalcula la duración de todas las OTs activas con la matriz actual
+// (tiempos/servicios). Solo admin.
 export async function POST(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });

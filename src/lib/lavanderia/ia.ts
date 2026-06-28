@@ -8,19 +8,23 @@ const MODELO = process.env.LAV_IA_MODEL || "claude-sonnet-4-6";
 export type ItemExtraido = {
   descripcion: string;
   cantidad: number;
-  precio: number | null; // precio de la linea tal como figura en el ticket
   prendaId: string | null;
   prendaNombre: string | null;
   servicioIds: string[]; // servicios detectados, mapeados a los conocidos
   servicios: string[]; // nombres de esos servicios
+  esNueva: boolean; // el ticket dice "varios": prenda nueva que todavía no está en el sistema
 };
+
+// "varios" en el ticket = prenda que aún no existe en la matriz; el empleado debe
+// reemplazar el nombre y la prenda se da de alta (incompleta) al cargar la OT.
+const esVarios = (s: string | null | undefined) =>
+  typeof s === "string" && /\bvarios?\b/.test(normalizar(s));
 
 export type OTExtraida = {
   numero: string | null;
   nombreCliente: string | null;
   telefono: string | null;
   domicilio: string | null;
-  total: number | null;
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null; // yyyy-MM-dd, de "PARA DD/MM"
@@ -45,7 +49,6 @@ const TOOL = {
       nombreCliente: { type: ["string", "null"] },
       telefono: { type: ["string", "null"] },
       domicilio: { type: ["string", "null"] },
-      total: { type: ["number", "null"], description: "Monto total en número, sin símbolos" },
       fechaTicket: { type: ["string", "null"], description: "Fecha/hora tal como figura en el ticket" },
       urgente: {
         type: "boolean",
@@ -64,11 +67,6 @@ const TOOL = {
           properties: {
             descripcion: { type: "string", description: "Texto de la prenda/servicio tal como aparece" },
             cantidad: { type: "number" },
-            precio: {
-              type: ["number", "null"],
-              description:
-                "Precio que figura en esa línea del ticket, en número sin símbolos ni puntos de miles (ej '$ 18.600,00' → 18600). Si la línea no muestra precio, null.",
-            },
             prendaSugerida: {
               type: ["string", "null"],
               description: "Nombre EXACTO de la lista de prendas conocidas que corresponde, o null",
@@ -123,10 +121,11 @@ export async function escanearComanda(
               `Hoy es ${hoyAR()} (yyyy-MM-dd). ` +
               "Extraé los datos y los items. Detectá también si está escrita la palabra URGENTE (urgente=true) " +
               'y si dice "PARA <fecha>" (devolvé fechaNecesaria en yyyy-MM-dd, infiriendo el año a partir de hoy). ' +
-              "Para cada item, detectá el precio que figura en su línea (campo precio, número sin símbolos). " +
               "Cada item es una PRENDA con uno o más SERVICIOS aplicados. " +
               "Indicá la prenda en prendaSugerida (nombre EXACTO de la lista de prendas, o null) y " +
-              "los servicios en serviciosSugeridos (nombres EXACTOS de la lista de servicios cuando coincidan).\n\n" +
+              "los servicios en serviciosSugeridos (nombres EXACTOS de la lista de servicios cuando coincidan).\n" +
+              'Si una línea dice "VARIOS", es una prenda que todavía NO está en el sistema: dejá ' +
+              'prendaSugerida en null y poné descripcion="varios".\n\n' +
               "PRENDAS conocidas:\n" +
               (listaPrendas || "(no hay prendas configuradas)") +
               "\n\nSERVICIOS conocidos:\n" +
@@ -146,14 +145,12 @@ export async function escanearComanda(
     nombreCliente?: string | null;
     telefono?: string | null;
     domicilio?: string | null;
-    total?: number | null;
     fechaTicket?: string | null;
     urgente?: boolean | null;
     fechaNecesaria?: string | null;
     items?: {
       descripcion: string;
       cantidad: number;
-      precio?: number | null;
       prendaSugerida?: string | null;
       serviciosSugeridos?: string[] | null;
     }[];
@@ -175,11 +172,11 @@ export async function escanearComanda(
     return {
       descripcion: it.descripcion,
       cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
-      precio: typeof it.precio === "number" && Number.isFinite(it.precio) ? Math.max(0, Math.round(it.precio)) : null,
       prendaId: match?.id ?? null,
       prendaNombre: match?.nombre ?? null,
       servicioIds: servMatches.map((s) => s.id),
       servicios: servMatches.map((s) => s.nombre),
+      esNueva: !match && (esVarios(it.descripcion) || esVarios(it.prendaSugerida)),
     };
   });
 
@@ -188,7 +185,6 @@ export async function escanearComanda(
     nombreCliente: data.nombreCliente ?? null,
     telefono: data.telefono ?? null,
     domicilio: data.domicilio ?? null,
-    total: typeof data.total === "number" ? data.total : null,
     fechaTicket: data.fechaTicket ?? null,
     urgente: data.urgente === true,
     fechaNecesaria,

@@ -1,16 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Loader2, Pencil, Calculator, Clock, DollarSign } from "lucide-react";
+import { Plus, Trash2, Loader2, Pencil, Calculator, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import { RenombrarModal } from "./RenombrarModal";
 import { ServicioModal } from "./ServicioModal";
 
-type Item = { id: string; nombre: string };
+type Item = { id: string; nombre: string; incompleta?: boolean };
 type Servicio = Item & { procesoIds: string[] };
-type Vista = "tiempos" | "precios";
 type Edicion = { tipo: "prendas" | "procesos"; id: string; nombre: string };
 const key = (a: string, b: string) => `${a}:${b}`;
 
@@ -19,8 +18,6 @@ export function MatrizTrabajos() {
   const [procesos, setProcesos] = useState<Item[]>([]);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [tiempos, setTiempos] = useState<Record<string, number>>({}); // prenda:proceso → minutos
-  const [precios, setPrecios] = useState<Record<string, number>>({}); // prenda:servicio → precio
-  const [vista, setVista] = useState<Vista>("tiempos");
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
@@ -31,14 +28,13 @@ export function MatrizTrabajos() {
 
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/trabajos")
-      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], servicios: [], tiempos: [], precios: [] }))
+      .then((r) => (r.ok ? r.json() : { prendas: [], procesos: [], servicios: [], tiempos: [] }))
       .then(
         (d: {
           prendas: Item[];
           procesos: Item[];
           servicios: Servicio[];
           tiempos: { prendaId: string; procesoId: string; minutos: number }[];
-          precios: { prendaId: string; servicioId: string; precio: number }[];
         }) => {
           setPrendas(d.prendas ?? []);
           setProcesos(d.procesos ?? []);
@@ -46,9 +42,6 @@ export function MatrizTrabajos() {
           const mapaT: Record<string, number> = {};
           for (const c of d.tiempos ?? []) mapaT[key(c.prendaId, c.procesoId)] = c.minutos;
           setTiempos(mapaT);
-          const mapaP: Record<string, number> = {};
-          for (const c of d.precios ?? []) mapaP[key(c.prendaId, c.servicioId)] = c.precio;
-          setPrecios(mapaP);
         }
       )
       .catch(() => {})
@@ -66,19 +59,9 @@ export function MatrizTrabajos() {
       else delete next[k];
       return next;
     });
+    // Cargarle minutos a una prenda nueva la deja de marcar como incompleta (lo hace el backend).
+    if (minutos > 0) setPrendas((arr) => arr.map((p) => (p.id === prendaId && p.incompleta ? { ...p, incompleta: false } : p)));
     await lavFetch("/api/lavanderia/duraciones", { method: "PUT", body: JSON.stringify({ prendaId, procesoId, minutos }) });
-  };
-
-  const guardarPrecio = async (prendaId: string, servicioId: string, valor: string) => {
-    const precio = Math.max(0, parseInt(valor, 10) || 0);
-    const k = key(prendaId, servicioId);
-    setPrecios((prev) => {
-      const next = { ...prev };
-      if (precio > 0) next[k] = precio;
-      else delete next[k];
-      return next;
-    });
-    await lavFetch("/api/lavanderia/precios", { method: "PUT", body: JSON.stringify({ prendaId, servicioId, precio }) });
   };
 
   const agregarPrenda = async () => {
@@ -117,7 +100,7 @@ export function MatrizTrabajos() {
   };
 
   const recalcular = async () => {
-    if (!confirm("¿Recalcular duración y monto de todas las OTs con la matriz actual?")) return;
+    if (!confirm("¿Recalcular la duración de todas las OTs con la matriz actual?")) return;
     setRecalculando(true);
     try {
       const res = await lavFetch("/api/lavanderia/recalcular-montos", { method: "POST" });
@@ -146,7 +129,7 @@ export function MatrizTrabajos() {
   };
 
   const eliminarServicio = async (id: string, nombre: string) => {
-    if (!confirm(`¿Eliminar el servicio "${nombre}" y sus precios?`)) return;
+    if (!confirm(`¿Eliminar el servicio "${nombre}"?`)) return;
     const res = await lavFetch(`/api/lavanderia/servicios/${id}`, { method: "DELETE" });
     if (res.ok) setServicios((arr) => arr.filter((x) => x.id !== id));
   };
@@ -171,18 +154,13 @@ export function MatrizTrabajos() {
     );
   }
 
-  const esTiempos = vista === "tiempos";
-  const columnas: Item[] = esTiempos ? procesos : servicios;
-
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
           <p className="text-sm text-muted-foreground">
-            {esTiempos
-              ? "Minutos de cada proceso por prenda. La duración de un ítem es la suma de los procesos de sus servicios."
-              : "Precio de cada servicio por prenda. El monto de un ítem es la suma de los servicios aplicados."}
+            Minutos de cada proceso por prenda. La duración de un ítem es la suma de los procesos de sus servicios.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={recalcular} disabled={recalculando}>
@@ -190,27 +168,19 @@ export function MatrizTrabajos() {
         </Button>
       </div>
 
-      {/* Toggle Tiempos / Precios */}
-      <div className="inline-flex rounded-xl border border-border bg-muted/40 p-0.5">
-        <button
-          onClick={() => setVista("tiempos")}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-[0.6rem] px-3 py-1.5 text-sm font-medium transition-colors",
-            esTiempos ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-          )}
-        >
-          <Clock className="size-4" /> Tiempos
-        </button>
-        <button
-          onClick={() => setVista("precios")}
-          className={cn(
-            "inline-flex items-center gap-1.5 rounded-[0.6rem] px-3 py-1.5 text-sm font-medium transition-colors",
-            !esTiempos ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-          )}
-        >
-          <DollarSign className="size-4" /> Precios
-        </button>
-      </div>
+      {/* Prendas nuevas cargadas desde la app que aún no tienen minutos */}
+      {prendas.some((p) => p.incompleta) && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-500/50 dark:bg-amber-500/10 dark:text-amber-200">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <div>
+            <p className="font-medium">Prendas nuevas sin minutos cargados</p>
+            <p className="text-[13px] leading-snug">
+              Se dieron de alta desde la carga por foto. Completá sus tiempos en la matriz:{" "}
+              <span className="font-medium">{prendas.filter((p) => p.incompleta).map((p) => p.nombre).join(", ")}</span>.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-3">
         <div className="flex items-center gap-2">
@@ -225,24 +195,18 @@ export function MatrizTrabajos() {
             <Plus /> Prenda
           </Button>
         </div>
-        {esTiempos ? (
-          <div className="flex items-center gap-2">
-            <input
-              value={nuevoProceso}
-              onChange={(e) => setNuevoProceso(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
-              placeholder="Nuevo proceso"
-              className="h-9 w-44 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-            <Button size="sm" variant="outline" onClick={agregarProceso}>
-              <Plus /> Proceso
-            </Button>
-          </div>
-        ) : (
-          <Button size="sm" variant="outline" onClick={() => setServicioModal("nuevo")}>
-            <Plus /> Servicio
+        <div className="flex items-center gap-2">
+          <input
+            value={nuevoProceso}
+            onChange={(e) => setNuevoProceso(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && agregarProceso()}
+            placeholder="Nuevo proceso"
+            className="h-9 w-44 rounded-md border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+          />
+          <Button size="sm" variant="outline" onClick={agregarProceso}>
+            <Plus /> Proceso
           </Button>
-        )}
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-border">
@@ -250,24 +214,20 @@ export function MatrizTrabajos() {
           <thead>
             <tr className="bg-muted/50">
               <th className="sticky left-0 z-10 min-w-44 border-b border-r border-border bg-muted/50 p-2 text-left font-semibold">
-                {esTiempos ? "Prenda / Proceso" : "Prenda / Servicio"}
+                Prenda / Proceso
               </th>
-              {columnas.map((col) => (
+              {procesos.map((col) => (
                 <th key={col.id} className="min-w-28 border-b border-border p-2 font-semibold">
                   <div className="flex items-center justify-center gap-1">
                     <button
-                      onClick={() =>
-                        esTiempos
-                          ? setEdicion({ tipo: "procesos", id: col.id, nombre: col.nombre })
-                          : setServicioModal(servicios.find((s) => s.id === col.id)!)
-                      }
+                      onClick={() => setEdicion({ tipo: "procesos", id: col.id, nombre: col.nombre })}
                       className="hover:text-primary"
-                      title={esTiempos ? "Renombrar" : "Editar servicio"}
+                      title="Renombrar"
                     >
                       {col.nombre}
                     </button>
                     <button
-                      onClick={() => (esTiempos ? eliminarProceso(col.id, col.nombre) : eliminarServicio(col.id, col.nombre))}
+                      onClick={() => eliminarProceso(col.id, col.nombre)}
                       className="text-muted-foreground hover:text-destructive"
                       title="Eliminar"
                     >
@@ -276,55 +236,43 @@ export function MatrizTrabajos() {
                   </div>
                 </th>
               ))}
-              {columnas.length === 0 && (
-                <th className="p-3 text-center font-normal text-muted-foreground">
-                  {esTiempos ? "Agregá un proceso" : "Agregá un servicio"}
-                </th>
+              {procesos.length === 0 && (
+                <th className="p-3 text-center font-normal text-muted-foreground">Agregá un proceso</th>
               )}
             </tr>
           </thead>
           <tbody>
             {prendas.map((prenda) => (
-              <tr key={prenda.id} className="border-b border-border last:border-0">
-                <td className="sticky left-0 z-10 border-r border-border bg-card p-2 font-medium">
+              <tr key={prenda.id} className={cn("border-b border-border last:border-0", prenda.incompleta && "bg-amber-50/60 dark:bg-amber-500/10")}>
+                <td className={cn("sticky left-0 z-10 border-r border-border p-2 font-medium", prenda.incompleta ? "bg-amber-50 dark:bg-amber-500/10" : "bg-card")}>
                   <div className="flex items-center justify-between gap-1">
                     <button onClick={() => setEdicion({ tipo: "prendas", id: prenda.id, nombre: prenda.nombre })} className="flex items-center gap-1 text-left hover:text-primary" title="Renombrar">
                       <Pencil className="size-3 shrink-0 text-muted-foreground" />
                       {prenda.nombre}
+                      {prenda.incompleta && (
+                        <span className="ml-1 inline-flex items-center gap-0.5 rounded-full bg-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-500/25 dark:text-amber-200" title="Prenda nueva: cargá los minutos">
+                          <AlertTriangle className="size-2.5" /> nueva
+                        </span>
+                      )}
                     </button>
                     <button onClick={() => eliminarPrenda(prenda.id, prenda.nombre)} className="text-muted-foreground hover:text-destructive" title="Eliminar">
                       <Trash2 className="size-3.5" />
                     </button>
                   </div>
                 </td>
-                {columnas.map((col) => {
+                {procesos.map((col) => {
                   const k = key(prenda.id, col.id);
                   return (
                     <td key={col.id} className="p-1 text-center">
-                      {esTiempos ? (
-                        <input
-                          key={`t-${k}`}
-                          type="number"
-                          min={0}
-                          defaultValue={tiempos[k] ?? ""}
-                          onBlur={(e) => guardarTiempo(prenda.id, col.id, e.target.value)}
-                          placeholder="—"
-                          className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center gap-0.5">
-                          <span className="text-xs text-muted-foreground">$</span>
-                          <input
-                            key={`p-${k}`}
-                            type="number"
-                            min={0}
-                            defaultValue={precios[k] ?? ""}
-                            onBlur={(e) => guardarPrecio(prenda.id, col.id, e.target.value)}
-                            placeholder="0"
-                            className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
-                          />
-                        </div>
-                      )}
+                      <input
+                        key={`t-${k}`}
+                        type="number"
+                        min={0}
+                        defaultValue={tiempos[k] ?? ""}
+                        onBlur={(e) => guardarTiempo(prenda.id, col.id, e.target.value)}
+                        placeholder="—"
+                        className="h-8 w-16 rounded-md border border-transparent bg-transparent text-center outline-none hover:border-border focus:border-primary"
+                      />
                     </td>
                   );
                 })}
@@ -332,13 +280,45 @@ export function MatrizTrabajos() {
             ))}
             {prendas.length === 0 && (
               <tr>
-                <td colSpan={Math.max(1, columnas.length + 1)} className="p-6 text-center text-muted-foreground">
+                <td colSpan={Math.max(1, procesos.length + 1)} className="p-6 text-center text-muted-foreground">
                   Agregá una prenda para empezar.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Servicios: agrupan procesos y se aplican a los ítems para calcular su duración. */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold">Servicios</h2>
+            <p className="text-sm text-muted-foreground">
+              Cada servicio agrupa procesos. Al aplicarlo a un ítem suma los minutos de esos procesos.
+            </p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => setServicioModal("nuevo")}>
+            <Plus /> Servicio
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {servicios.map((s) => (
+            <span key={s.id} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card py-1 pl-3 pr-1.5 text-sm">
+              <button onClick={() => setServicioModal(s)} className="font-medium hover:text-primary" title="Editar servicio">
+                {s.nombre}
+              </button>
+              <button
+                onClick={() => eliminarServicio(s.id, s.nombre)}
+                className="rounded-full p-0.5 text-muted-foreground hover:text-destructive"
+                title="Eliminar"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            </span>
+          ))}
+          {servicios.length === 0 && <p className="text-sm text-muted-foreground">Todavía no hay servicios. Agregá uno.</p>}
+        </div>
       </div>
 
       <RenombrarModal

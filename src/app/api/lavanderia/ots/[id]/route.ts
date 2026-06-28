@@ -70,17 +70,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   if (accion === "editar") {
-    // montoManual: el monto del body pisa al de la matriz cuando viene.
-    const itemsEntrada: (ItemEntrada & { montoManual: number | null })[] = Array.isArray(body.items)
+    const itemsEntrada: ItemEntrada[] = Array.isArray(body.items)
       ? body.items
           .filter((i: unknown) => i && typeof (i as ItemEntrada).descripcion === "string")
-          .map((i: ItemEntrada & { monto?: number | null }) => ({
+          .map((i: ItemEntrada) => ({
             prendaId: i.prendaId ?? null,
             descripcion: i.descripcion,
             cantidad: Number(i.cantidad) || 1,
             servicioIds: Array.isArray(i.servicioIds) ? i.servicioIds.filter((x): x is string => typeof x === "string") : [],
-            montoManual:
-              typeof i.monto === "number" && Number.isFinite(i.monto) ? Math.max(0, Math.round(i.monto)) : null,
           }))
       : [];
 
@@ -94,10 +91,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         : null;
 
     const calculo = await calcularDuracion(itemsEntrada);
-    const itemsConMonto = calculo.items.map((it, idx) => ({
-      ...it,
-      monto: itemsEntrada[idx]?.montoManual ?? it.monto,
-    }));
     const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria }, id);
 
     await prisma.$transaction([
@@ -109,7 +102,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           nombreCliente: typeof body.nombreCliente === "string" ? body.nombreCliente : null,
           telefono: typeof body.telefono === "string" ? body.telefono : null,
           domicilio: typeof body.domicilio === "string" ? body.domicilio : null,
-          total: Number.isFinite(body.total) ? body.total : null,
           fechaTicket: typeof body.fechaTicket === "string" ? body.fechaTicket : null,
           duracionMin: calculo.duracionTotal,
           aRevisar: calculo.aRevisar,
@@ -118,13 +110,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           fechaAsignada,
           orden,
           items: {
-            create: itemsConMonto.map((it) => ({
+            create: calculo.items.map((it) => ({
               descripcion: it.descripcion,
               prendaId: it.prendaId,
               cantidad: it.cantidad,
               servicioIds: it.servicioIds,
               duracionMin: it.duracionMin,
-              monto: it.monto,
             })),
           },
         },

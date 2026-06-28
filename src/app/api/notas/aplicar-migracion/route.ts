@@ -233,6 +233,22 @@ const MIGRATIONS: Migration[] = [
       `TRUNCATE TABLE "lav_duraciones", "lav_procesos" CASCADE`,
     ],
   },
+  {
+    name: "20260628000000_lav_prenda_incompleta",
+    checksum: "10e86c22c833985bf7f9a7e9685f26c0063a9a5ddd77959f4dfc419baf02000f",
+    statements: [
+      `ALTER TABLE "lav_prendas" ADD COLUMN IF NOT EXISTS "incompleta" BOOLEAN NOT NULL DEFAULT false`,
+    ],
+  },
+  {
+    name: "20260628120000_lav_quitar_precios",
+    checksum: "fc2f7eee67b777d37c5d2cef3865cc2cc47245526881e90af399dae10c5a48de",
+    statements: [
+      `DROP TABLE IF EXISTS "lav_precios"`,
+      `ALTER TABLE "lav_ot_items" DROP COLUMN IF EXISTS "monto"`,
+      `ALTER TABLE "lav_ots" DROP COLUMN IF EXISTS "total"`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

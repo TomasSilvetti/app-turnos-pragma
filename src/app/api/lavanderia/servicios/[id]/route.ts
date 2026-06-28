@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/lavanderia/empleado";
 import { recalcularOTsActivas } from "@/lib/lavanderia/duraciones";
 
 // PATCH: edita nombre y/o el conjunto de procesos de un servicio. DELETE: elimina
-// el servicio (cascade en precios y en servicio_procesos). Solo admin.
+// el servicio (cascade en servicio_procesos). Solo admin.
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
