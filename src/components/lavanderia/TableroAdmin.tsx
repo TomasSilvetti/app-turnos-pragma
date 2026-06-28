@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -22,10 +22,12 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ItemOT } from "@/components/lavanderia/ItemOT";
 import { OTModal } from "@/components/lavanderia/OTModal";
+import { TableroAccionesProvider } from "@/components/lavanderia/TableroAccionesContext";
+import { useTableroStream } from "@/hooks/useTableroStream";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { distribuirEnTurnos, formatoDuracion, nombreTurno, type SeccionTurno } from "@/lib/lavanderia/timeline";
 import { useEsMobile } from "@/hooks/useEsMobile";
-import type { DiaSnap, OTSnap, TableroSnapshot } from "@/lib/lavanderia/tablero";
+import type { DiaSnap, OTSnap } from "@/lib/lavanderia/tablero";
 
 // Tarjeta arrastrable: reusa el mismo diseño que el tablero del empleado (ItemOT),
 // agregando un handle de arrastre y ocultando las acciones de empleado.
@@ -303,8 +305,11 @@ function ColumnaAdmin({
 }
 
 export function TableroAdmin() {
+  // El admin entra por cookie, asi que el hook no necesita un empleadoId real;
+  // un valor constante alcanza para activar el polling de version (cada 5s) que
+  // mantiene el tablero del admin al dia con lo que hagan los empleados.
+  const { snapshot, refrescar, aplicarLocal } = useTableroStream("admin");
   const [dias, setDias] = useState<DiaSnap[]>([]);
-  const [cargando, setCargando] = useState(true);
   const [activa, setActiva] = useState<OTSnap | null>(null);
   const [sobreFecha, setSobreFecha] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
@@ -312,20 +317,25 @@ export function TableroAdmin() {
   const esMobile = useEsMobile();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
-  const cargar = useCallback(() => {
-    lavFetch("/api/lavanderia/ots")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: TableroSnapshot | null) => d && setDias(d.dias))
-      .catch(() => {})
-      .finally(() => setCargando(false));
-  }, []);
+  // Mientras se arrastra no sincronizamos desde el snapshot, para no pisar el
+  // reordenamiento optimista en curso. Usamos un ref (no dependencia del effect)
+  // para que al soltar no se dispare un sync que revierta el movimiento.
+  const arrastrandoRef = useRef(false);
+  useEffect(() => {
+    arrastrandoRef.current = activa !== null;
+  }, [activa]);
 
-  useEffect(() => cargar(), [cargar]);
+  // El polling actualiza `snapshot` solo cuando cambia la version del tablero;
+  // ahi reflejamos esos cambios (incluido el parche optimista de empezar/terminar)
+  // en el estado local que dibuja el drag & drop.
+  useEffect(() => {
+    if (snapshot && !arrastrandoRef.current) setDias(snapshot.dias);
+  }, [snapshot]);
 
   const cambiarExtra = (fecha: string, habilitado: boolean) => {
     lavFetch("/api/lavanderia/turnos/extra", { method: "PUT", body: JSON.stringify({ fecha, habilitado }) })
       .then((r) => {
-        if (r.ok) cargar();
+        if (r.ok) refrescar();
       })
       .catch(() => {})
       .finally(() => setConfirmar(null));
@@ -392,12 +402,12 @@ export function TableroAdmin() {
     const movimientos = afectadas.flatMap((d) => d.ots.map((o, i) => ({ id: o.id, fechaAsignada: d.fecha, orden: i })));
     lavFetch("/api/lavanderia/ots/reordenar", { method: "PUT", body: JSON.stringify({ movimientos }) })
       .then((r) => {
-        if (!r.ok) cargar();
+        if (!r.ok) refrescar();
       })
-      .catch(() => cargar());
+      .catch(() => refrescar());
   };
 
-  if (cargando) {
+  if (!snapshot) {
     return (
       <div className="flex justify-center py-16 text-muted-foreground">
         <Loader2 className="animate-spin" />
@@ -410,6 +420,7 @@ export function TableroAdmin() {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal }}>
     <div className="space-y-3">
       <div>
         <h1 className="text-xl font-bold tracking-tight text-slate-800">Tablero</h1>
@@ -455,7 +466,7 @@ export function TableroAdmin() {
           onCerrar={() => setOtModal(null)}
           onActualizar={() => {
             setOtModal(null);
-            cargar();
+            refrescar();
           }}
         />
       )}
@@ -486,5 +497,6 @@ export function TableroAdmin() {
         </div>
       )}
     </div>
+    </TableroAccionesProvider>
   );
 }
