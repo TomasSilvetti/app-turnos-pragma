@@ -23,17 +23,22 @@ export function ItemOT({
   onAbrir?: () => void;
 }) {
   const [procesando, setProcesando] = useState(false);
-  const { refrescar } = useTableroAcciones();
+  const { refrescar, aplicarLocal } = useTableroAcciones();
 
   const accion = async (accion: "empezar" | "terminar") => {
     setProcesando(true);
+    // Optimista: la tarjeta cambia de estado ya, sin esperar al PATCH ni al
+    // refetch (que ademas puede leer del cache del navegador y traer datos viejos).
+    const nuevoEstado = accion === "empezar" ? "en_progreso" : "terminado";
+    aplicarLocal(ot.id, { estado: nuevoEstado });
     try {
       const r = await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
         method: "PATCH",
         body: JSON.stringify({ accion }),
       });
-      // Refrescamos al instante en vez de esperar el próximo tick del SSE.
-      if (r.ok) await refrescar();
+      // Reconciliamos con el estado real (posicion, empleado). Si fallo, esto
+      // revierte el parche optimista al traer el snapshot verdadero.
+      await refrescar();
     } finally {
       setProcesando(false);
     }

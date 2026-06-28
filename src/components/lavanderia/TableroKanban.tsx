@@ -25,7 +25,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
-    <TableroAccionesProvider value={{ refrescar }}>
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal }}>
     <div className="px-3 py-5 sm:px-5">
       <div className="mb-4">
         {conectado ? (
