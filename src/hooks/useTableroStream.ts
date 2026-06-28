@@ -1,11 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { lavFetch } from "@/lib/lavanderia/client";
 import type { TableroSnapshot } from "@/lib/lavanderia/tablero";
 
-// Suscribe al tablero via SSE. EventSource reconecta solo ante cortes. Como
-// fallback inicial (y si el stream no conecta), hace un GET puntual.
+// Intervalo de chequeo de version. Cada tick es un GET liviano (1 aggregate);
+// solo traemos el tablero completo cuando la version cambio.
+const INTERVALO_MS = 5000;
+
+// Mantiene el tablero al dia por polling de version (no SSE). El SSE mantenia la
+// funcion serverless "viva" todo el tiempo, lo que consume mucho del plan free
+// de Vercel; este enfoque solo gasta lo que tarda cada chequeo. Ademas pausa
+// cuando la pestaña esta oculta, asi no gasta de noche con el tablero abierto.
 export function useTableroStream(empleadoId: string | null): {
   snapshot: TableroSnapshot | null;
   conectado: boolean;
@@ -13,46 +19,80 @@ export function useTableroStream(empleadoId: string | null): {
 } {
   const [snapshot, setSnapshot] = useState<TableroSnapshot | null>(null);
   const [conectado, setConectado] = useState(false);
+  // Ultima version vista; si no cambia, no traemos el tablero completo.
+  const versionRef = useRef<string>("");
 
-  // Refetch puntual del tablero. Se usa tras una acción (empezar/terminar) para
-  // ver el cambio al instante sin esperar al próximo tick del SSE.
+  // Trae el tablero completo y actualiza la version conocida.
+  const traerTablero = useCallback(async () => {
+    const r = await lavFetch("/api/lavanderia/ots");
+    if (!r.ok) throw new Error("tablero no disponible");
+    const d: TableroSnapshot = await r.json();
+    versionRef.current = d.version;
+    setSnapshot(d);
+  }, []);
+
+  // Refetch puntual tras una accion (empezar/terminar/cargar) para ver el cambio
+  // al instante sin esperar al proximo tick.
   const refrescar = useCallback(async () => {
     try {
-      const r = await lavFetch("/api/lavanderia/ots");
-      if (r.ok) setSnapshot(await r.json());
+      await traerTablero();
     } catch {
-      /* sin conexión: el SSE reconciliará luego */
+      /* sin conexion: el proximo poll reconciliara */
     }
-  }, []);
+  }, [traerTablero]);
 
   useEffect(() => {
     if (!empleadoId) return;
     let cerrado = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
-    // Carga inicial inmediata (no esperamos al primer tick del stream).
-    lavFetch("/api/lavanderia/ots")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d: TableroSnapshot | null) => {
-        if (!cerrado && d) setSnapshot(d);
-      })
-      .catch(() => {});
-
-    const es = new EventSource(`/api/lavanderia/stream?e=${encodeURIComponent(empleadoId)}`);
-    es.addEventListener("open", () => setConectado(true));
-    es.addEventListener("snapshot", (e) => {
+    // Chequeo de version: barato. Solo si cambio traemos el tablero completo.
+    const chequear = async () => {
       try {
-        setSnapshot(JSON.parse((e as MessageEvent).data));
+        const r = await lavFetch("/api/lavanderia/version");
+        if (!r.ok) throw new Error("version no disponible");
+        const { version } = (await r.json()) as { version: string };
+        if (cerrado) return;
+        setConectado(true);
+        if (version !== versionRef.current) await traerTablero();
       } catch {
-        /* ignorar payload invalido */
+        if (!cerrado) setConectado(false);
       }
+    };
+
+    const programar = () => {
+      if (cerrado) return;
+      timer = setTimeout(tick, INTERVALO_MS);
+    };
+
+    const tick = async () => {
+      // No gastar mientras la pestaña esta oculta; reanudamos al volver.
+      if (typeof document !== "undefined" && document.hidden) {
+        programar();
+        return;
+      }
+      await chequear();
+      programar();
+    };
+
+    // Carga inicial inmediata (trae tablero completo) y arranca el loop.
+    refrescar().finally(() => {
+      if (!cerrado) setConectado(true);
+      programar();
     });
-    es.onerror = () => setConectado(false);
+
+    // Al volver a la pestaña, chequear de inmediato sin esperar al timer.
+    const onVisible = () => {
+      if (typeof document !== "undefined" && !document.hidden) chequear();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     return () => {
       cerrado = true;
-      es.close();
+      if (timer) clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [empleadoId]);
+  }, [empleadoId, refrescar, traerTablero]);
 
   return { snapshot, conectado, refrescar };
 }
