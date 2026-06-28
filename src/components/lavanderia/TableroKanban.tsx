@@ -5,10 +5,11 @@ import { Loader2, WifiOff } from "lucide-react";
 import { useTableroStream } from "@/hooks/useTableroStream";
 import { ColumnaDia } from "./ColumnaDia";
 import { OTModal } from "./OTModal";
+import { TableroAccionesProvider } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
-  const { snapshot, conectado } = useTableroStream(empleadoId);
+  const { snapshot, conectado, refrescar } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
 
   if (!snapshot) {
@@ -24,6 +25,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
+    <TableroAccionesProvider value={{ refrescar }}>
     <div className="px-3 py-5 sm:px-5">
       <div className="mb-4">
         {conectado ? (
@@ -50,5 +52,6 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
         <OTModal ot={otModal} onCerrar={() => setOtModal(null)} onActualizar={() => setOtModal(null)} />
       )}
     </div>
+    </TableroAccionesProvider>
   );
 }

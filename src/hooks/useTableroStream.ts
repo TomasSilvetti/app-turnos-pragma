@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { lavFetch } from "@/lib/lavanderia/client";
 import type { TableroSnapshot } from "@/lib/lavanderia/tablero";
 
@@ -9,9 +9,21 @@ import type { TableroSnapshot } from "@/lib/lavanderia/tablero";
 export function useTableroStream(empleadoId: string | null): {
   snapshot: TableroSnapshot | null;
   conectado: boolean;
+  refrescar: () => Promise<void>;
 } {
   const [snapshot, setSnapshot] = useState<TableroSnapshot | null>(null);
   const [conectado, setConectado] = useState(false);
+
+  // Refetch puntual del tablero. Se usa tras una acción (empezar/terminar) para
+  // ver el cambio al instante sin esperar al próximo tick del SSE.
+  const refrescar = useCallback(async () => {
+    try {
+      const r = await lavFetch("/api/lavanderia/ots");
+      if (r.ok) setSnapshot(await r.json());
+    } catch {
+      /* sin conexión: el SSE reconciliará luego */
+    }
+  }, []);
 
   useEffect(() => {
     if (!empleadoId) return;
@@ -42,5 +54,5 @@ export function useTableroStream(empleadoId: string | null): {
     };
   }, [empleadoId]);
 
-  return { snapshot, conectado };
+  return { snapshot, conectado, refrescar };
 }

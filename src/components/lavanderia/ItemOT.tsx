@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import { altoOT, formatoDuracion } from "@/lib/lavanderia/timeline";
+import { useTableroAcciones } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 const formatoMonto = (value: number) =>
@@ -25,15 +26,17 @@ export function ItemOT({
   onAbrir?: () => void;
 }) {
   const [procesando, setProcesando] = useState(false);
+  const { refrescar } = useTableroAcciones();
 
   const accion = async (accion: "empezar" | "terminar") => {
     setProcesando(true);
     try {
-      await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
+      const r = await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
         method: "PATCH",
         body: JSON.stringify({ accion }),
       });
-      // El SSE refresca el tablero; no actualizamos estado local.
+      // Refrescamos al instante en vez de esperar el próximo tick del SSE.
+      if (r.ok) await refrescar();
     } finally {
       setProcesando(false);
     }
