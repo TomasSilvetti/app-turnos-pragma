@@ -8,6 +8,7 @@ import {
   Shirt,
   Users,
   BarChart3,
+  Gauge,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -19,6 +20,7 @@ const ITEMS = [
   { href: "/lavanderia/admin/trabajos", label: "Trabajos", icon: Shirt },
   { href: "/lavanderia/admin/empleados", label: "Empleados", icon: Users },
   { href: "/lavanderia/admin/metricas", label: "Métricas", icon: BarChart3 },
+  { href: "/lavanderia/admin/calibracion", label: "Calibración", icon: Gauge },
 ];
 
 const STORAGE_KEY = "lav_admin_sidebar_colapsado";

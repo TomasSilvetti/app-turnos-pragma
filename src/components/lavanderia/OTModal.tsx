@@ -277,6 +277,10 @@ export function OTModal({
                   <p className="flex items-center gap-1 text-[11px] text-amber-600 dark:text-amber-400">
                     <AlertTriangle className="size-3" /> Sin prenda no se calcula duración
                   </p>
+                ) : it.procesoIds.length === 0 ? (
+                  <p className="flex items-center gap-1 text-[11px] font-medium text-yellow-700 dark:text-yellow-300">
+                    <AlertTriangle className="size-3" /> Marcá al menos un proceso para calcular la duración
+                  </p>
                 ) : sinTiempos ? (
                   <p className="flex items-center gap-1 text-[11px] font-medium text-yellow-700 dark:text-yellow-300">
                     <AlertTriangle className="size-3" /> Sin tiempo cargado para esta prenda/proceso

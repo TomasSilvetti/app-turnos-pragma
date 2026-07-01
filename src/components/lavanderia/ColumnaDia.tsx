@@ -34,11 +34,13 @@ function ContenidoCompleto({
   secciones,
   sinTurnos,
   onAbrirOT,
+  resaltadaId,
 }: {
   dia: DiaSnap;
   secciones: SeccionTurno[];
   sinTurnos: OTSnap[];
   onAbrirOT?: (ot: OTSnap) => void;
+  resaltadaId?: string | null;
 }) {
   return (
     <div className="flex flex-col gap-2 p-2">
@@ -57,7 +59,7 @@ function ContenidoCompleto({
                 {dia.esHoy && sec.ahora !== null && i === Math.floor(sec.ahora * sec.ots.length) && (
                   <LineaAhora ahoraMin={dia.ahoraMin!} />
                 )}
-                <ItemOT ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} />
+                <ItemOT ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} resaltada={ot.id === resaltadaId} />
               </div>
             ))}
           </div>
@@ -67,7 +69,7 @@ function ContenidoCompleto({
       {sinTurnos.length > 0 && (
         <div className="space-y-2">
           {sinTurnos.map((ot) => (
-            <ItemOT key={ot.id} ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} />
+            <ItemOT key={ot.id} ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} resaltada={ot.id === resaltadaId} />
           ))}
         </div>
       )}
@@ -108,7 +110,20 @@ function ContenidoCompacto({ secciones }: { secciones: SeccionTurno[] }) {
   );
 }
 
-export function ColumnaDia({ dia, ancha, onAbrirOT }: { dia: DiaSnap; ancha: boolean; onAbrirOT?: (ot: OTSnap) => void }) {
+export function ColumnaDia({
+  dia,
+  ancha,
+  onAbrirOT,
+  forzarExpandir = false,
+  resaltadaId,
+}: {
+  dia: DiaSnap;
+  ancha: boolean;
+  onAbrirOT?: (ot: OTSnap) => void;
+  // Fuerza abrir la columna aunque no haya hover (al llegar por el buscador).
+  forzarExpandir?: boolean;
+  resaltadaId?: string | null;
+}) {
   const { secciones, sinTurnos } = distribuirEnTurnos(dia);
   const cap = dia.capacidadMin;
   const ocup = dia.ocupacionMin;
@@ -147,20 +162,33 @@ export function ColumnaDia({ dia, ancha, onAbrirOT }: { dia: DiaSnap; ancha: boo
     return (
       <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm">
         {Header}
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} />
+        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
       </section>
     );
   }
 
   return (
-    <section className="group/col flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.25rem] border border-white/60 bg-white/45 shadow-[0_4px_20px_-12px_rgba(16,24,40,0.25)] backdrop-blur-sm transition-all duration-300 ease-in-out hover:flex-[3] hover:bg-white/60 hover:shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]">
+    <section
+      className={cn(
+        "group/col flex min-w-0 flex-col overflow-hidden rounded-[1.25rem] border border-white/60 backdrop-blur-sm transition-all duration-300 ease-in-out",
+        forzarExpandir
+          ? "flex-[3] bg-white/60 shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]"
+          : "flex-1 bg-white/45 shadow-[0_4px_20px_-12px_rgba(16,24,40,0.25)] hover:flex-[3] hover:bg-white/60 hover:shadow-[0_12px_36px_-12px_rgba(16,24,40,0.3)]"
+      )}
+    >
       {Header}
-      <div className="group-hover/col:hidden">
-        <ContenidoCompacto secciones={secciones} />
-      </div>
-      <div className="hidden group-hover/col:block">
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} />
-      </div>
+      {forzarExpandir ? (
+        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
+      ) : (
+        <>
+          <div className="group-hover/col:hidden">
+            <ContenidoCompacto secciones={secciones} />
+          </div>
+          <div className="hidden group-hover/col:block">
+            <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
+          </div>
+        </>
+      )}
     </section>
   );
 }

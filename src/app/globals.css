@@ -249,3 +249,45 @@ body {
   0%, 40% { box-shadow: 0 0 0 3px var(--color-primary); }
   100% { box-shadow: 0 0 0 0 transparent; }
 }
+
+/* Resaltado al buscar y seleccionar una OT en el tablero */
+.ot-resaltada-flash {
+  animation: ot-resaltada 3s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 10;
+  /* Pinta la card del mismo color llamativo del halo (ámbar) mientras dura. */
+  background-color: rgb(253, 224, 71) !important;
+  border-color: rgb(245, 158, 11) !important;
+}
+@keyframes ot-resaltada {
+  0% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 1), 0 0 44px 10px rgba(251, 191, 36, 0.85);
+    background-color: rgb(251, 191, 36);
+    transform: scale(1.07) rotate(-1.2deg);
+  }
+  12% {
+    box-shadow: 0 0 0 5px rgba(217, 70, 239, 1), 0 0 44px 10px rgba(236, 72, 153, 0.85);
+    background-color: rgb(253, 224, 71);
+    transform: scale(1.05) rotate(1.2deg);
+  }
+  28% {
+    box-shadow: 0 0 0 5px rgba(245, 158, 11, 1), 0 0 44px 10px rgba(251, 191, 36, 0.85);
+    background-color: rgb(251, 191, 36);
+    transform: scale(1.06) rotate(-1deg);
+  }
+  44% {
+    box-shadow: 0 0 0 5px rgba(217, 70, 239, 1), 0 0 40px 8px rgba(236, 72, 153, 0.8);
+    background-color: rgb(253, 224, 71);
+    transform: scale(1.04) rotate(0.8deg);
+  }
+  60% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.95), 0 0 32px 6px rgba(251, 191, 36, 0.7);
+    background-color: rgb(254, 240, 138);
+    transform: scale(1.03) rotate(0deg);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    background-color: rgb(254, 249, 195);
+    transform: scale(1) rotate(0deg);
+  }
+}

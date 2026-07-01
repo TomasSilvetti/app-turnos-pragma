@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Plus, Trash2, Loader2, Pencil, Calculator, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Loader2, Pencil, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,6 @@ export function MatrizTrabajos() {
   const [cargando, setCargando] = useState(true);
   const [nuevaPrenda, setNuevaPrenda] = useState("");
   const [nuevoProceso, setNuevoProceso] = useState("");
-  const [recalculando, setRecalculando] = useState(false);
   const [edicion, setEdicion] = useState<Edicion | null>(null);
 
   const cargar = useCallback(() => {
@@ -79,20 +78,6 @@ export function MatrizTrabajos() {
     }
   };
 
-  const recalcular = async () => {
-    if (!confirm("¿Recalcular la duración de todas las OTs con la matriz actual?")) return;
-    setRecalculando(true);
-    try {
-      const res = await lavFetch("/api/lavanderia/recalcular-montos", { method: "POST" });
-      if (res.ok) {
-        const { actualizados } = await res.json();
-        alert(`Listo: ${actualizados} OTs recalculadas.`);
-      } else alert("No se pudo recalcular.");
-    } finally {
-      setRecalculando(false);
-    }
-  };
-
   const eliminarPrenda = async (id: string, nombre: string) => {
     if (!confirm(`¿Eliminar la prenda "${nombre}"?`)) return;
     const res = await lavFetch(`/api/lavanderia/prendas/${id}`, { method: "DELETE" });
@@ -127,16 +112,12 @@ export function MatrizTrabajos() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
-          <p className="text-sm text-muted-foreground">
-            Minutos de cada proceso por prenda. La duración de un ítem es la suma de los minutos de los procesos que se le aplican.
-          </p>
-        </div>
-        <Button size="sm" variant="outline" onClick={recalcular} disabled={recalculando}>
-          {recalculando ? <Loader2 className="animate-spin" /> : <Calculator />} Recalcular OTs
-        </Button>
+      <div>
+        <h1 className="text-xl font-bold tracking-tight">Trabajos</h1>
+        <p className="text-sm text-muted-foreground">
+          Minutos de cada proceso por prenda. La duración de un ítem es la suma de los minutos de los procesos que se le aplican.
+          Al editar un tiempo, las OTs activas afectadas se recalculan solas.
+        </p>
       </div>
 
       {/* Prendas nuevas cargadas desde la app que aún no tienen minutos */}

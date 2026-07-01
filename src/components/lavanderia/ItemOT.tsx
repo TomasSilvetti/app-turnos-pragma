@@ -14,6 +14,7 @@ export function ItemOT({
   soloLectura = false,
   dragHandle,
   onAbrir,
+  resaltada = false,
 }: {
   ot: OTSnap;
   // En el tablero del admin las tarjetas se arrastran y no se inician/terminan.
@@ -21,6 +22,8 @@ export function ItemOT({
   dragHandle?: React.ReactNode;
   // Click en la tarjeta (fuera del handle y los botones) abre el detalle.
   onAbrir?: () => void;
+  // Aplica la animación de resaltado cuando se llega por el buscador.
+  resaltada?: boolean;
 }) {
   const [procesando, setProcesando] = useState(false);
   const { refrescar, aplicarLocal } = useTableroAcciones();
@@ -55,10 +58,12 @@ export function ItemOT({
 
   return (
     <article
+      id={`ot-card-${ot.id}`}
       onClick={onAbrir}
       style={{ minHeight: altoOT(ot.duracionMin) }}
       className={cn(
         "flex flex-col gap-1.5 overflow-hidden rounded-2xl border p-2.5 text-left shadow-[0_2px_10px_-4px_rgba(16,24,40,0.18)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_8px_20px_-8px_rgba(16,24,40,0.28)]",
+        resaltada && "ot-resaltada-flash",
         onAbrir && "cursor-pointer",
         ot.estado === "terminado" && "border-emerald-200/70 bg-emerald-50/60 opacity-80 dark:border-emerald-500/40 dark:bg-emerald-500/5",
         ot.estado === "en_progreso" &&

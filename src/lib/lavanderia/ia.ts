@@ -166,11 +166,23 @@ export async function escanearComanda(
   const indicePorNombre = new Map(prendas.map((p) => [normalizar(p.nombre), p]));
   const procesoPorNombre = new Map(procesos.map((p) => [normalizar(p.nombre), p]));
 
+  // "Valet x kilo" en el ticket nunca trae el proceso escrito, pero siempre lleva
+  // Limpieza. Se lo forzamos al detectar esa prenda.
+  const procLimpieza = procesoPorNombre.get("limpieza");
+  const esValet = (p: { nombre: string } | undefined) =>
+    Boolean(p) && normalizar(p!.nombre).includes("valet");
+
   const items: ItemExtraido[] = (data.items ?? []).map((it) => {
     const match = it.prendaSugerida ? indicePorNombre.get(normalizar(it.prendaSugerida)) : undefined;
     const procMatches = (it.procesosSugeridos ?? [])
       .map((nombre) => procesoPorNombre.get(normalizar(nombre)))
       .filter((p): p is { id: string; nombre: string } => Boolean(p));
+
+    // Forzar Limpieza en Valet x kilo si no vino ya en la lista detectada.
+    if (esValet(match) && procLimpieza && !procMatches.some((p) => p.id === procLimpieza.id)) {
+      procMatches.unshift(procLimpieza);
+    }
+
     return {
       descripcion: it.descripcion,
       cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
