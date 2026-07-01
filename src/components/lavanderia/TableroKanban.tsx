@@ -11,7 +11,7 @@ import { TableroAccionesProvider } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
-  const { snapshot, conectado, refrescar, aplicarLocal } = useTableroStream(empleadoId);
+  const { snapshot, conectado, refrescar, aplicarLocal, quitarLocal } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
 
@@ -28,7 +28,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
-    <TableroAccionesProvider value={{ refrescar, aplicarLocal }}>
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal }}>
     <div className="px-3 py-5 sm:px-5">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {conectado ? (

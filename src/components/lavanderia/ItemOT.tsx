@@ -26,14 +26,18 @@ export function ItemOT({
   resaltada?: boolean;
 }) {
   const [procesando, setProcesando] = useState(false);
-  const { refrescar, aplicarLocal } = useTableroAcciones();
+  const { refrescar, aplicarLocal, quitarLocal } = useTableroAcciones();
 
   const accion = async (accion: "empezar" | "terminar") => {
     setProcesando(true);
-    // Optimista: la tarjeta cambia de estado ya, sin esperar al PATCH ni al
-    // refetch (que ademas puede leer del cache del navegador y traer datos viejos).
-    const nuevoEstado = accion === "empezar" ? "en_progreso" : "terminado";
-    aplicarLocal(ot.id, { estado: nuevoEstado });
+    // Optimista: la tarjeta reacciona ya, sin esperar al PATCH ni al refetch (que
+    // ademas puede leer del cache del navegador y traer datos viejos). Al terminar
+    // la OT desaparece del tablero; al empezar solo cambia de estado.
+    if (accion === "terminar") {
+      quitarLocal(ot.id);
+    } else {
+      aplicarLocal(ot.id, { estado: "en_progreso" });
+    }
     try {
       const r = await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
         method: "PATCH",

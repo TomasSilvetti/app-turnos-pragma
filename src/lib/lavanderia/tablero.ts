@@ -87,7 +87,9 @@ export async function getTablero(): Promise<TableroSnapshot> {
   await migrarAtrasadas(primerLaborable);
 
   const ots = await prisma.lavOT.findMany({
-    where: { fechaAsignada: { gte: hoy, lte: hasta } },
+    // Las OTs terminadas desaparecen del tablero (quedan en el histórico/DB, pero
+    // no se muestran en la cola de trabajo).
+    where: { fechaAsignada: { gte: hoy, lte: hasta }, estado: { not: "terminado" } },
     orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     include: {
       items: { select: { descripcion: true, cantidad: true, prendaId: true, procesoIds: true, duracionMin: true } },

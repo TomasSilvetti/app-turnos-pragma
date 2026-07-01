@@ -17,6 +17,7 @@ export function useTableroStream(empleadoId: string | null): {
   conectado: boolean;
   refrescar: () => Promise<void>;
   aplicarLocal: (otId: string, patch: Partial<OTSnap>) => void;
+  quitarLocal: (otId: string) => void;
 } {
   const [snapshot, setSnapshot] = useState<TableroSnapshot | null>(null);
   const [conectado, setConectado] = useState(false);
@@ -44,6 +45,19 @@ export function useTableroStream(empleadoId: string | null): {
               ...d,
               ots: d.ots.map((o) => (o.id === otId ? { ...o, ...patch } : o)),
             })),
+          }
+        : prev
+    );
+  }, []);
+
+  // Quita una OT del snapshot en memoria (feedback optimista al terminar: la
+  // tarjeta desaparece al instante; el refetch posterior lo confirma).
+  const quitarLocal = useCallback((otId: string) => {
+    setSnapshot((prev) =>
+      prev
+        ? {
+            ...prev,
+            dias: prev.dias.map((d) => ({ ...d, ots: d.ots.filter((o) => o.id !== otId) })),
           }
         : prev
     );
@@ -112,5 +126,5 @@ export function useTableroStream(empleadoId: string | null): {
     };
   }, [empleadoId, refrescar, traerTablero]);
 
-  return { snapshot, conectado, refrescar, aplicarLocal };
+  return { snapshot, conectado, refrescar, aplicarLocal, quitarLocal };
 }

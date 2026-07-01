@@ -10,9 +10,12 @@ import type { OTSnap } from "@/lib/lavanderia/tablero";
 const TableroAccionesContext = createContext<{
   refrescar: () => Promise<void>;
   aplicarLocal: (otId: string, patch: Partial<OTSnap>) => void;
+  // quitarLocal: saca la OT del tablero al instante (al terminarla).
+  quitarLocal: (otId: string) => void;
 }>({
   refrescar: async () => {},
   aplicarLocal: () => {},
+  quitarLocal: () => {},
 });
 
 export const TableroAccionesProvider = TableroAccionesContext.Provider;

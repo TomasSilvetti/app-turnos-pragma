@@ -319,7 +319,7 @@ export function TableroAdmin() {
   // El admin entra por cookie, asi que el hook no necesita un empleadoId real;
   // un valor constante alcanza para activar el polling de version (cada 5s) que
   // mantiene el tablero del admin al dia con lo que hagan los empleados.
-  const { snapshot, refrescar, aplicarLocal } = useTableroStream("admin");
+  const { snapshot, refrescar, aplicarLocal, quitarLocal } = useTableroStream("admin");
   const [dias, setDias] = useState<DiaSnap[]>([]);
   const [activa, setActiva] = useState<OTSnap | null>(null);
   const [sobreFecha, setSobreFecha] = useState<string | null>(null);
@@ -432,7 +432,7 @@ export function TableroAdmin() {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
-    <TableroAccionesProvider value={{ refrescar, aplicarLocal }}>
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal }}>
     <div className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
