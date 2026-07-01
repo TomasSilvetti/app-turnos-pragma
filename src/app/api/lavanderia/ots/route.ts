@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireEmpleado } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
-import { asignarOT } from "@/lib/lavanderia/capacidad";
+import { asignarOT, limiteDivisionMin } from "@/lib/lavanderia/capacidad";
+import { dividirEnPartes } from "@/lib/lavanderia/dividir";
 import { getTablero } from "@/lib/lavanderia/tablero";
 
 // GET: snapshot completo del tablero (7 dias). Requiere empleado.
@@ -65,36 +66,84 @@ export async function POST(request: NextRequest) {
       : null;
 
   const calculo = await calcularDuracion(items);
-  const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
 
-  const ot = await prisma.lavOT.create({
-    data: {
-      numero: typeof body.numero === "string" ? body.numero : null,
-      nombreCliente: typeof body.nombreCliente === "string" ? body.nombreCliente : null,
-      telefono: typeof body.telefono === "string" ? body.telefono : null,
-      domicilio: typeof body.domicilio === "string" ? body.domicilio : null,
-      fechaTicket: typeof body.fechaTicket === "string" ? body.fechaTicket : null,
-      estado: "pendiente",
-      fechaAsignada,
-      orden,
-      duracionMin: calculo.duracionTotal,
-      aRevisar: calculo.aRevisar,
-      urgente,
-      fechaNecesaria,
-      empleadoCargaId: empleado.id,
-      datosIA: body.datosIA ?? null,
-      items: {
-        create: calculo.items.map((it) => ({
-          descripcion: it.descripcion,
-          prendaId: it.prendaId,
-          cantidad: it.cantidad,
-          procesoIds: it.procesoIds,
-          duracionMin: it.duracionMin,
-        })),
+  // Campos comunes a la OT (o a todas sus partes si se divide).
+  const comun = {
+    numero: typeof body.numero === "string" ? body.numero : null,
+    nombreCliente: typeof body.nombreCliente === "string" ? body.nombreCliente : null,
+    telefono: typeof body.telefono === "string" ? body.telefono : null,
+    domicilio: typeof body.domicilio === "string" ? body.domicilio : null,
+    fechaTicket: typeof body.fechaTicket === "string" ? body.fechaTicket : null,
+    estado: "pendiente",
+    aRevisar: calculo.aRevisar,
+    urgente,
+    fechaNecesaria,
+    empleadoCargaId: empleado.id,
+    datosIA: body.datosIA ?? null,
+  };
+
+  // Auto-division: si la OT no entra en un turno, se parte en sub-OTs que si entren.
+  const turnos = await prisma.lavTurnoConfig.findMany();
+  const limite = limiteDivisionMin(turnos as Parameters<typeof limiteDivisionMin>[0]);
+  const partes =
+    calculo.duracionTotal > limite ? dividirEnPartes(calculo.items, limite) : [];
+
+  // Caso normal (no se divide): una sola OT, como siempre.
+  if (partes.length <= 1) {
+    const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
+    const ot = await prisma.lavOT.create({
+      data: {
+        ...comun,
+        fechaAsignada,
+        orden,
+        duracionMin: calculo.duracionTotal,
+        items: {
+          create: calculo.items.map((it) => ({
+            descripcion: it.descripcion,
+            prendaId: it.prendaId,
+            cantidad: it.cantidad,
+            procesoIds: it.procesoIds,
+            duracionMin: it.duracionMin,
+          })),
+        },
       },
-    },
-    select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },
-  });
+      select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },
+    });
+    return NextResponse.json({ ot }, { status: 201 });
+  }
 
-  return NextResponse.json({ ot }, { status: 201 });
+  // OT dividida: se crean N sub-OTs que comparten grupoId y numero. Se asigna cada
+  // parte en secuencia para que su ocupacion cuente al asignar la siguiente (asi el
+  // packer las reparte, ~2 por dia).
+  const grupoId = crypto.randomUUID();
+  const total = partes.length;
+  const creadas: { id: string; fechaAsignada: string }[] = [];
+  for (let i = 0; i < partes.length; i++) {
+    const parte = partes[i];
+    const { fechaAsignada, orden } = await asignarOT(parte.duracionMin, { urgente, fechaNecesaria });
+    const ot = await prisma.lavOT.create({
+      data: {
+        ...comun,
+        fechaAsignada,
+        orden,
+        duracionMin: parte.duracionMin,
+        grupoId,
+        parteIndice: i + 1,
+        parteTotal: total,
+        items: {
+          create: parte.items.map((it) => ({
+            descripcion: it.descripcion,
+            prendaId: it.prendaId,
+            cantidad: it.cantidad,
+            procesoIds: it.procesoIds,
+            duracionMin: it.duracionMin,
+          })),
+        },
+      },
+      select: { id: true, fechaAsignada: true },
+    });
+    creadas.push(ot);
+  }
+
+  return NextResponse.json({ grupoId, partes: total, ots: creadas }, { status: 201 });
 }

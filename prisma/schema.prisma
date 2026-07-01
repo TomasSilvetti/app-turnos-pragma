@@ -595,6 +595,11 @@ model LavOT {
   aRevisar          Boolean   @default(false) // alguna prenda no se pudo mapear a la matriz
   urgente           Boolean   @default(false) // el ticket dice "URGENTE": va primero en el dia de hoy
   fechaNecesaria    String? // yyyy-MM-dd, de "PARA DD/MM": va primero el ultimo dia laborable previo
+  // Division de OTs grandes: cuando una OT no entra en un turno se parte en varias
+  // sub-OTs que comparten grupoId y numero. null en una OT no dividida.
+  grupoId           String? // agrupa las partes de una OT dividida
+  parteIndice       Int? // 1-based, para mostrar "2/6"
+  parteTotal        Int? // total de partes del grupo
   empleadoCargaId   String?
   empleadoTrabajoId String?
   empezadoEn        DateTime?
@@ -609,6 +614,7 @@ model LavOT {
 
   @@index([fechaAsignada])
   @@index([estado])
+  @@index([grupoId])
   @@map("lav_ots")
 }
 
