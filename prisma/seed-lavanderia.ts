@@ -2,17 +2,37 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const LUN_A_VIE = [1, 2, 3, 4, 5];
-
 async function main() {
-  // Turnos (single-tenant): upsert por tipo (unique).
+  // Días que atiende (single-tenant): domingo cerrado, lun-sáb abierto.
+  const dias = [
+    { diaSemana: 0, atiende: false },
+    { diaSemana: 1, atiende: true },
+    { diaSemana: 2, atiende: true },
+    { diaSemana: 3, atiende: true },
+    { diaSemana: 4, atiende: true },
+    { diaSemana: 5, atiende: true },
+    { diaSemana: 6, atiende: true },
+  ];
+  for (const d of dias) {
+    await prisma.lavDiaConfig.upsert({ where: { diaSemana: d.diaSemana }, update: d, create: d });
+  }
+
+  // Turnos por día. Lun-vie: mañana 08-14, tarde 17-21, especial 14-17.
+  // Sábado: solo mañana 10-14.
   const turnos = [
-    { tipo: "manana", horaInicio: "08:00", horaFin: "14:00", diasSemana: LUN_A_VIE, habilitado: true },
-    { tipo: "tarde", horaInicio: "17:00", horaFin: "21:00", diasSemana: LUN_A_VIE, habilitado: true },
-    { tipo: "extra", horaInicio: "14:00", horaFin: "17:00", diasSemana: LUN_A_VIE, habilitado: false },
+    ...[1, 2, 3, 4, 5].flatMap((diaSemana) => [
+      { diaSemana, tipo: "manana", horaInicio: "08:00", horaFin: "14:00", habilitado: true },
+      { diaSemana, tipo: "tarde", horaInicio: "17:00", horaFin: "21:00", habilitado: true },
+      { diaSemana, tipo: "extra", horaInicio: "14:00", horaFin: "17:00", habilitado: true },
+    ]),
+    { diaSemana: 6, tipo: "manana", horaInicio: "10:00", horaFin: "14:00", habilitado: true },
   ];
   for (const t of turnos) {
-    await prisma.lavTurnoConfig.upsert({ where: { tipo: t.tipo }, update: t, create: t });
+    await prisma.lavTurnoConfig.upsert({
+      where: { diaSemana_tipo: { diaSemana: t.diaSemana, tipo: t.tipo } },
+      update: t,
+      create: t,
+    });
   }
 
   // Empleado admin inicial (solo si no hay empleados).

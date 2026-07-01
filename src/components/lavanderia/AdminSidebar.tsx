@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   Gauge,
+  Clock,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -19,6 +20,7 @@ const ITEMS = [
   { href: "/lavanderia/admin/tablero", label: "Tablero", icon: LayoutGrid },
   { href: "/lavanderia/admin/trabajos", label: "Trabajos", icon: Shirt },
   { href: "/lavanderia/admin/empleados", label: "Empleados", icon: Users },
+  { href: "/lavanderia/admin/horarios", label: "Horarios", icon: Clock },
   { href: "/lavanderia/admin/metricas", label: "Métricas", icon: BarChart3 },
   { href: "/lavanderia/admin/calibracion", label: "Calibración", icon: Gauge },
 ];

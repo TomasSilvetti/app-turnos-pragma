@@ -8,12 +8,17 @@ export type TurnoAplicable = {
   minutos: number;
 };
 
-type TurnoConfig = {
+export type TurnoConfigRow = {
+  diaSemana: number;
   tipo: string;
   horaInicio: string;
   horaFin: string;
-  diasSemana: number[];
   habilitado: boolean;
+};
+
+export type ConfigTurnos = {
+  turnos: TurnoConfigRow[];
+  diasAtiende: Set<number>; // días de la semana con atiende=true
 };
 
 const HORIZONTE_DIAS = 60; // limite de busqueda al asignar
@@ -22,23 +27,19 @@ function minutosTurno(t: { horaInicio: string; horaFin: string }): number {
   return Math.max(0, horaAMin(t.horaFin) - horaAMin(t.horaInicio));
 }
 
-// Turnos habilitados para una fecha. El turno "extra" solo aplica si hay un
-// LavDiaExtra habilitado para esa fecha; el resto, segun su config base.
+// Turnos habilitados para una fecha. Si el día no atiende, ninguno aplica. El
+// turno "extra" solo aplica si además hay un LavDiaExtra habilitado para esa fecha.
 export function turnosDelDia(
   fecha: string,
-  config: TurnoConfig[],
+  config: ConfigTurnos,
   diasExtraHabilitados: Set<string>
 ): TurnoAplicable[] {
   const dia = diaSemanaDe(fecha);
+  if (!config.diasAtiende.has(dia)) return [];
   const res: TurnoAplicable[] = [];
-  for (const t of config) {
-    const aplicaDia = t.diasSemana.includes(dia);
-    if (!aplicaDia) continue;
-    if (t.tipo === "extra") {
-      if (!diasExtraHabilitados.has(fecha)) continue;
-    } else if (!t.habilitado) {
-      continue;
-    }
+  for (const t of config.turnos) {
+    if (t.diaSemana !== dia || !t.habilitado) continue;
+    if (t.tipo === "extra" && !diasExtraHabilitados.has(fecha)) continue;
     res.push({ tipo: t.tipo, horaInicio: t.horaInicio, horaFin: t.horaFin, minutos: minutosTurno(t) });
   }
   return res.sort((a, b) => horaAMin(a.horaInicio) - horaAMin(b.horaInicio));
@@ -63,17 +64,19 @@ export async function primerDiaLaborable(): Promise<string> {
 
 // Carga la config de turnos y los dias extra habilitados en un rango.
 export async function cargarConfigTurnos(fechaDesde: string, fechaHasta: string) {
-  const [config, extras] = await Promise.all([
+  const [turnos, dias, extras] = await Promise.all([
     prisma.lavTurnoConfig.findMany(),
+    prisma.lavDiaConfig.findMany({ where: { atiende: true }, select: { diaSemana: true } }),
     prisma.lavDiaExtra.findMany({
       where: { habilitado: true, fecha: { gte: fechaDesde, lte: fechaHasta } },
       select: { fecha: true },
     }),
   ]);
-  return {
-    config: config as TurnoConfig[],
-    diasExtra: new Set(extras.map((e) => e.fecha)),
+  const config: ConfigTurnos = {
+    turnos: turnos as TurnoConfigRow[],
+    diasAtiende: new Set(dias.map((d) => d.diaSemana)),
   };
+  return { config, diasExtra: new Set(extras.map((e) => e.fecha)) };
 }
 
 // Opciones de prioridad al cargar una OT (de la deteccion por foto).

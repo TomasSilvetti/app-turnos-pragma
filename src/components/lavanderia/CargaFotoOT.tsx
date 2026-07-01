@@ -40,6 +40,7 @@ export function CargaFotoOT() {
   const [tiempos, setTiempos] = useState<Map<string, number>>(new Map()); // prenda:proceso → minutos
   const [ot, setOt] = useState<OTPreview | null>(null);
   const [items, setItems] = useState<ItemPreview[]>([]);
+  const [confirmarDuplicada, setConfirmarDuplicada] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -68,6 +69,7 @@ export function CargaFotoOT() {
     setError(null);
     setOt(null);
     setItems([]);
+    setConfirmarDuplicada(false);
     if (inputRef.current) inputRef.current.value = "";
   }, []);
 
@@ -98,8 +100,10 @@ export function CargaFotoOT() {
     }
   };
 
-  const confirmar = async () => {
+  // force: saltea el chequeo de OT duplicada (N° ya cargado en el tablero).
+  const confirmar = async (force = false) => {
     if (!ot) return;
+    setConfirmarDuplicada(false);
     setEstado("creando");
     try {
       const res = await lavFetch("/api/lavanderia/ots", {
@@ -114,14 +118,21 @@ export function CargaFotoOT() {
           fechaNecesaria: ot.fechaNecesaria,
           items: items.filter((i) => i.prendaId || i.descripcion.trim()),
           datosIA: ot,
+          force,
         }),
       });
-      if (res.ok) setEstado("creada");
-      else {
-        const d = await res.json();
-        setError(d.error || "No se pudo crear la OT");
-        setEstado("preview");
+      if (res.ok) {
+        setEstado("creada");
+        return;
       }
+      const d = await res.json().catch(() => ({}));
+      if (res.status === 409 && d.duplicada) {
+        setConfirmarDuplicada(true);
+        setEstado("preview");
+        return;
+      }
+      setError(d.error || "No se pudo crear la OT");
+      setEstado("preview");
     } catch {
       setError("Error de red al crear la OT");
       setEstado("preview");
@@ -351,10 +362,34 @@ export function CargaFotoOT() {
           <Button variant="outline" className="flex-1" onClick={reiniciar} disabled={estado !== "preview"}>
             <X /> Descartar
           </Button>
-          <Button className="flex-1" onClick={confirmar} disabled={(estado as Estado) === "creando" || items.length === 0 || hayNuevaSinResolver}>
+          <Button className="flex-1" onClick={() => confirmar()} disabled={(estado as Estado) === "creando" || items.length === 0 || hayNuevaSinResolver}>
             {(estado as Estado) === "creando" ? <Loader2 className="animate-spin" /> : <Check />} Cargar al tablero
           </Button>
         </div>
+
+        {confirmarDuplicada && (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center">
+            <div className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-background p-4 shadow-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="mt-0.5 size-5 shrink-0 text-amber-500" />
+                <div>
+                  <p className="font-semibold">OT ya cargada</p>
+                  <p className="text-sm text-muted-foreground">
+                    Esta OT ya está cargada en el tablero. ¿Seguro que querés agregarla?
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" className="flex-1" onClick={() => setConfirmarDuplicada(false)}>
+                  <X /> Cancelar
+                </Button>
+                <Button className="flex-1" onClick={() => confirmar(true)}>
+                  <Check /> Sí, agregar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

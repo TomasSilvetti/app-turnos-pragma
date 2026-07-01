@@ -108,8 +108,6 @@ export async function getTablero(): Promise<TableroSnapshot> {
     porDia.set(ot.fechaAsignada, arr);
   }
 
-  const cfgExtra = config.find((t) => t.tipo === "extra");
-
   const dias: DiaSnap[] = [];
   // Avanzamos por el calendario agregando solo días con turnos (laborables),
   // hasta juntar DIAS_VISIBLES.
@@ -120,14 +118,17 @@ export async function getTablero(): Promise<TableroSnapshot> {
     const delDia = porDia.get(fecha) ?? [];
     const { dia, fechaCorta } = etiquetaDia(fecha);
 
-    const extra: ExtraInfo | null = cfgExtra
-      ? {
-          disponible: cfgExtra.diasSemana.includes(diaSemanaDe(fecha)),
-          activo: diasExtra.has(fecha),
-          horaInicio: cfgExtra.horaInicio,
-          horaFin: cfgExtra.horaFin,
-        }
-      : null;
+    const diaSem = diaSemanaDe(fecha);
+    const extraRow = config.turnos.find((t) => t.tipo === "extra" && t.diaSemana === diaSem);
+    const extra: ExtraInfo | null =
+      extraRow && extraRow.habilitado && config.diasAtiende.has(diaSem)
+        ? {
+            disponible: true,
+            activo: diasExtra.has(fecha),
+            horaInicio: extraRow.horaInicio,
+            horaFin: extraRow.horaFin,
+          }
+        : null;
 
     const otsSnap: OTSnap[] = delDia.map((ot) => ({
       id: ot.id,

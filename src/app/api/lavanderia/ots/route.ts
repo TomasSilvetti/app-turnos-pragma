@@ -36,6 +36,17 @@ export async function POST(request: NextRequest) {
   if (items.length === 0)
     return NextResponse.json({ error: "La OT no tiene items" }, { status: 400 });
 
+  // OT duplicada: si el N° ya existe y no se forzó, avisar antes de crear.
+  const numeroOT = typeof body.numero === "string" ? body.numero.trim() : "";
+  if (numeroOT && body.force !== true) {
+    const existe = await prisma.lavOT.findFirst({ where: { numero: numeroOT }, select: { id: true } });
+    if (existe)
+      return NextResponse.json(
+        { error: "Esta OT ya está cargada en el tablero", duplicada: true },
+        { status: 409 }
+      );
+  }
+
   // Alta de prendas nuevas (caso "varios"): se crean incompletas para que el admin
   // les cargue los minutos. Se reutiliza una existente del mismo nombre si la hay.
   for (const it of items) {

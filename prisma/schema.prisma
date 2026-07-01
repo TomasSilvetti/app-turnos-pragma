@@ -560,16 +560,26 @@ model LavDuracion {
   @@map("lav_duraciones")
 }
 
-// Configuración global de turnos (single-tenant). tipo: "manana" | "tarde" | "extra".
+// Config de turnos por día de la semana (single-tenant).
+// tipo: "manana" | "tarde" | "extra". diaSemana: 0=Domingo .. 6=Sabado.
 model LavTurnoConfig {
   id         String  @id @default(cuid())
-  tipo       String  @unique
+  diaSemana  Int
+  tipo       String
   horaInicio String // "HH:mm"
   horaFin    String // "HH:mm"
-  diasSemana Int[] // 0=Domingo .. 6=Sabado
   habilitado Boolean @default(true)
 
+  @@unique([diaSemana, tipo])
   @@map("lav_turno_config")
+}
+
+// Toggle "¿el local atiende este día?". Si atiende=false, no aplica ningún turno.
+model LavDiaConfig {
+  diaSemana Int     @id
+  atiende   Boolean @default(false)
+
+  @@map("lav_dia_config")
 }
 
 // Habilita el turno extra para un dia puntual (fecha en formato yyyy-MM-dd).
