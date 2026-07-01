@@ -29,6 +29,13 @@ export type OTSnap = {
   empleadoTrabajo: string | null;
   items: { descripcion: string; cantidad: number; prendaId: string | null; procesoIds: string[]; procesos: string[]; duracionMin: number }[];
   puedeEmpezar: boolean;
+  // Division de OTs grandes: la sub-OT lleva su indice de parte (2/6). Cuando todas
+  // las partes de un grupo estan terminadas, se reemplazan por una unica card
+  // combinada (partesCompletadas seteado, sin parteIndice).
+  grupoId: string | null;
+  parteIndice: number | null;
+  parteTotal: number | null;
+  partesCompletadas: number | null;
 };
 
 export type DiaSnap = {
@@ -156,6 +163,10 @@ export async function getTablero(): Promise<TableroSnapshot> {
       // Cualquier OT pendiente puede empezarse (varias en simultaneo, en cualquier
       // dia). Al empezarla se reubica en la columna de hoy.
       puedeEmpezar: ot.estado === "pendiente",
+      grupoId: ot.grupoId,
+      parteIndice: ot.parteIndice,
+      parteTotal: ot.parteTotal,
+      partesCompletadas: null,
     }));
 
     dias.push({
@@ -170,6 +181,96 @@ export async function getTablero(): Promise<TableroSnapshot> {
       extra,
       ots: otsSnap,
     });
+  }
+
+  // Recombinar OTs divididas: cuando TODAS las partes de un grupo estan terminadas,
+  // se reemplazan sus N cards por una unica card combinada (con la duracion total y
+  // los items fusionados). Se consultan todas las partes del grupo aparte porque las
+  // terminadas en dias pasados ya no entran en el rango del tablero.
+  const grupoIds = [
+    ...new Set(
+      dias.flatMap((d) => d.ots).map((o) => o.grupoId).filter((g): g is string => Boolean(g))
+    ),
+  ];
+  if (grupoIds.length > 0) {
+    const partes = await prisma.lavOT.findMany({
+      where: { grupoId: { in: grupoIds } },
+      include: {
+        items: { select: { descripcion: true, cantidad: true, prendaId: true, procesoIds: true, duracionMin: true } },
+        empleadoTrabajo: { select: { nombre: true } },
+      },
+    });
+    const porGrupo = new Map<string, typeof partes>();
+    for (const p of partes) {
+      const arr = porGrupo.get(p.grupoId!) ?? [];
+      arr.push(p);
+      porGrupo.set(p.grupoId!, arr);
+    }
+
+    for (const [gid, ps] of porGrupo) {
+      const todasTerminadas = ps.length > 0 && ps.every((p) => p.estado === "terminado");
+      if (!todasTerminadas) continue;
+
+      // Quitar las partes del grupo de todos los dias y quedarnos con el dia visible
+      // mas tardio que tenia una (ahi va la card combinada).
+      let destino: DiaSnap | null = null;
+      for (const d of dias) {
+        if (d.ots.some((o) => o.grupoId === gid) && (!destino || d.fecha > destino.fecha)) {
+          destino = d;
+        }
+        d.ots = d.ots.filter((o) => o.grupoId !== gid);
+      }
+      if (!destino) continue; // todas las partes ya scrollearon fuera del tablero
+
+      // Fusionar items por prenda + procesos (reconstruye la OT original).
+      const mergeItems = new Map<string, OTSnap["items"][number]>();
+      for (const p of ps) {
+        for (const it of p.items) {
+          const key = `${it.prendaId ?? ""}|${[...it.procesoIds].sort().join(",")}|${it.descripcion}`;
+          const prev = mergeItems.get(key);
+          if (prev) {
+            prev.cantidad += it.cantidad;
+            prev.duracionMin += it.duracionMin;
+          } else {
+            mergeItems.set(key, {
+              descripcion: it.descripcion,
+              cantidad: it.cantidad,
+              prendaId: it.prendaId,
+              procesoIds: it.procesoIds,
+              procesos: it.procesoIds.map((id) => nombreProceso.get(id) ?? "").filter(Boolean),
+              duracionMin: it.duracionMin,
+            });
+          }
+        }
+      }
+
+      const ref = ps[0];
+      const ultimaTerminada = ps.reduce((a, b) =>
+        (b.terminadoEn?.getTime() ?? 0) > (a.terminadoEn?.getTime() ?? 0) ? b : a
+      );
+      destino.ots.push({
+        id: `grupo-${gid}`,
+        numero: ref.numero,
+        nombreCliente: ref.nombreCliente,
+        telefono: ref.telefono,
+        domicilio: ref.domicilio,
+        estado: "terminado",
+        duracionMin: ps.reduce((acc, p) => acc + p.duracionMin, 0),
+        orden: 0,
+        aRevisar: ps.some((p) => p.aRevisar),
+        urgente: false,
+        fechaNecesaria: ref.fechaNecesaria,
+        empezadoEn: null,
+        terminadoEn: ultimaTerminada.terminadoEn?.toISOString() ?? null,
+        empleadoTrabajo: ultimaTerminada.empleadoTrabajo?.nombre ?? null,
+        items: [...mergeItems.values()],
+        puedeEmpezar: false,
+        grupoId: gid,
+        parteIndice: null,
+        parteTotal: ps.length,
+        partesCompletadas: ps.length,
+      });
+    }
   }
 
   return { dias, version: await versionTablero() };

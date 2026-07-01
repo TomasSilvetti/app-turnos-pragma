@@ -23,8 +23,18 @@ export type ConfigTurnos = {
 
 const HORIZONTE_DIAS = 60; // limite de busqueda al asignar
 
-function minutosTurno(t: { horaInicio: string; horaFin: string }): number {
+export function minutosTurno(t: { horaInicio: string; horaFin: string }): number {
   return Math.max(0, horaAMin(t.horaFin) - horaAMin(t.horaInicio));
+}
+
+// Duracion maxima de una sub-OT: una OT que supere esto se auto-divide en partes.
+// Es la capacidad del turno base mas grande (manana/tarde habilitados); asi cada
+// parte "entra en un turno". Se excluye el turno "extra" (es eventual). Fallback
+// 240min si no hay turnos base configurados.
+export function limiteDivisionMin(config: TurnoConfigRow[]): number {
+  const base = config.filter((t) => t.tipo !== "extra" && t.habilitado);
+  const max = base.reduce((acc, t) => Math.max(acc, minutosTurno(t)), 0);
+  return max > 0 ? max : 240;
 }
 
 // Turnos habilitados para una fecha. Si el día no atiende, ninguno aplica. El

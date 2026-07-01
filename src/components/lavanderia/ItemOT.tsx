@@ -52,6 +52,14 @@ export function ItemOT({
   };
 
   const titulo = ot.numero ? `OT ${ot.numero}` : ot.nombreCliente || "OT";
+  // OT dividida: la sub-OT muestra su parte (2/6); la card combinada (todas las
+  // partes terminadas) muestra que se completo el total.
+  const esCombinada = ot.partesCompletadas != null;
+  const parteBadge = esCombinada
+    ? `completa · ${ot.partesCompletadas} partes`
+    : ot.parteTotal
+      ? `${ot.parteIndice}/${ot.parteTotal}`
+      : null;
   // yyyy-MM-dd → dd/MM para mostrar al usuario.
   const fechaNecesariaCorta = ot.fechaNecesaria
     ? (() => {
@@ -80,7 +88,21 @@ export function ItemOT({
         <div className="flex min-w-0 items-start gap-1.5">
           {dragHandle && <span onClick={(e) => e.stopPropagation()}>{dragHandle}</span>}
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">{titulo}</p>
+            <p className="truncate text-sm font-semibold">
+              {titulo}
+              {parteBadge && (
+                <span
+                  className={cn(
+                    "ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 align-middle text-[10px] font-semibold",
+                    esCombinada
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                      : "bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300"
+                  )}
+                >
+                  {parteBadge}
+                </span>
+              )}
+            </p>
             {ot.nombreCliente && ot.numero && (
               <p className="truncate text-xs text-muted-foreground">{ot.nombreCliente}</p>
             )}
