@@ -173,3 +173,157 @@ export async function asignarOT(
   // No entro en ningun lado: al primer dia con turnos (overflow controlado).
   return { fechaAsignada: primerLaborable, orden: cuenta.get(primerLaborable) ?? 0 };
 }
+
+// Dias laborables (con capacidad > 0) desde hoy hasta el horizonte, con su capacidad.
+function diasLaborables(
+  hoy: string,
+  config: ConfigTurnos,
+  diasExtra: Set<string>
+): { fecha: string; cap: number }[] {
+  const dias: { fecha: string; cap: number }[] = [];
+  for (let i = 0; i <= HORIZONTE_DIAS; i++) {
+    const f = sumarDias(hoy, i);
+    const cap = capacidadDia(turnosDelDia(f, config, diasExtra));
+    if (cap > 0) dias.push({ fecha: f, cap });
+  }
+  return dias;
+}
+
+// ¿Se acerca la deadline de una OT "PARA <fecha>"? Es inminente cuando el primer
+// dia laborable (hoy) ya alcanzó al ultimo dia laborable ANTERIOR a la fecha
+// necesaria: es el ultimo dia util para tenerla lista, o ya se pasó. Mientras haya
+// margen (hay dias laborables entre hoy y la fecha) NO es inminente y la OT fluye
+// como una mas en la cola.
+export function deadlineInminente(fechaNecesaria: string, dias: { fecha: string }[]): boolean {
+  if (dias.length === 0) return true;
+  const hoy = dias[0].fecha;
+  let ultimoUtil: string | null = null;
+  for (const d of dias) {
+    if (d.fecha >= fechaNecesaria) break;
+    ultimoUtil = d.fecha;
+  }
+  if (ultimoUtil === null) return true; // sin laborable previo: la fecha es hoy o ya pasó
+  return hoy >= ultimoUtil;
+}
+
+// Re-empaqueta TODA la cola de OTs vivas hacia adelante rellenando huecos (gap-filling):
+//  - Orden base: el visual actual (fechaAsignada, orden, createdAt), que refleja el
+//    orden de llegada y respeta reordenamientos manuales previos.
+//  - Cuando la proxima OT no entra en el hueco restante de un dia, se itera sobre las
+//    siguientes de la cola buscando una que sí entre antes de pasar al dia siguiente.
+//    Así se compactan los dias en vez de dejar un hueco y saltar al dia posterior.
+//  - En progreso: fijas en su dia (o hoy si cayeron en un dia no laborable/pasado),
+//    al frente y en orden de inicio.
+//  - Urgentes y "PARA <fecha>" con deadline INMINENTE: al frente de hoy, sin importar
+//    la capacidad. Las "PARA <fecha>" con margen fluyen como una OT normal.
+//  - Partes de una OT dividida (mismo grupoId): se respeta el orden de parteIndice.
+// Se corre tras crear/editar una OT (reasignacion real en DB). Devuelve cuantas movió.
+export async function recompactar(): Promise<number> {
+  const hoy = hoyAR();
+  const hasta = sumarDias(hoy, HORIZONTE_DIAS);
+  const { config, diasExtra } = await cargarConfigTurnos(hoy, hasta);
+
+  const dias = diasLaborables(hoy, config, diasExtra);
+  if (dias.length === 0) return 0;
+  const hoyLab = dias[0].fecha;
+  const ultimoLab = dias[dias.length - 1].fecha;
+  const esLaborable = new Set(dias.map((d) => d.fecha));
+
+  const ots = await prisma.lavOT.findMany({
+    where: { estado: { in: ["pendiente", "en_progreso"] } },
+    orderBy: [{ fechaAsignada: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
+    select: {
+      id: true,
+      estado: true,
+      urgente: true,
+      fechaNecesaria: true,
+      duracionMin: true,
+      fechaAsignada: true,
+      orden: true,
+      empezadoEn: true,
+      grupoId: true,
+      parteIndice: true,
+    },
+  });
+  if (ots.length === 0) return 0;
+
+  const resultado = new Map<string, string[]>(); // fecha -> ids en orden
+  const usado = new Map<string, number>(); // minutos comprometidos por dia
+  const colocadas = new Set<string>(); // ids ya ubicados (para respetar orden de partes)
+  const push = (fecha: string, id: string) => {
+    const arr = resultado.get(fecha) ?? [];
+    arr.push(id);
+    resultado.set(fecha, arr);
+    colocadas.add(id);
+  };
+  const reservar = (fecha: string, min: number) => usado.set(fecha, (usado.get(fecha) ?? 0) + min);
+
+  // Partes de una OT dividida (mismo grupoId) deben ir en orden: una parte no puede
+  // colocarse si un hermano anterior (parteIndice menor) sigue sin ubicar.
+  const hermanosPorGrupo = new Map<string, { id: string; idx: number }[]>();
+  for (const o of ots) {
+    if (o.grupoId == null || o.parteIndice == null) continue;
+    const arr = hermanosPorGrupo.get(o.grupoId) ?? [];
+    arr.push({ id: o.id, idx: o.parteIndice });
+    hermanosPorGrupo.set(o.grupoId, arr);
+  }
+  const anteriorSinColocar = (o: { grupoId: string | null; parteIndice: number | null }) => {
+    if (o.grupoId == null || o.parteIndice == null) return false;
+    const hermanos = hermanosPorGrupo.get(o.grupoId) ?? [];
+    return hermanos.some((h) => h.idx < o.parteIndice! && !colocadas.has(h.id));
+  };
+
+  // 1. En progreso: fijas en su dia, al frente y en orden de inicio.
+  const enProgreso = ots
+    .filter((o) => o.estado === "en_progreso")
+    .sort((a, b) => (a.empezadoEn?.getTime() ?? 0) - (b.empezadoEn?.getTime() ?? 0) || a.orden - b.orden);
+  for (const o of enProgreso) {
+    const f = esLaborable.has(o.fechaAsignada) && o.fechaAsignada >= hoyLab ? o.fechaAsignada : hoyLab;
+    push(f, o.id);
+    reservar(f, o.duracionMin);
+  }
+
+  // 2. Pendientes en su orden visual actual (ya viene ordenado por la query).
+  const pendientes = ots.filter((o) => o.estado === "pendiente");
+  const esUrgenteHoy = (o: (typeof pendientes)[number]) =>
+    o.urgente || (!!o.fechaNecesaria && deadlineInminente(o.fechaNecesaria, dias));
+
+  // 2a. Urgentes / deadline inminente: al frente de hoy (sin importar capacidad).
+  for (const o of pendientes.filter(esUrgenteHoy)) {
+    push(hoyLab, o.id);
+    reservar(hoyLab, o.duracionMin);
+  }
+
+  // 2b. Normales: gap-filling por dia respetando el orden base y el orden de partes.
+  const cola = pendientes.filter((o) => !esUrgenteHoy(o));
+  for (const d of dias) {
+    let restante = d.cap - (usado.get(d.fecha) ?? 0);
+    let i = 0;
+    while (i < cola.length && restante > 0) {
+      if (cola[i].duracionMin <= restante && !anteriorSinColocar(cola[i])) {
+        push(d.fecha, cola[i].id);
+        restante -= cola[i].duracionMin;
+        cola.splice(i, 1); // no avanzar i: reintenta con la siguiente en la misma posicion
+      } else {
+        i++; // no entra en el hueco (o falta una parte anterior): probar la siguiente
+      }
+    }
+  }
+  // Sobrantes (mas grandes que cualquier dia o mas alla del horizonte): al ultimo dia.
+  for (const o of cola) push(ultimoLab, o.id);
+
+  // Persistir solo lo que cambió.
+  const actual = new Map(ots.map((o) => [o.id, o] as const));
+  const updates: ReturnType<typeof prisma.lavOT.update>[] = [];
+  for (const [fecha, ids] of resultado) {
+    ids.forEach((id, orden) => {
+      const o = actual.get(id)!;
+      if (o.fechaAsignada !== fecha || o.orden !== orden) {
+        updates.push(prisma.lavOT.update({ where: { id }, data: { fechaAsignada: fecha, orden } }));
+      }
+    });
+  }
+  if (updates.length === 0) return 0;
+  await prisma.$transaction(updates);
+  return updates.length;
+}

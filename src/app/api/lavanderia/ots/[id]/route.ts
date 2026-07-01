@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireEmpleado, requireAdmin } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
-import { asignarOT, primerDiaLaborable } from "@/lib/lavanderia/capacidad";
+import { asignarOT, primerDiaLaborable, recompactar } from "@/lib/lavanderia/capacidad";
 
 // PATCH: acciones sobre una OT.
 //  - { accion: "empezar" }  empleado: la marca en progreso y la manda al frente
@@ -121,6 +121,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         },
       }),
     ]);
+
+    // La edicion pudo cambiar duracion/prioridad: recompactar la cola (gap-filling).
+    await recompactar();
 
     return NextResponse.json({ ok: true });
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireEmpleado } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
-import { asignarOT, limiteDivisionMin } from "@/lib/lavanderia/capacidad";
+import { asignarOT, limiteDivisionMin, recompactar } from "@/lib/lavanderia/capacidad";
 import { dividirEnPartes } from "@/lib/lavanderia/dividir";
 import { getTablero } from "@/lib/lavanderia/tablero";
 
@@ -120,6 +120,8 @@ export async function POST(request: NextRequest) {
       },
       select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },
     });
+    // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
+    await recompactar();
     return NextResponse.json({ ot }, { status: 201 });
   }
 
@@ -155,6 +157,9 @@ export async function POST(request: NextRequest) {
     });
     creadas.push(ot);
   }
+
+  // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
+  await recompactar();
 
   return NextResponse.json({ grupoId, partes: total, ots: creadas }, { status: 201 });
 }

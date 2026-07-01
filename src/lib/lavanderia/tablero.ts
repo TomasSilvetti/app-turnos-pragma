@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ahoraAR, diaSemanaDe, etiquetaDia, sumarDias } from "./fecha";
-import { cargarConfigTurnos, capacidadDia, turnosDelDia, type TurnoAplicable } from "./capacidad";
+import { cargarConfigTurnos, capacidadDia, deadlineInminente, turnosDelDia, type TurnoAplicable } from "./capacidad";
 
 // Estado del turno extra para un día (para mostrar el gap clickeable en admin).
 export type ExtraInfo = {
@@ -23,6 +23,8 @@ export type OTSnap = {
   orden: number;
   aRevisar: boolean;
   urgente: boolean;
+  // La deadline "PARA <fecha>" ya está encima: se prioriza y muestra como urgente.
+  urgentePorDeadline: boolean;
   fechaNecesaria: string | null;
   empezadoEn: string | null;
   terminadoEn: string | null;
@@ -108,11 +110,25 @@ export async function getTablero(): Promise<TableroSnapshot> {
   const procesos = await prisma.lavProceso.findMany({ select: { id: true, nombre: true } });
   const nombreProceso = new Map(procesos.map((p) => [p.id, p.nombre]));
 
+  // Dias laborables desde hoy (para evaluar la cercania de las deadlines "PARA <fecha>").
+  const laborables: { fecha: string }[] = [];
+  for (let i = 0; i <= DIAS_VISIBLES * 2 + 7; i++) {
+    const f = sumarDias(hoy, i);
+    if (turnosDelDia(f, config, diasExtra).length > 0) laborables.push({ fecha: f });
+  }
+  // Deadline "PARA <fecha>" inminente: la OT pendiente se muestra en la columna de
+  // hoy (aunque en DB siga en otro dia), al frente, para que se priorice.
+  const esInminente = (ot: (typeof ots)[number]) =>
+    ot.estado === "pendiente" && !!ot.fechaNecesaria && deadlineInminente(ot.fechaNecesaria, laborables);
+
   const porDia = new Map<string, typeof ots>();
   for (const ot of ots) {
-    const arr = porDia.get(ot.fechaAsignada) ?? [];
-    arr.push(ot);
-    porDia.set(ot.fechaAsignada, arr);
+    const promover = esInminente(ot) && ot.fechaAsignada !== primerLaborable;
+    const fecha = promover ? primerLaborable : ot.fechaAsignada;
+    const arr = porDia.get(fecha) ?? [];
+    if (promover) arr.unshift(ot); // al frente de hoy
+    else arr.push(ot);
+    porDia.set(fecha, arr);
   }
 
   const dias: DiaSnap[] = [];
@@ -148,6 +164,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
       orden: ot.orden,
       aRevisar: ot.aRevisar,
       urgente: ot.urgente,
+      urgentePorDeadline: esInminente(ot),
       fechaNecesaria: ot.fechaNecesaria,
       empezadoEn: ot.empezadoEn?.toISOString() ?? null,
       terminadoEn: ot.terminadoEn?.toISOString() ?? null,
@@ -259,6 +276,7 @@ export async function getTablero(): Promise<TableroSnapshot> {
         orden: 0,
         aRevisar: ps.some((p) => p.aRevisar),
         urgente: false,
+        urgentePorDeadline: false,
         fechaNecesaria: ref.fechaNecesaria,
         empezadoEn: null,
         terminadoEn: ultimaTerminada.terminadoEn?.toISOString() ?? null,

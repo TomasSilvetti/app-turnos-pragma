@@ -81,7 +81,7 @@ export function ItemOT({
         ot.estado === "en_progreso" &&
           "border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 dark:border-amber-500/60 dark:bg-amber-500/10",
         ot.estado === "pendiente" && "border-white/70 bg-white/80 backdrop-blur",
-        ot.urgente && ot.estado !== "terminado" && "ring-1 ring-red-300"
+        (ot.urgente || ot.urgentePorDeadline) && ot.estado !== "terminado" && "ring-1 ring-red-300"
       )}
     >
       <div className="flex items-start justify-between gap-2">
@@ -114,9 +114,9 @@ export function ItemOT({
         </span>
       </div>
 
-      {(ot.urgente || fechaNecesariaCorta) && (
+      {(ot.urgente || ot.urgentePorDeadline || fechaNecesariaCorta) && (
         <div className="flex flex-wrap items-center gap-1">
-          {ot.urgente && (
+          {(ot.urgente || ot.urgentePorDeadline) && (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               <Flame className="size-3" /> Urgente
             </span>
