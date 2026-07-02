@@ -614,6 +614,9 @@ model LavOT {
   empleadoTrabajoId String?
   empezadoEn        DateTime?
   terminadoEn       DateTime?
+  // Marca la entrega al cliente: una OT terminada pasa al modulo "terminados"
+  // hasta que se entrega (se setea este timestamp) y sale del listado.
+  entregadoEn       DateTime?
   datosIA           Json?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -642,4 +645,120 @@ model LavOTItem {
 
   @@index([otId])
   @@map("lav_ot_items")
+}
+
+// Histórico enriquecido: una fila por OT (o sub-OT) que pasó por el sistema,
+// pensada como ejemplo de entrenamiento para predecir "¿para cuándo estará?" al
+// momento del ingreso. Es independiente de LavOT (sin FK): sobrevive a ediciones
+// y borrados de la OT viva. Las features "as-of ingreso" (proyección, backlog,
+// día/hora) se congelan al crear; los labels (lead time real, error de
+// estimación) se completan al terminar/entregar.
+model LavOTHistorico {
+  id          String @id @default(cuid())
+  otId        String @unique // referencia lógica a la LavOT (no FK a propósito)
+  numero      String?
+  grupoId     String? // agrupa partes de una OT dividida (mismo ticket)
+  parteIndice Int?
+  parteTotal  Int?
+
+  // Identidad / cliente (se guarda de más, por si sirve como feature futura).
+  nombreCliente String?
+  telefono      String?
+  domicilio     String?
+
+  // ── Features conocidas al INGRESO (as-of creación) ──
+  ingresadoEn           DateTime // = createdAt de la OT
+  ingresoFecha          String // yyyy-MM-dd (AR)
+  ingresoDiaSemana      Int // 0=domingo .. 6=sábado
+  ingresoHoraMin        Int // minutos desde medianoche (hora AR)
+  urgente               Boolean @default(false)
+  fechaNecesaria        String? // yyyy-MM-dd de "PARA DD/MM"
+  aRevisar              Boolean @default(false)
+  duracionProyectadaMin Int // estimación del modelo al ingreso
+  fechaAsignadaInicial  String? // día del tablero que prometió el modelo al ingresar
+  totalPrendas          Int     @default(0) // suma de cantidades
+  totalItems            Int     @default(0) // cantidad de líneas/prendas distintas
+  totalProcesos         Int     @default(0) // suma de procesos aplicados
+  // Carga viva del taller al ingresar (congestión que enfrentó la OT):
+  backlogCount          Int? // OTs vivas por delante
+  backlogMin            Int? // minutos proyectados vivos por delante
+
+  // ── Resultado / labels ──
+  empezadoEn         DateTime?
+  terminadoEn        DateTime?
+  entregadoEn        DateTime?
+  terminadoFecha     String? // yyyy-MM-dd (AR)
+  terminadoDiaSemana Int?
+  esperaMin          Int? // ingreso → empezado
+  ejecucionMin       Int? // empezado → terminado (wall-clock)
+  leadTimeMin        Int? // ingreso → terminado  ← label principal de predicción
+  leadTimeEntregaMin Int? // ingreso → entregado
+  errorEstimacionMin Int? // ejecucionMin - duracionProyectadaMin (calibración del estimador)
+
+  empleadoCargaId   String?
+  empleadoTrabajoId String?
+
+  // ── Datos crudos congelados (features futuras que hoy no anticipamos) ──
+  prendas  Json // [{ prendaId, prendaNombre, descripcion, cantidad, procesoIds, procesoNombres, duracionMin }]
+  datosIA  Json? // salida original de visión (ticket)
+  snapshot Json? // dump completo de la OT al cerrar, por las dudas
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([terminadoFecha])
+  @@index([ingresoFecha])
+  @@index([numero])
+  @@map("lav_ot_historico")
+}
+
+// Snapshot diario del PLAN del tablero: congela, una vez por día, qué proyectaba
+// el tablero para cada día del horizonte. Es efímero (el plan se pierde al
+// recompactar), así que se guarda para poder comparar después "lo prometido" vs
+// "lo realmente terminado ese día" (throughput real, derivable de LavOTHistorico)
+// y medir el desbalance. El volumen se mide en prendas y procesos, no en cantidad
+// de OTs (una OT de 21h no es comparable con una de 1h).
+model LavPlanSnapshot {
+  id            String   @id @default(cuid())
+  snapshotEn    DateTime @default(now()) // timestamp exacto de la toma
+  snapshotFecha String // yyyy-MM-dd (AR) en que se tomó el snapshot
+  diaObjetivo   String // yyyy-MM-dd del horizonte que describe esta fila
+  offsetDias    Int // 0 = primer día laborable (hoy), 1 = siguiente, ...
+  capacidadMin  Int      @default(0)
+  ocupacionMin  Int      @default(0)
+  totalOts      Int      @default(0)
+  totalPrendas  Int      @default(0) // suma de cantidades planificadas ese día
+  totalProcesos Int      @default(0) // suma de procesos×cantidad planificados ese día
+  ots           Json // [{ otId, numero, grupoId, parteIndice, estado, urgente, duracionMin, prendas, procesos }]
+  createdAt     DateTime @default(now())
+
+  @@unique([snapshotFecha, diaObjetivo])
+  @@index([snapshotFecha])
+  @@index([diaObjetivo])
+  @@map("lav_plan_snapshots")
+}
+
+// Log append-only de todos los eventos del ciclo de vida de una OT. Es la fuente
+// de verdad "guarda de más": nunca se actualiza ni borra, permite reconstruir
+// cualquier métrica futura aunque la OT o el histórico cambien. Cada fila lleva
+// un snapshot del contexto (backlog, día asignado) al momento del evento.
+model LavOTEvento {
+  id            String   @id @default(cuid())
+  otId          String
+  numero        String?
+  grupoId       String?
+  tipo          String // "creada" | "empezada" | "terminada" | "entregada" | "editada" | "movida"
+  en            DateTime @default(now())
+  empleadoId    String? // quién disparó la acción
+  duracionMin   Int? // duración proyectada al momento del evento
+  fechaAsignada String? // día del tablero al momento del evento
+  orden         Int?
+  backlogCount  Int? // OTs vivas por delante al momento del evento
+  backlogMin    Int? // minutos proyectados vivos por delante
+  payload       Json? // snapshot libre con el resto del contexto
+
+  @@index([otId])
+  @@index([tipo])
+  @@index([en])
+  @@map("lav_ot_eventos")
 }

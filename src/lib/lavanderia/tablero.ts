@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ahoraAR, diaSemanaDe, etiquetaDia, sumarDias } from "./fecha";
 import { cargarConfigTurnos, capacidadDia, deadlineInminente, turnosDelDia, type TurnoAplicable } from "./capacidad";
+import { registrarPlanSnapshot } from "./historico";
 
 // Estado del turno extra para un día (para mostrar el gap clickeable en admin).
 export type ExtraInfo = {
@@ -10,7 +11,10 @@ export type ExtraInfo = {
   horaFin: string;
 };
 
-export const DIAS_VISIBLES = 7;
+// Máximo de días laborables que devuelve el snapshot. El tablero muestra 7 por
+// defecto y 14 en la vista comprimida (toggle), así que siempre se calculan 14
+// para que el toggle sea instantáneo (sin refetch).
+export const DIAS_VISIBLES = 14;
 
 export type OTSnap = {
   id: string;
@@ -199,6 +203,10 @@ export async function getTablero(): Promise<TableroSnapshot> {
       ots: otsSnap,
     });
   }
+
+  // Congela el plan del dia (una vez por dia): la "promesa" del tablero, para poder
+  // compararla despues contra lo realmente terminado (desbalance). Best-effort.
+  await registrarPlanSnapshot(dias, hoy);
 
   // Recombinar OTs divididas: cuando TODAS las partes de un grupo estan terminadas,
   // se reemplazan sus N cards por una unica card combinada (con la duracion total y

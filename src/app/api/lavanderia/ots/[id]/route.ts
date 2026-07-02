@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireEmpleado, requireAdmin } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
 import { asignarOT, primerDiaLaborable, recompactar } from "@/lib/lavanderia/capacidad";
+import { cargaTaller, historicoAlCerrar, registrarEvento } from "@/lib/lavanderia/historico";
 
 // PATCH: acciones sobre una OT.
 //  - { accion: "empezar" }  empleado: la marca en progreso y la manda al frente
@@ -55,6 +56,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       );
       return upd;
     });
+    const backlog = await cargaTaller(id);
+    await registrarEvento({
+      otId: id,
+      tipo: "empezada",
+      numero: ot.numero,
+      grupoId: ot.grupoId,
+      empleadoId: empleado.id,
+      duracionMin: ot.duracionMin,
+      fechaAsignada: target,
+      backlogCount: backlog.count,
+      backlogMin: backlog.min,
+    });
     return NextResponse.json({ ot: actualizada });
   }
 
@@ -65,6 +78,20 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id },
       data: { estado: "terminado", terminadoEn: new Date() },
       select: { id: true, estado: true },
+    });
+    // Histórico: completa los labels (lead time real, error de estimación).
+    await historicoAlCerrar(id);
+    const backlog = await cargaTaller(id);
+    await registrarEvento({
+      otId: id,
+      tipo: "terminada",
+      numero: ot.numero,
+      grupoId: ot.grupoId,
+      empleadoId: empleado.id,
+      duracionMin: ot.duracionMin,
+      fechaAsignada: ot.fechaAsignada,
+      backlogCount: backlog.count,
+      backlogMin: backlog.min,
     });
     return NextResponse.json({ ot: actualizada });
   }
@@ -125,6 +152,31 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // La edicion pudo cambiar duracion/prioridad: recompactar la cola (gap-filling).
     await recompactar();
 
+    // Histórico: la edición no re-congela el ingreso, pero queda en el log con la
+    // nueva composición para poder reconstruir el cambio.
+    await registrarEvento({
+      otId: id,
+      tipo: "editada",
+      numero: typeof body.numero === "string" ? body.numero : ot.numero,
+      grupoId: ot.grupoId,
+      empleadoId: empleado.id,
+      duracionMin: calculo.duracionTotal,
+      fechaAsignada,
+      orden,
+      payload: {
+        items: calculo.items.map((it) => ({
+          descripcion: it.descripcion,
+          prendaId: it.prendaId,
+          cantidad: it.cantidad,
+          procesoIds: it.procesoIds,
+          duracionMin: it.duracionMin,
+        })),
+        aRevisar: calculo.aRevisar,
+        urgente,
+        fechaNecesaria,
+      },
+    });
+
     return NextResponse.json({ ok: true });
   }
 
@@ -137,6 +189,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       where: { id },
       data: { fechaAsignada, orden },
       select: { id: true, fechaAsignada: true, orden: true },
+    });
+    await registrarEvento({
+      otId: id,
+      tipo: "movida",
+      numero: ot.numero,
+      grupoId: ot.grupoId,
+      empleadoId: admin.id,
+      duracionMin: ot.duracionMin,
+      fechaAsignada,
+      orden,
     });
     return NextResponse.json({ ot: actualizada });
   }

@@ -5,6 +5,7 @@ import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones"
 import { asignarOT, limiteDivisionMin, recompactar } from "@/lib/lavanderia/capacidad";
 import { dividirEnPartes } from "@/lib/lavanderia/dividir";
 import { getTablero } from "@/lib/lavanderia/tablero";
+import { cargaTaller, historicoAlCrear, registrarEvento } from "@/lib/lavanderia/historico";
 
 // GET: snapshot completo del tablero (7 dias). Requiere empleado.
 export async function GET(request: NextRequest) {
@@ -122,6 +123,19 @@ export async function POST(request: NextRequest) {
     });
     // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
     await recompactar();
+    // Histórico: congela features de ingreso y deja rastro del evento (best-effort).
+    const backlog = await cargaTaller(ot.id);
+    await historicoAlCrear(ot.id);
+    await registrarEvento({
+      otId: ot.id,
+      tipo: "creada",
+      numero: comun.numero,
+      empleadoId: empleado.id,
+      duracionMin: ot.duracionMin,
+      fechaAsignada: ot.fechaAsignada,
+      backlogCount: backlog.count,
+      backlogMin: backlog.min,
+    });
     return NextResponse.json({ ot }, { status: 201 });
   }
 
@@ -160,6 +174,22 @@ export async function POST(request: NextRequest) {
 
   // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
   await recompactar();
+
+  // Histórico: una fila/evento por sub-OT (comparten grupoId y numero).
+  for (const c of creadas) {
+    const backlog = await cargaTaller(c.id);
+    await historicoAlCrear(c.id);
+    await registrarEvento({
+      otId: c.id,
+      tipo: "creada",
+      numero: comun.numero,
+      grupoId,
+      empleadoId: empleado.id,
+      fechaAsignada: c.fechaAsignada,
+      backlogCount: backlog.count,
+      backlogMin: backlog.min,
+    });
+  }
 
   return NextResponse.json({ grupoId, partes: total, ots: creadas }, { status: 201 });
 }
