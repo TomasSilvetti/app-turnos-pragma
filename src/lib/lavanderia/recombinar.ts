@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { calcularDuracion } from "./duraciones";
 import { recompactar } from "./capacidad";
 
 export type ResultadoRecombinar = {
@@ -7,16 +8,15 @@ export type ResultadoRecombinar = {
   otsEliminadas: number; // sub-OTs pendientes que se colapsaron
 };
 
-// Backfill: como ya no se parten las OTs, colapsa en una sola OT las partes
-// PENDIENTES de cada grupo que quedaron de la etapa en que sí se partía.
+// Backfill: como ya no se parten las OTs, colapsa en una sola OT PENDIENTE las
+// partes pendientes de cada grupo que quedaron de la etapa en que sí se partía.
 //
 //  - Une lo que quede pendiente aunque haya hermanos ya terminados / en progreso
 //    (esos no se tocan; solo se juntan las partes que todavía no se empezaron).
-//  - La duración se SUMA de las partes (no se recalcula con la matriz: para un
-//    valet parcial la matriz daría la carga completa, inflando la OT).
-//  - Un grupo con una sola parte pendiente igual se "desagrupa" (pierde la etiqueta
-//    X/Y y queda como OT normal).
-// Se corre una vez tras el deploy.
+//  - La duración se RECALCULA con la matriz (`calcularDuracion`): así el valet x
+//    kilo cuenta como una sola carga (su tiempo NO escala con la cantidad de kilos),
+//    y no se infla al sumar las partes.
+// Se corre una vez tras el deploy (o desde el botón "Reagrupar partidas").
 export async function recombinarTodas(): Promise<ResultadoRecombinar> {
   const partes = await prisma.lavOT.findMany({
     where: { estado: "pendiente", grupoId: { not: null } },
@@ -35,70 +35,69 @@ export async function recombinarTodas(): Promise<ResultadoRecombinar> {
   let otsEliminadas = 0;
 
   for (const ps of porGrupo.values()) {
-    // Una sola parte pendiente: solo se le quita la marca de grupo (queda entera).
-    if (ps.length === 1) {
-      await prisma.lavOT.update({
-        where: { id: ps[0].id },
-        data: { grupoId: null, parteIndice: null, parteTotal: null },
-      });
-      gruposRecombinados++;
-      otsEliminadas += 1;
-      continue;
-    }
-
-    // Varias partes pendientes: se colapsan en una sola OT. Los items se unen por
-    // (prenda + procesos + descripción) sumando cantidad y duración; la duración
-    // total es la suma de las partes (el trabajo que realmente queda por hacer).
-    const acc = new Map<string, { prendaId: string | null; descripcion: string; cantidad: number; procesoIds: string[]; duracionMin: number }>();
+    // Une los items de todas las partes por (prenda + procesos + descripción)
+    // sumando la cantidad; la duración se recalcula (valet = carga entera).
+    const acc = new Map<string, { prendaId: string | null; descripcion: string; cantidad: number; procesoIds: string[] }>();
     for (const p of ps) {
       for (const it of p.items) {
         const key = `${it.prendaId ?? ""}|${[...it.procesoIds].sort().join(",")}|${it.descripcion}`;
         const e = acc.get(key);
-        if (e) {
-          e.cantidad += it.cantidad;
-          e.duracionMin += it.duracionMin;
-        } else {
-          acc.set(key, { prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, procesoIds: it.procesoIds, duracionMin: it.duracionMin });
-        }
+        if (e) e.cantidad += it.cantidad;
+        else acc.set(key, { prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, procesoIds: it.procesoIds });
       }
     }
-    const items = [...acc.values()];
-    const duracionTotal = items.reduce((a, it) => a + it.duracionMin, 0);
+    const calc = await calcularDuracion([...acc.values()]);
+    const itemsCreate = calc.items.map((it) => ({
+      descripcion: it.descripcion,
+      prendaId: it.prendaId,
+      cantidad: it.cantidad,
+      procesoIds: it.procesoIds,
+      duracionMin: it.duracionMin,
+    }));
 
     const base = ps[0]; // menor parteIndice (orden de creación como desempate)
-    const createdAt = ps.reduce((min, p) => (p.createdAt < min ? p.createdAt : min), ps[0].createdAt);
 
-    await prisma.$transaction(async (tx) => {
-      await tx.lavOT.deleteMany({ where: { id: { in: ps.map((p) => p.id) } } });
-      await tx.lavOT.create({
+    if (ps.length === 1) {
+      // Una sola parte pendiente: se desagrupa (queda entera) y se recalcula.
+      await prisma.lavOT.update({
+        where: { id: base.id },
         data: {
-          numero: base.numero,
-          nombreCliente: base.nombreCliente,
-          telefono: base.telefono,
-          domicilio: base.domicilio,
-          fechaTicket: base.fechaTicket,
+          grupoId: null,
+          parteIndice: null,
+          parteTotal: null,
           estado: "pendiente",
-          fechaAsignada: base.fechaAsignada,
-          orden: base.orden,
-          duracionMin: duracionTotal,
-          aRevisar: ps.some((p) => p.aRevisar),
-          urgente: base.urgente,
-          fechaNecesaria: base.fechaNecesaria,
-          empleadoCargaId: base.empleadoCargaId,
-          datosIA: base.datosIA === null ? undefined : (base.datosIA as Prisma.InputJsonValue),
-          createdAt,
-          items: {
-            create: items.map((it) => ({
-              descripcion: it.descripcion,
-              prendaId: it.prendaId,
-              cantidad: it.cantidad,
-              procesoIds: it.procesoIds,
-              duracionMin: it.duracionMin,
-            })),
-          },
+          duracionMin: calc.duracionTotal,
+          aRevisar: calc.aRevisar,
+          items: { deleteMany: {}, create: itemsCreate },
         },
       });
-    });
+    } else {
+      // Varias partes pendientes: se colapsan en una sola OT pendiente.
+      const createdAt = ps.reduce((min, p) => (p.createdAt < min ? p.createdAt : min), ps[0].createdAt);
+      await prisma.$transaction(async (tx) => {
+        await tx.lavOT.deleteMany({ where: { id: { in: ps.map((p) => p.id) } } });
+        await tx.lavOT.create({
+          data: {
+            numero: base.numero,
+            nombreCliente: base.nombreCliente,
+            telefono: base.telefono,
+            domicilio: base.domicilio,
+            fechaTicket: base.fechaTicket,
+            estado: "pendiente",
+            fechaAsignada: base.fechaAsignada,
+            orden: base.orden,
+            duracionMin: calc.duracionTotal,
+            aRevisar: calc.aRevisar,
+            urgente: base.urgente,
+            fechaNecesaria: base.fechaNecesaria,
+            empleadoCargaId: base.empleadoCargaId,
+            datosIA: base.datosIA === null ? undefined : (base.datosIA as Prisma.InputJsonValue),
+            createdAt,
+            items: { create: itemsCreate },
+          },
+        });
+      });
+    }
     gruposRecombinados++;
     otsEliminadas += ps.length;
   }
