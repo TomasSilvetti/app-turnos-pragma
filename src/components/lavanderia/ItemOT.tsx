@@ -35,17 +35,18 @@ export function ItemOT({
     // la OT desaparece del tablero; al empezar solo cambia de estado.
     if (accion === "terminar") {
       quitarLocal(ot.id);
+      // El aviso de WhatsApp se abre al instante (optimista), sin esperar al
+      // PATCH: en prod el round-trip tardaba y el modal aparecía con demora.
+      // El aviso vive en el tablero (no en esta tarjeta, que ya se quitó).
+      avisarWhatsapp(ot);
     } else {
       aplicarLocal(ot.id, { estado: "en_progreso" });
     }
     try {
-      const r = await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
+      await lavFetch(`/api/lavanderia/ots/${ot.id}`, {
         method: "PATCH",
         body: JSON.stringify({ accion }),
       });
-      // Al terminar, ofrecemos avisarle al cliente por WhatsApp. El aviso vive en
-      // el tablero (no en esta tarjeta, que ya se quitó), así que sobrevive.
-      if (accion === "terminar" && r.ok) avisarWhatsapp(ot);
       // Reconciliamos con el estado real (posicion, empleado). Si fallo, esto
       // revierte el parche optimista al traer el snapshot verdadero.
       await refrescar();

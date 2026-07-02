@@ -148,7 +148,7 @@ function CardTerminado({
         ) : (
           <span className="inline-flex shrink-0 items-center gap-1.5">
             {waLink && (
-              <a href={waLink} target="_blank" rel="noopener noreferrer" title="Reenviar aviso por WhatsApp">
+              <a href={waLink} target="whatsapp" title="Reenviar aviso por WhatsApp">
                 <Button
                   size="xs"
                   variant="ghost"

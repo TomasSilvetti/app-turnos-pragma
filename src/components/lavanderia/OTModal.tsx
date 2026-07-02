@@ -127,6 +127,17 @@ export function OTModal({
   };
 
   const accion = async (accion: "empezar" | "terminar") => {
+    // Al terminar mostramos el aviso de WhatsApp al instante y disparamos el
+    // PATCH en segundo plano; en prod el round-trip demoraba la aparición del
+    // modal. El aviso, al cerrarse, refresca y cierra el detalle.
+    if (accion === "terminar") {
+      setAviso(true);
+      lavFetch(`/api/lavanderia/ots/${ot.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ accion }),
+      }).catch(() => {});
+      return;
+    }
     setAccionando(true);
     setError(null);
     try {
@@ -135,14 +146,8 @@ export function OTModal({
         body: JSON.stringify({ accion }),
       });
       if (res.ok) {
-        // Al terminar, mostramos el aviso de WhatsApp; el modal se cierra cuando
-        // el aviso se cierra. Empezar sigue cerrando directo.
-        if (accion === "terminar") {
-          setAviso(true);
-        } else {
-          onActualizar();
-          onCerrar();
-        }
+        onActualizar();
+        onCerrar();
       } else {
         const d = await res.json().catch(() => ({}));
         setError(d.error || "No se pudo actualizar");

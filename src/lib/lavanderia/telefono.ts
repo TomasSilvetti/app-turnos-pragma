@@ -27,8 +27,12 @@ export function telefonoWhatsapp(raw: string | null | undefined): string | null 
 }
 
 // Mensaje que se le manda al cliente cuando su pedido está listo para retirar.
+// El emoji se escribe como code point (\u{1F44F} = 👏) en vez del carácter
+// literal: así la fuente es ASCII puro y ningún paso del build/minificado puede
+// corromper los bytes multibyte del emoji. encodeURIComponent lo codifica bien
+// para el link de wa.me.
 export const MENSAJE_PRENDAS_LISTAS =
-  "Estimado cliente, las prendas que dejó en el local 5Asec Terrazul - Yerba Buena, están listas para ser retiradas.\n¡Lo esperamos!";
+  "Estimado cliente, las prendas que dejó en el local 5Asec Terrazul - Yerba Buena, están listas para ser retiradas.\u{1F44F}\n¡Lo esperamos!";
 
 // Arma el link de wa.me con el aviso de prendas listas. Devuelve null si el
 // teléfono no es válido.

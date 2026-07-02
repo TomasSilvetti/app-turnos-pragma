@@ -55,7 +55,9 @@ export function AvisoWhatsappModal({ ot, onCerrar }: { ot: OTSnap; onCerrar: () 
               <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-xs text-foreground/80">
                 {mensaje}
               </div>
-              <a href={link} target="_blank" rel="noopener noreferrer" className="block" onClick={onCerrar}>
+              {/* target con nombre fijo (sin rel=noopener, que fuerza contexto
+                  nuevo en algunos navegadores) para reutilizar la misma pestaña. */}
+              <a href={link} target="whatsapp" className="block" onClick={onCerrar}>
                 <Button className="w-full border-0 bg-[#25D366] text-white hover:bg-[#1ebe5b]">
                   <WhatsappIcon className="size-4" /> Enviar por WhatsApp
                 </Button>
