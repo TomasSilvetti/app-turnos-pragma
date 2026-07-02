@@ -112,20 +112,25 @@ function CardTerminado({
         </span>
       )}
 
-      <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-        <span className="inline-flex min-w-0 items-center gap-1 truncate text-[11px] text-muted-foreground">
-          {ot.empleadoTrabajo && (
-            <>
-              <User className="size-3 shrink-0" /> {ot.empleadoTrabajo}
-            </>
-          )}
+      <div className="mt-auto space-y-2 pt-1">
+        {/* Fila de datos: empleado y fecha siempre visibles (no compiten con los botones). */}
+        <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex min-w-0 items-center gap-1 truncate">
+            {ot.empleadoTrabajo && (
+              <>
+                <User className="size-3 shrink-0" /> {ot.empleadoTrabajo}
+              </>
+            )}
+          </span>
           {ot.dia && (
             <span className="shrink-0 rounded-full bg-white/70 px-1.5 py-0.5 font-medium capitalize text-slate-500">
               {ot.dia} {ot.fechaCorta}
             </span>
           )}
-        </span>
+        </div>
 
+        {/* Fila de acciones. */}
+        <div className="flex items-center justify-end gap-1.5">
         {confirmando ? (
           <span className="inline-flex shrink-0 items-center gap-1.5">
             <Button
@@ -172,6 +177,7 @@ function CardTerminado({
             </Button>
           </span>
         )}
+        </div>
       </div>
     </article>
   );
