@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireEmpleado } from "@/lib/lavanderia/empleado";
 import { calcularDuracion, type ItemEntrada } from "@/lib/lavanderia/duraciones";
-import { asignarOT, limiteDivisionMin, recompactar } from "@/lib/lavanderia/capacidad";
-import { dividirEnPartes } from "@/lib/lavanderia/dividir";
+import { asignarOT, recompactar } from "@/lib/lavanderia/capacidad";
 import { getTablero } from "@/lib/lavanderia/tablero";
 import { cargaTaller, historicoAlCrear, registrarEvento } from "@/lib/lavanderia/historico";
 
@@ -94,102 +93,41 @@ export async function POST(request: NextRequest) {
     datosIA: body.datosIA ?? null,
   };
 
-  // Auto-division: si la OT no entra en un turno, se parte en sub-OTs que si entren.
-  const turnos = await prisma.lavTurnoConfig.findMany();
-  const limite = limiteDivisionMin(turnos as Parameters<typeof limiteDivisionMin>[0]);
-  const partes =
-    calculo.duracionTotal > limite ? dividirEnPartes(calculo.items, limite) : [];
-
-  // Caso normal (no se divide): una sola OT, como siempre.
-  if (partes.length <= 1) {
-    const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
-    const ot = await prisma.lavOT.create({
-      data: {
-        ...comun,
-        fechaAsignada,
-        orden,
-        duracionMin: calculo.duracionTotal,
-        items: {
-          create: calculo.items.map((it) => ({
-            descripcion: it.descripcion,
-            prendaId: it.prendaId,
-            cantidad: it.cantidad,
-            procesoIds: it.procesoIds,
-            duracionMin: it.duracionMin,
-          })),
-        },
+  // Una sola OT: ya no se divide. El fill (recompactar) mueve OTs enteras entre
+  // dias para llenar huecos respetando el orden de llegada.
+  const { fechaAsignada, orden } = await asignarOT(calculo.duracionTotal, { urgente, fechaNecesaria });
+  const ot = await prisma.lavOT.create({
+    data: {
+      ...comun,
+      fechaAsignada,
+      orden,
+      duracionMin: calculo.duracionTotal,
+      items: {
+        create: calculo.items.map((it) => ({
+          descripcion: it.descripcion,
+          prendaId: it.prendaId,
+          cantidad: it.cantidad,
+          procesoIds: it.procesoIds,
+          duracionMin: it.duracionMin,
+        })),
       },
-      select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },
-    });
-    // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
-    await recompactar();
-    // Histórico: congela features de ingreso y deja rastro del evento (best-effort).
-    const backlog = await cargaTaller(ot.id);
-    await historicoAlCrear(ot.id);
-    await registrarEvento({
-      otId: ot.id,
-      tipo: "creada",
-      numero: comun.numero,
-      empleadoId: empleado.id,
-      duracionMin: ot.duracionMin,
-      fechaAsignada: ot.fechaAsignada,
-      backlogCount: backlog.count,
-      backlogMin: backlog.min,
-    });
-    return NextResponse.json({ ot }, { status: 201 });
-  }
-
-  // OT dividida: se crean N sub-OTs que comparten grupoId y numero. Se asigna cada
-  // parte en secuencia para que su ocupacion cuente al asignar la siguiente (asi el
-  // packer las reparte, ~2 por dia).
-  const grupoId = crypto.randomUUID();
-  const total = partes.length;
-  const creadas: { id: string; fechaAsignada: string }[] = [];
-  for (let i = 0; i < partes.length; i++) {
-    const parte = partes[i];
-    const { fechaAsignada, orden } = await asignarOT(parte.duracionMin, { urgente, fechaNecesaria });
-    const ot = await prisma.lavOT.create({
-      data: {
-        ...comun,
-        fechaAsignada,
-        orden,
-        duracionMin: parte.duracionMin,
-        grupoId,
-        parteIndice: i + 1,
-        parteTotal: total,
-        items: {
-          create: parte.items.map((it) => ({
-            descripcion: it.descripcion,
-            prendaId: it.prendaId,
-            cantidad: it.cantidad,
-            procesoIds: it.procesoIds,
-            duracionMin: it.duracionMin,
-          })),
-        },
-      },
-      select: { id: true, fechaAsignada: true },
-    });
-    creadas.push(ot);
-  }
-
+    },
+    select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },
+  });
   // Reacomoda toda la cola rellenando huecos con las OTs que entren (gap-filling).
   await recompactar();
-
-  // Histórico: una fila/evento por sub-OT (comparten grupoId y numero).
-  for (const c of creadas) {
-    const backlog = await cargaTaller(c.id);
-    await historicoAlCrear(c.id);
-    await registrarEvento({
-      otId: c.id,
-      tipo: "creada",
-      numero: comun.numero,
-      grupoId,
-      empleadoId: empleado.id,
-      fechaAsignada: c.fechaAsignada,
-      backlogCount: backlog.count,
-      backlogMin: backlog.min,
-    });
-  }
-
-  return NextResponse.json({ grupoId, partes: total, ots: creadas }, { status: 201 });
+  // Histórico: congela features de ingreso y deja rastro del evento (best-effort).
+  const backlog = await cargaTaller(ot.id);
+  await historicoAlCrear(ot.id);
+  await registrarEvento({
+    otId: ot.id,
+    tipo: "creada",
+    numero: comun.numero,
+    empleadoId: empleado.id,
+    duracionMin: ot.duracionMin,
+    fechaAsignada: ot.fechaAsignada,
+    backlogCount: backlog.count,
+    backlogMin: backlog.min,
+  });
+  return NextResponse.json({ ot }, { status: 201 });
 }
