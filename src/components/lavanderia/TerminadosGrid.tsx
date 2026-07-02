@@ -5,7 +5,7 @@ import { Loader2, PackageCheck, Check, Clock, User, AlertTriangle, Inbox, Rotate
 import { Button } from "@/components/ui/button";
 import { BuscadorOT } from "./BuscadorOT";
 import { WhatsappIcon } from "./WhatsappIcon";
-import { linkWhatsappPrendasListas } from "@/lib/lavanderia/telefono";
+import { linkWhatsappPrendasListas, abrirWhatsapp } from "@/lib/lavanderia/telefono";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { useResaltarOT } from "@/hooks/useResaltarOT";
 import { formatoDuracion } from "@/lib/lavanderia/timeline";
@@ -148,7 +148,15 @@ function CardTerminado({
         ) : (
           <span className="inline-flex shrink-0 items-center gap-1.5">
             {waLink && (
-              <a href={waLink} target="whatsapp" title="Reenviar aviso por WhatsApp">
+              <a
+                href={waLink}
+                target="whatsapp"
+                title="Reenviar aviso por WhatsApp"
+                onClick={(e) => {
+                  e.preventDefault();
+                  abrirWhatsapp(waLink);
+                }}
+              >
                 <Button
                   size="xs"
                   variant="ghost"

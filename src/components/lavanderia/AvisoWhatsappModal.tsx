@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { Check, X, PhoneOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WhatsappIcon } from "./WhatsappIcon";
-import { MENSAJE_PRENDAS_LISTAS, linkWhatsappPrendasListas } from "@/lib/lavanderia/telefono";
+import { MENSAJE_PRENDAS_LISTAS, linkWhatsappPrendasListas, abrirWhatsapp } from "@/lib/lavanderia/telefono";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 // Aviso que se muestra al terminar una OT: ofrece avisarle al cliente por
@@ -55,9 +55,18 @@ export function AvisoWhatsappModal({ ot, onCerrar }: { ot: OTSnap; onCerrar: () 
               <div className="rounded-lg border border-border bg-muted/40 p-2.5 text-xs text-foreground/80">
                 {mensaje}
               </div>
-              {/* target con nombre fijo (sin rel=noopener, que fuerza contexto
-                  nuevo en algunos navegadores) para reutilizar la misma pestaña. */}
-              <a href={link} target="whatsapp" className="block" onClick={onCerrar}>
+              {/* Interceptamos el click para reutilizar la pestaña que abrió la
+                  app (abrirWhatsapp); el href queda como fallback si falla JS. */}
+              <a
+                href={link}
+                target="whatsapp"
+                className="block"
+                onClick={(e) => {
+                  e.preventDefault();
+                  abrirWhatsapp(link);
+                  onCerrar();
+                }}
+              >
                 <Button className="w-full border-0 bg-[#25D366] text-white hover:bg-[#1ebe5b]">
                   <WhatsappIcon className="size-4" /> Enviar por WhatsApp
                 </Button>

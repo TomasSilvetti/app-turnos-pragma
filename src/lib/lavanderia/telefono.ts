@@ -54,3 +54,26 @@ export function linkWhatsappPrendasListas(telefono: string | null | undefined): 
     ? `https://wa.me/${numero}?text=${text}`
     : `https://web.whatsapp.com/send?phone=${numero}&text=${text}`;
 }
+
+// Referencia a la pestaña de WhatsApp que abrió la app. La guardamos para
+// reutilizarla y no apilar una pestaña nueva en cada envío.
+let waWin: Window | null = null;
+
+// Abre WhatsApp reutilizando, si se puede, la misma pestaña que abrimos antes.
+// Nota: el navegador NO permite tocar pestañas que abrió el usuario a mano (ni
+// enumerarlas ni cerrarlas); sólo podemos reutilizar la que abrió la app. Si el
+// navegador cortó el vínculo (WhatsApp Web usa COOP), cae a abrir una nueva.
+export function abrirWhatsapp(url: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (waWin && !waWin.closed) {
+      // Navegar una ventana por referencia sí está permitido cross-origin.
+      waWin.location.href = url;
+      waWin.focus();
+      return;
+    }
+  } catch {
+    // Referencia cortada por COOP: seguimos y abrimos una nueva.
+  }
+  waWin = window.open(url, "whatsapp");
+}
