@@ -29,14 +29,28 @@ export function telefonoWhatsapp(raw: string | null | undefined): string | null 
 // Mensaje que se le manda al cliente cuando su pedido está listo para retirar.
 // El emoji se escribe como code point (\u{1F44F} = 👏) en vez del carácter
 // literal: así la fuente es ASCII puro y ningún paso del build/minificado puede
-// corromper los bytes multibyte del emoji. encodeURIComponent lo codifica bien
-// para el link de wa.me.
+// corromper los bytes multibyte del emoji. encodeURIComponent lo codifica bien.
 export const MENSAJE_PRENDAS_LISTAS =
   "Estimado cliente, las prendas que dejó en el local 5Asec Terrazul - Yerba Buena, están listas para ser retiradas.\u{1F44F}\n¡Lo esperamos!";
 
-// Arma el link de wa.me con el aviso de prendas listas. Devuelve null si el
+// ¿El dispositivo es un celular? Sólo tiene sentido en el cliente (navigator).
+function esMobile(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+}
+
+// Arma el link de WhatsApp con el aviso de prendas listas. Devuelve null si el
 // teléfono no es válido.
+//
+// En desktop apuntamos directo a web.whatsapp.com/send: evita el redirect de
+// wa.me (que al re-encodear rompía el emoji dejando "�") y salta la página
+// intermedia, abriendo el chat directo. En mobile usamos wa.me, que deep-linkea
+// al app nativo (donde el texto se decodifica bien).
 export function linkWhatsappPrendasListas(telefono: string | null | undefined): string | null {
   const numero = telefonoWhatsapp(telefono);
-  return numero ? `https://wa.me/${numero}?text=${encodeURIComponent(MENSAJE_PRENDAS_LISTAS)}` : null;
+  if (!numero) return null;
+  const text = encodeURIComponent(MENSAJE_PRENDAS_LISTAS);
+  return esMobile()
+    ? `https://wa.me/${numero}?text=${text}`
+    : `https://web.whatsapp.com/send?phone=${numero}&text=${text}`;
 }
