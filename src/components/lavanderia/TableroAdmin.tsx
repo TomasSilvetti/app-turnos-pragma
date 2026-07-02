@@ -23,11 +23,13 @@ import { Button } from "@/components/ui/button";
 import { ItemOT } from "@/components/lavanderia/ItemOT";
 import { OTModal } from "@/components/lavanderia/OTModal";
 import { BuscadorOT } from "@/components/lavanderia/BuscadorOT";
+import { BarraDiaMini, nivelOcupacion } from "@/components/lavanderia/BarraDiaMini";
+import { ToggleVista } from "@/components/lavanderia/ToggleVista";
 import { TableroAccionesProvider } from "@/components/lavanderia/TableroAccionesContext";
 import { useTableroStream } from "@/hooks/useTableroStream";
 import { useResaltarOT } from "@/hooks/useResaltarOT";
 import { lavFetch } from "@/lib/lavanderia/client";
-import { distribuirEnTurnos, formatoDuracion, nombreTurno, type SeccionTurno } from "@/lib/lavanderia/timeline";
+import { formatoDuracion } from "@/lib/lavanderia/timeline";
 import { useEsMobile } from "@/hooks/useEsMobile";
 import type { DiaSnap, OTSnap } from "@/lib/lavanderia/tablero";
 
@@ -60,118 +62,52 @@ function TarjetaArrastrable({ ot, onAbrir, resaltada }: { ot: OTSnap; onAbrir?: 
   );
 }
 
-function GapExtra({ horaInicio, horaFin, onClick }: { horaInicio: string; horaFin: string; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className="group flex w-full flex-col items-center gap-0.5 rounded-2xl border border-dashed border-amber-300 bg-amber-50/70 py-3 text-center transition-colors hover:border-amber-400 hover:bg-amber-100/80"
-    >
-      <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-600 group-hover:text-amber-700">
-        <Sparkles className="size-3.5" /> Activar turno extra
-      </span>
-      <span className="text-[11px] text-amber-500/80">
-        {horaInicio}–{horaFin}
-      </span>
-    </button>
-  );
-}
-
 const ESTADO_BARRA: Record<string, string> = {
   pendiente: "bg-gradient-to-r from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-500",
   en_progreso: "bg-gradient-to-r from-amber-400 to-orange-400",
   terminado: "bg-gradient-to-r from-emerald-400 to-teal-400",
 };
 
-// Vista comprimida: barras de ocupacion por turno (igual que el tablero del empleado).
-function ContenidoCompacto({ secciones }: { secciones: SeccionTurno[] }) {
+// Vista comprimida: barras de ocupacion apiladas (una sola cola).
+function ContenidoCompacto({ dia }: { dia: DiaSnap }) {
   return (
-    <div className="flex flex-col gap-2 p-1.5">
-      {secciones.map((sec) => (
-        <div key={sec.turno.tipo}>
-          <p className="mb-1 px-0.5 text-center text-[10px] font-medium uppercase text-muted-foreground">
-            {sec.turno.horaInicio.slice(0, 2)}–{sec.turno.horaFin.slice(0, 2)}
-          </p>
-          <div className="space-y-1">
-            {sec.ots.map((ot) => (
-              <div
-                key={ot.id}
-                title={`${ot.numero ? `OT ${ot.numero}` : ot.nombreCliente ?? "OT"} · ${formatoDuracion(ot.duracionMin)}`}
-                style={{ height: Math.max(8, Math.round(ot.duracionMin * 0.25)) }}
-                className={cn("flex items-center justify-center rounded", ESTADO_BARRA[ot.estado])}
-              >
-                {ot.numero && ot.duracionMin >= 60 && (
-                  <span className="truncate px-1 text-[9px] font-semibold text-slate-700 dark:text-slate-100">{ot.numero}</span>
-                )}
-              </div>
-            ))}
-            {sec.ots.length === 0 && <div className="h-2 rounded bg-muted/50" />}
-          </div>
+    <div className="flex flex-col gap-1 p-1.5">
+      {dia.ots.map((ot) => (
+        <div
+          key={ot.id}
+          title={`${ot.numero ? `OT ${ot.numero}` : ot.nombreCliente ?? "OT"} · ${formatoDuracion(ot.duracionMin)}`}
+          style={{ height: Math.max(8, Math.round(ot.duracionMin * 0.25)) }}
+          className={cn("flex items-center justify-center rounded", ESTADO_BARRA[ot.estado])}
+        >
+          {ot.numero && ot.duracionMin >= 60 && (
+            <span className="truncate px-1 text-[9px] font-semibold text-slate-700 dark:text-slate-100">{ot.numero}</span>
+          )}
         </div>
       ))}
+      {dia.ots.length === 0 && <div className="h-2 rounded bg-muted/50" />}
     </div>
   );
 }
 
-// Vista completa con tarjetas arrastrables y el gap de turno extra.
+// Vista completa: el día como una sola cola de tarjetas arrastrables.
 function ContenidoCompleto({
   dia,
-  secciones,
-  sinTurnos,
-  onActivarExtra,
-  onDesactivarExtra,
   onAbrirOT,
   resaltadaId,
 }: {
   dia: DiaSnap;
-  secciones: SeccionTurno[];
-  sinTurnos: OTSnap[];
-  onActivarExtra: (dia: DiaSnap) => void;
-  onDesactivarExtra: (fecha: string) => void;
   onAbrirOT?: (ot: OTSnap) => void;
   resaltadaId?: string | null;
 }) {
-  const cap = dia.capacidadMin;
-  const mostrarGap = dia.extra?.disponible && !dia.extra.activo;
   return (
     <div className="flex flex-col gap-2 p-2">
-      {secciones.map((sec, i) => (
-        <div key={sec.turno.tipo} className="space-y-1.5">
-          <div className="flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            <span className={cn("inline-flex items-center gap-1", sec.turno.tipo === "extra" && "text-amber-600")}>
-              {sec.turno.tipo === "extra" && <Sparkles className="size-3" />}
-              {nombreTurno(sec.turno.tipo)}
-            </span>
-            <span className="flex items-center gap-1.5">
-              {sec.turno.horaInicio}–{sec.turno.horaFin}
-              {sec.turno.tipo === "extra" && (
-                <button
-                  onClick={() => onDesactivarExtra(dia.fecha)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Desactivar turno extra"
-                >
-                  <X className="size-3" />
-                </button>
-              )}
-            </span>
-          </div>
-          {sec.ots.map((ot) => (
-            <TarjetaArrastrable key={ot.id} ot={ot} onAbrir={onAbrirOT} resaltada={ot.id === resaltadaId} />
-          ))}
-          {sec.ots.length === 0 && <p className="px-1 py-1 text-[11px] text-muted-foreground/60">Sin trabajos</p>}
-
-          {/* Gap clickeable entre el turno mañana y el siguiente. */}
-          {mostrarGap && sec.turno.horaFin === dia.extra!.horaInicio && i < secciones.length - 1 && (
-            <GapExtra horaInicio={dia.extra!.horaInicio} horaFin={dia.extra!.horaFin} onClick={() => onActivarExtra(dia)} />
-          )}
-        </div>
-      ))}
-
-      {sinTurnos.map((ot) => (
+      {dia.ots.map((ot) => (
         <TarjetaArrastrable key={ot.id} ot={ot} onAbrir={onAbrirOT} resaltada={ot.id === resaltadaId} />
       ))}
-
-      {secciones.length === 0 && sinTurnos.length === 0 && (
-        <p className="py-8 text-center text-xs text-muted-foreground/60">{cap > 0 ? "Soltá acá" : "Día sin turnos"}</p>
+      {dia.ots.length === 0 && (
+        <p className="py-8 text-center text-xs text-muted-foreground/60">
+          {dia.capacidadMin > 0 ? "Soltá acá" : "Día sin turnos"}
+        </p>
       )}
     </div>
   );
@@ -188,6 +124,9 @@ function ColumnaAdmin({
   onAbrirOT,
   forzarExpandir = false,
   resaltadaId,
+  compacto = false,
+  entradaDerecha = false,
+  entradaDelayMs = 0,
 }: {
   dia: DiaSnap;
   ancha: boolean;
@@ -197,12 +136,14 @@ function ColumnaAdmin({
   onActivarExtra: (dia: DiaSnap) => void;
   onDesactivarExtra: (fecha: string) => void;
   onAbrirOT?: (ot: OTSnap) => void;
+  compacto?: boolean;
+  entradaDerecha?: boolean;
+  entradaDelayMs?: number;
   // Fuerza abrir la columna aunque no haya hover (al llegar por el buscador).
   forzarExpandir?: boolean;
   resaltadaId?: string | null;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `col:${dia.fecha}` });
-  const { secciones, sinTurnos } = distribuirEnTurnos(dia);
   const cap = dia.capacidadMin;
   const ocup = dia.ocupacionMin;
   const pct = cap > 0 ? Math.min(100, Math.round((ocup / cap) * 100)) : 0;
@@ -231,20 +172,62 @@ function ColumnaAdmin({
       <p className="mt-1.5 truncate text-[10px] font-medium text-slate-500">
         {cap > 0 ? `${formatoDuracion(ocup)} / ${formatoDuracion(cap)} (${pct}%)` : "Sin turnos"}
       </p>
+      {(dia.turnos.length > 0 || dia.extra?.disponible) && (
+        <div className="mt-1 flex flex-wrap items-center gap-1">
+          {dia.turnos.map((t) => (
+            <span
+              key={t.tipo}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium",
+                t.tipo === "extra" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+              )}
+            >
+              {t.tipo === "extra" && <Sparkles className="size-2.5" />}
+              {t.horaInicio}–{t.horaFin}
+              {t.tipo === "extra" && (
+                <button
+                  onClick={() => onDesactivarExtra(dia.fecha)}
+                  className="ml-0.5 text-amber-500 hover:text-destructive"
+                  title="Desactivar turno extra"
+                >
+                  <X className="size-2.5" />
+                </button>
+              )}
+            </span>
+          ))}
+          {dia.extra?.disponible && !dia.extra.activo && (
+            <button
+              onClick={() => onActivarExtra(dia)}
+              title="Activar turno extra"
+              className="inline-flex items-center gap-1 rounded-full border border-dashed border-amber-300 bg-amber-50/70 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 transition-colors hover:border-amber-400 hover:bg-amber-100/80"
+            >
+              <Sparkles className="size-2.5" /> +extra {dia.extra.horaInicio}–{dia.extra.horaFin}
+            </button>
+          )}
+        </div>
+      )}
     </header>
   );
 
-  const Completo = (
-    <ContenidoCompleto
-      dia={dia}
-      secciones={secciones}
-      sinTurnos={sinTurnos}
-      onActivarExtra={onActivarExtra}
-      onDesactivarExtra={onDesactivarExtra}
-      onAbrirOT={onAbrirOT}
-      resaltadaId={resaltadaId}
-    />
-  );
+  const Completo = <ContenidoCompleto dia={dia} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />;
+
+  // Vista comprimida (14 días): solo el % del día, sin drag & drop.
+  if (compacto) {
+    const nivel = nivelOcupacion(dia);
+    return (
+      <section
+        style={entradaDerecha ? { animationDelay: `${entradaDelayMs}ms` } : undefined}
+        className={cn(
+          "flex h-40 min-w-0 flex-col overflow-hidden rounded-[1.25rem] border backdrop-blur-sm transition-[background-color,border-color] duration-500",
+          nivel.card,
+          dia.esHoy && "ring-1 ring-sky-300/60",
+          entradaDerecha && "fila-entra-derecha"
+        )}
+      >
+        <BarraDiaMini dia={dia} />
+      </section>
+    );
+  }
 
   // En mobile no hay hover: cada dia ocupa todo el ancho y se muestra expandido.
   if (esMobile) {
@@ -268,7 +251,7 @@ function ColumnaAdmin({
   // El dia actual va siempre expandido; los demas, compactos y se expanden al hover.
   if (ancha) {
     return (
-      <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm">
+      <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm transition-all duration-500 ease-in-out">
         {Header}
         <SortableContext items={dia.ots.map((o) => o.id)} strategy={verticalListSortingStrategy}>
           <div ref={setNodeRef} className={cn("min-h-32 flex-1 transition-colors", isOver && "bg-sky-100/40")}>
@@ -300,11 +283,11 @@ function ColumnaAdmin({
           {expandido ? (
             Completo
           ) : arrastrando ? (
-            <ContenidoCompacto secciones={secciones} />
+            <ContenidoCompacto dia={dia} />
           ) : (
             <>
               <div className="group-hover/col:hidden">
-                <ContenidoCompacto secciones={secciones} />
+                <ContenidoCompacto dia={dia} />
               </div>
               <div className="hidden group-hover/col:block">{Completo}</div>
             </>
@@ -325,6 +308,7 @@ export function TableroAdmin() {
   const [sobreFecha, setSobreFecha] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
   const esMobile = useEsMobile();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -341,6 +325,8 @@ export function TableroAdmin() {
   // ahi reflejamos esos cambios (incluido el parche optimista de empezar/terminar)
   // en el estado local que dibuja el drag & drop.
   useEffect(() => {
+    // Sincroniza el estado local del drag & drop con el snapshot del stream.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (snapshot && !arrastrandoRef.current) setDias(snapshot.dias);
   }, [snapshot]);
 
@@ -427,8 +413,9 @@ export function TableroAdmin() {
     );
   }
 
+  const diasView = dias.slice(0, vista);
   // La columna "ancha" es la de hoy; si hoy no es laborable, la primera.
-  const idxHoy = dias.findIndex((d) => d.esHoy);
+  const idxHoy = diasView.findIndex((d) => d.esHoy);
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
@@ -441,7 +428,10 @@ export function TableroAdmin() {
             Arrastrá las OTs para reordenarlas o moverlas entre días. Tocá el espacio entre turnos para activar el turno extra.
           </p>
         </div>
-        <BuscadorOT dias={dias} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+        <div className="flex items-center gap-2">
+          <ToggleVista vista={vista} onVista={setVista} />
+          <BuscadorOT dias={diasView} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+        </div>
       </div>
       <DndContext
         sensors={sensors}
@@ -450,12 +440,22 @@ export function TableroAdmin() {
         onDragOver={onDragOver}
         onDragEnd={onDragEnd}
       >
-        <div className={cn("flex w-full gap-2 pb-4", esMobile ? "flex-col" : "items-stretch")}>
-          {dias.map((dia, i) => (
+        <div
+          className={cn(
+            "pb-4",
+            vista === 14
+              ? "grid grid-cols-2 gap-2 sm:grid-cols-7"
+              : cn("flex w-full gap-2", esMobile ? "flex-col" : "items-stretch")
+          )}
+        >
+          {diasView.map((dia, i) => (
             <ColumnaAdmin
               key={dia.fecha}
               dia={dia}
-              ancha={anchaIdx === i}
+              ancha={vista === 7 && anchaIdx === i}
+              compacto={vista === 14}
+              entradaDerecha={vista === 14 && i >= 7}
+              entradaDelayMs={(13 - i) * 40}
               esMobile={esMobile}
               arrastrando={activa !== null}
               sobre={sobreFecha === dia.fecha}

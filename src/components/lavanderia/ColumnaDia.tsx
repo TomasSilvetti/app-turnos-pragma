@@ -2,12 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { ItemOT } from "./ItemOT";
+import { BarraDiaMini, nivelOcupacion } from "./BarraDiaMini";
 import {
-  distribuirEnTurnos,
+  etiquetaTurnos,
   formatoDuracion,
   horaActualEtiqueta,
-  nombreTurno,
-  type SeccionTurno,
+  indiceLineaAhora,
 } from "@/lib/lavanderia/timeline";
 import type { DiaSnap, OTSnap } from "@/lib/lavanderia/tablero";
 
@@ -28,84 +28,56 @@ function LineaAhora({ ahoraMin }: { ahoraMin: number }) {
   );
 }
 
-// Contenido detallado (tarjetas) — para la columna de hoy y al expandir.
+// Contenido detallado (tarjetas) — para la columna de hoy y al expandir. El día
+// es una sola cola continua; la línea "ahora" se intercala en su posición.
 function ContenidoCompleto({
   dia,
-  secciones,
-  sinTurnos,
   onAbrirOT,
   resaltadaId,
 }: {
   dia: DiaSnap;
-  secciones: SeccionTurno[];
-  sinTurnos: OTSnap[];
   onAbrirOT?: (ot: OTSnap) => void;
   resaltadaId?: string | null;
 }) {
+  const lineaIdx = indiceLineaAhora(dia);
   return (
     <div className="flex flex-col gap-2 p-2">
-      {secciones.map((sec) => (
-        <div key={sec.turno.tipo} className={cn(sec.pasado && "opacity-60")}>
-          <div className="mb-1 flex items-center justify-between px-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-            <span>{nombreTurno(sec.turno.tipo)}</span>
-            <span>
-              {sec.turno.horaInicio}–{sec.turno.horaFin}
-            </span>
-          </div>
-          {dia.esHoy && sec.ahora !== null && sec.ots.length === 0 && <LineaAhora ahoraMin={dia.ahoraMin!} />}
-          <div className="space-y-2">
-            {sec.ots.map((ot, i) => (
-              <div key={ot.id}>
-                {dia.esHoy && sec.ahora !== null && i === Math.floor(sec.ahora * sec.ots.length) && (
-                  <LineaAhora ahoraMin={dia.ahoraMin!} />
-                )}
+      {dia.ots.length === 0 ? (
+        <p className="py-6 text-center text-xs text-muted-foreground/70">Día libre</p>
+      ) : (
+        <div className="space-y-2">
+          {dia.ots.map((ot, i) => (
+            <div key={ot.id}>
+              {lineaIdx === i && <LineaAhora ahoraMin={dia.ahoraMin!} />}
+              <div className={cn(lineaIdx !== null && i < lineaIdx && "opacity-60")}>
                 <ItemOT ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} resaltada={ot.id === resaltadaId} />
               </div>
-            ))}
-          </div>
-          {sec.ots.length === 0 && <p className="px-1 py-2 text-[11px] text-muted-foreground/70">Sin trabajos</p>}
-        </div>
-      ))}
-      {sinTurnos.length > 0 && (
-        <div className="space-y-2">
-          {sinTurnos.map((ot) => (
-            <ItemOT key={ot.id} ot={ot} onAbrir={onAbrirOT ? () => onAbrirOT(ot) : undefined} resaltada={ot.id === resaltadaId} />
+            </div>
           ))}
+          {lineaIdx === dia.ots.length && <LineaAhora ahoraMin={dia.ahoraMin!} />}
         </div>
-      )}
-      {secciones.every((s) => s.ots.length === 0) && sinTurnos.length === 0 && (
-        <p className="py-6 text-center text-xs text-muted-foreground/70">Día libre</p>
       )}
     </div>
   );
 }
 
-// Vista comprimida: solo barras de ocupación por turno, sin texto.
-function ContenidoCompacto({ secciones }: { secciones: SeccionTurno[] }) {
+// Vista comprimida: barras de ocupación apiladas (una sola cola), sin texto.
+function ContenidoCompacto({ dia }: { dia: DiaSnap }) {
   return (
-    <div className="flex flex-col gap-2 p-1.5">
-      {secciones.map((sec) => (
-        <div key={sec.turno.tipo}>
-          <p className="mb-1 px-0.5 text-center text-[10px] font-medium uppercase text-muted-foreground">
-            {sec.turno.horaInicio.slice(0, 2)}–{sec.turno.horaFin.slice(0, 2)}
-          </p>
-          <div className="space-y-1">
-            {sec.ots.map((ot) => (
-              <div
-                key={ot.id}
-                title={`${ot.numero ? `OT ${ot.numero}` : ot.nombreCliente ?? "OT"} · ${formatoDuracion(ot.duracionMin)}`}
-                style={{ height: Math.max(8, Math.round(ot.duracionMin * 0.25)) }}
-                className={cn("flex items-center justify-center rounded", ESTADO_BARRA[ot.estado])}
-              >
-                {ot.numero && ot.duracionMin >= 60 && (
-                  <span className="truncate px-1 text-[9px] font-semibold text-slate-700 dark:text-slate-100">{ot.numero}</span>
-                )}
-              </div>
-            ))}
-            {sec.ots.length === 0 && <div className="h-2 rounded bg-muted/50" />}
-          </div>
+    <div className="flex flex-col gap-1 p-1.5">
+      {dia.ots.map((ot) => (
+        <div
+          key={ot.id}
+          title={`${ot.numero ? `OT ${ot.numero}` : ot.nombreCliente ?? "OT"} · ${formatoDuracion(ot.duracionMin)}`}
+          style={{ height: Math.max(8, Math.round(ot.duracionMin * 0.25)) }}
+          className={cn("flex items-center justify-center rounded", ESTADO_BARRA[ot.estado])}
+        >
+          {ot.numero && ot.duracionMin >= 60 && (
+            <span className="truncate px-1 text-[9px] font-semibold text-slate-700 dark:text-slate-100">{ot.numero}</span>
+          )}
         </div>
       ))}
+      {dia.ots.length === 0 && <div className="h-2 rounded bg-muted/50" />}
     </div>
   );
 }
@@ -116,6 +88,9 @@ export function ColumnaDia({
   onAbrirOT,
   forzarExpandir = false,
   resaltadaId,
+  compacto = false,
+  entradaDerecha = false,
+  entradaDelayMs = 0,
 }: {
   dia: DiaSnap;
   ancha: boolean;
@@ -123,11 +98,16 @@ export function ColumnaDia({
   // Fuerza abrir la columna aunque no haya hover (al llegar por el buscador).
   forzarExpandir?: boolean;
   resaltadaId?: string | null;
+  // Vista comprimida (14 días): solo muestra el % del día.
+  compacto?: boolean;
+  // Columnas de la 2da fila (14 días): entran deslizando desde la derecha.
+  entradaDerecha?: boolean;
+  entradaDelayMs?: number;
 }) {
-  const { secciones, sinTurnos } = distribuirEnTurnos(dia);
   const cap = dia.capacidadMin;
   const ocup = dia.ocupacionMin;
   const pct = cap > 0 ? Math.min(100, Math.round((ocup / cap) * 100)) : 0;
+  const horarios = etiquetaTurnos(dia);
 
   const Header = (
     <header className="rounded-t-[1.25rem] border-b border-white/60 bg-white/70 p-3 backdrop-blur-xl">
@@ -155,14 +135,32 @@ export function ColumnaDia({
       <p className="mt-1.5 truncate text-[10px] font-medium text-slate-500">
         {cap > 0 ? `${formatoDuracion(ocup)} / ${formatoDuracion(cap)}` : "Sin turnos"}
       </p>
+      {horarios && <p className="truncate text-[10px] text-slate-400">{horarios}</p>}
     </header>
   );
 
+  if (compacto) {
+    const nivel = nivelOcupacion(dia);
+    return (
+      <section
+        style={entradaDerecha ? { animationDelay: `${entradaDelayMs}ms` } : undefined}
+        className={cn(
+          "flex h-40 min-w-0 flex-col overflow-hidden rounded-[1.25rem] border backdrop-blur-sm transition-[background-color,border-color] duration-500",
+          nivel.card,
+          dia.esHoy && "ring-1 ring-sky-300/60",
+          entradaDerecha && "fila-entra-derecha"
+        )}
+      >
+        <BarraDiaMini dia={dia} />
+      </section>
+    );
+  }
+
   if (ancha) {
     return (
-      <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm">
+      <section className="flex min-w-0 flex-[3] flex-col overflow-hidden rounded-[1.25rem] border border-sky-200/70 bg-white/55 shadow-[0_8px_30px_-10px_rgba(56,120,255,0.35)] ring-1 ring-sky-300/40 backdrop-blur-sm transition-all duration-500 ease-in-out">
         {Header}
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
+        <ContenidoCompleto dia={dia} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
       </section>
     );
   }
@@ -178,14 +176,14 @@ export function ColumnaDia({
     >
       {Header}
       {forzarExpandir ? (
-        <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
+        <ContenidoCompleto dia={dia} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
       ) : (
         <>
           <div className="group-hover/col:hidden">
-            <ContenidoCompacto secciones={secciones} />
+            <ContenidoCompacto dia={dia} />
           </div>
           <div className="hidden group-hover/col:block">
-            <ContenidoCompleto dia={dia} secciones={secciones} sinTurnos={sinTurnos} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
+            <ContenidoCompleto dia={dia} onAbrirOT={onAbrirOT} resaltadaId={resaltadaId} />
           </div>
         </>
       )}

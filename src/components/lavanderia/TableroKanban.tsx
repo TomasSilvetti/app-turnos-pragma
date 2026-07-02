@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { Loader2, WifiOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useTableroStream } from "@/hooks/useTableroStream";
 import { useResaltarOT } from "@/hooks/useResaltarOT";
 import { ColumnaDia } from "./ColumnaDia";
 import { BuscadorOT } from "./BuscadorOT";
+import { ToggleVista } from "./ToggleVista";
 import { OTModal } from "./OTModal";
 import { TableroAccionesProvider } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
@@ -13,6 +15,7 @@ import type { OTSnap } from "@/lib/lavanderia/tablero";
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const { snapshot, conectado, refrescar, aplicarLocal, quitarLocal } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
 
   if (!snapshot) {
@@ -23,8 +26,9 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
     );
   }
 
+  const dias = snapshot.dias.slice(0, vista);
   // La columna "ancha" es la de hoy; si hoy no es laborable, la primera.
-  const idxHoy = snapshot.dias.findIndex((d) => d.esHoy);
+  const idxHoy = dias.findIndex((d) => d.esHoy);
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
@@ -44,14 +48,25 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
             <WifiOff className="size-3.5" /> Reconectando…
           </span>
         )}
-        <BuscadorOT dias={snapshot.dias} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+        <div className="flex items-center gap-2">
+          <ToggleVista vista={vista} onVista={setVista} />
+          <BuscadorOT dias={dias} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+        </div>
       </div>
-      <div className="flex w-full items-stretch gap-2 pb-4">
-        {snapshot.dias.map((dia, i) => (
+      <div
+        className={cn(
+          "pb-4",
+          vista === 14 ? "grid grid-cols-2 gap-2 sm:grid-cols-7" : "flex w-full items-stretch gap-2"
+        )}
+      >
+        {dias.map((dia, i) => (
           <ColumnaDia
             key={dia.fecha}
             dia={dia}
-            ancha={anchaIdx === i}
+            ancha={vista === 7 && anchaIdx === i}
+            compacto={vista === 14}
+            entradaDerecha={vista === 14 && i >= 7}
+            entradaDelayMs={(13 - i) * 40}
             onAbrirOT={setOtModal}
             forzarExpandir={expandidaFecha === dia.fecha}
             resaltadaId={resaltadaId}

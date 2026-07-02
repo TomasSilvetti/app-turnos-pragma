@@ -1,61 +1,34 @@
 import { horaAMin } from "./fecha";
-import type { TurnoAplicable } from "./capacidad";
-import type { DiaSnap, OTSnap } from "./tablero";
+import type { DiaSnap } from "./tablero";
 
-export type SeccionTurno = {
-  turno: TurnoAplicable;
-  ots: OTSnap[];
-  // Posicion de la linea "ahora" dentro de esta seccion (0..1) o null.
-  ahora: number | null;
-  // true si el momento actual ya paso este turno por completo.
-  pasado: boolean;
-};
-
-const NOMBRE_TURNO: Record<string, string> = {
-  manana: "Mañana",
-  tarde: "Tarde",
-  extra: "Turno extra",
-};
-
-export function nombreTurno(tipo: string): string {
-  return NOMBRE_TURNO[tipo] ?? tipo;
+// Etiqueta de los horarios del día ("08–14 · 17–21"). Vacía si no hay turnos.
+export function etiquetaTurnos(dia: DiaSnap): string {
+  return dia.turnos.map((t) => `${t.horaInicio}–${t.horaFin}`).join(" · ");
 }
 
-// Reparte las OTs (en orden) entre los turnos del dia segun la capacidad de
-// cada uno (apilado secuencial). Calcula tambien donde cae la linea "ahora".
-export function distribuirEnTurnos(dia: DiaSnap): { secciones: SeccionTurno[]; sinTurnos: OTSnap[] } {
-  if (dia.turnos.length === 0) {
-    return { secciones: [], sinTurnos: dia.ots };
+// Índice de la lista de OTs del día donde va la línea "ahora" (o null si no
+// corresponde). El día se ve como una sola cola; la línea se ubica antes de la
+// primera OT cuyo inicio (acumulado) cae después del momento actual. Para eso se
+// calcula cuántos minutos de trabajo caben ANTES de ahora, sumando la porción ya
+// transcurrida de cada turno (respeta los huecos entre mañana y tarde).
+export function indiceLineaAhora(dia: DiaSnap): number | null {
+  if (!dia.esHoy || dia.ahoraMin === null || dia.turnos.length === 0) return null;
+  const ahora = dia.ahoraMin;
+
+  let disponibleAntes = 0;
+  for (const t of dia.turnos) {
+    const ini = horaAMin(t.horaInicio);
+    const fin = horaAMin(t.horaFin);
+    if (ahora >= fin) disponibleAntes += t.minutos;
+    else if (ahora > ini) disponibleAntes += ahora - ini;
   }
 
-  const secciones: SeccionTurno[] = dia.turnos.map((turno) => ({
-    turno,
-    ots: [],
-    ahora: null,
-    pasado: false,
-  }));
-
-  let idx = 0;
-  let usadosEnTurno = 0;
-  for (const ot of dia.ots) {
-    while (idx < secciones.length - 1 && usadosEnTurno >= secciones[idx].turno.minutos) {
-      usadosEnTurno -= secciones[idx].turno.minutos;
-      idx++;
-    }
-    secciones[idx].ots.push(ot);
-    usadosEnTurno += ot.duracionMin;
+  let acumulado = 0;
+  for (let i = 0; i < dia.ots.length; i++) {
+    if (acumulado >= disponibleAntes) return i;
+    acumulado += dia.ots[i].duracionMin;
   }
-
-  if (dia.ahoraMin !== null) {
-    for (const sec of secciones) {
-      const ini = horaAMin(sec.turno.horaInicio);
-      const fin = horaAMin(sec.turno.horaFin);
-      if (dia.ahoraMin >= fin) sec.pasado = true;
-      else if (dia.ahoraMin >= ini) sec.ahora = (dia.ahoraMin - ini) / (fin - ini);
-    }
-  }
-
-  return { secciones, sinTurnos: [] };
+  return dia.ots.length; // todo el trabajo del día quedó antes de ahora
 }
 
 // Altura proporcional a la duracion, con un piso legible.
