@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // 2) Recalcular la duración de las OTs con valet con la matriz/regla actual.
-  // Solo las activas: las terminadas se dejan intactas (histórico congelado).
+  // 2) Recalcular la duración de TODAS las OTs con valet (pendientes, en proceso y
+  // terminadas) con la matriz/regla actual. El histórico se recalcula aparte.
   const otIds = [...new Set(items.map((it) => it.otId))];
   const ots = await prisma.lavOT.findMany({
-    where: { id: { in: otIds }, estado: { not: "terminado" } },
+    where: { id: { in: otIds } },
     include: { items: { select: { id: true, prendaId: true, descripcion: true, cantidad: true, procesoIds: true } } },
   });
 
