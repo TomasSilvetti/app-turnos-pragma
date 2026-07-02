@@ -183,9 +183,13 @@ export async function escanearComanda(
       procMatches.unshift(procLimpieza);
     }
 
+    // Valet x kilo va a una máquina especial: la duración es fija (no depende de
+    // los kilos), así que la cantidad siempre es 1.
+    const cantidad = esValet(match) ? 1 : Math.max(1, Math.round(Number(it.cantidad) || 1));
+
     return {
       descripcion: it.descripcion,
-      cantidad: Math.max(1, Math.round(Number(it.cantidad) || 1)),
+      cantidad,
       prendaId: match?.id ?? null,
       prendaNombre: match?.nombre ?? null,
       procesoIds: procMatches.map((p) => p.id),

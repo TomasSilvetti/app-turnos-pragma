@@ -1,5 +1,19 @@
 import { prisma } from "@/lib/prisma";
 
+// "Valet x kilo" va a una máquina especial: la carga completa se procesa junta,
+// así que la duración es la que tiene cargada en la matriz (Valet × sus procesos)
+// pero NO escala con la cantidad de kilos.
+const normalizar = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+export const esPrendaValet = (nombre: string | null | undefined) =>
+  typeof nombre === "string" && normalizar(nombre).includes("valet");
+
 export type ItemEntrada = {
   prendaId?: string | null;
   descripcion: string;
@@ -31,12 +45,15 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   const prendaIds = [...new Set(items.map((i) => i.prendaId).filter((x): x is string => Boolean(x)))];
   const procesoIds = [...new Set(items.flatMap((i) => i.procesoIds ?? []))];
 
-  const [tiempos, procesos] = await Promise.all([
+  const [tiempos, procesos, prendas] = await Promise.all([
     prendaIds.length
       ? prisma.lavDuracion.findMany({ where: { prendaId: { in: prendaIds } }, select: { prendaId: true, procesoId: true, minutos: true } })
       : Promise.resolve([]),
     procesoIds.length
       ? prisma.lavProceso.findMany({ where: { id: { in: procesoIds } }, select: { id: true, nombre: true } })
+      : Promise.resolve([]),
+    prendaIds.length
+      ? prisma.lavPrenda.findMany({ where: { id: { in: prendaIds } }, select: { id: true, nombre: true } })
       : Promise.resolve([]),
   ]);
 
@@ -44,6 +61,7 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
   const minutosCelda = new Map<string, number>();
   for (const t of tiempos) minutosCelda.set(`${t.prendaId}:${t.procesoId}`, t.minutos);
   const nombreProceso = new Map(procesos.map((p) => [p.id, p.nombre]));
+  const valetIds = new Set(prendas.filter((p) => esPrendaValet(p.nombre)).map((p) => p.id));
 
   let aRevisar = false;
   const calculados: ItemCalculado[] = items.map((i) => {
@@ -62,13 +80,18 @@ export async function calcularDuracion(items: ItemEntrada[]): Promise<CalculoDur
     const sinTiempos = Boolean(i.prendaId) && ids.length > 0 && minutosUnit === 0;
     if (!i.prendaId || ids.length === 0 || sinTiempos) aRevisar = true;
 
+    // Valet x kilo: máquina especial, la duración de la matriz es por carga
+    // completa y NO se multiplica por la cantidad de kilos.
+    const esValet = Boolean(i.prendaId) && valetIds.has(i.prendaId!);
+    const duracionMin = esValet ? minutosUnit : minutosUnit * cantidad;
+
     return {
       prendaId: i.prendaId ?? null,
       descripcion: i.descripcion,
       cantidad,
       procesoIds: ids,
       procesos: ids.map((id) => nombreProceso.get(id) ?? "").filter(Boolean),
-      duracionMin: minutosUnit * cantidad,
+      duracionMin,
       sinTiempos,
     };
   });
