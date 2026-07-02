@@ -311,31 +311,9 @@ export function TableroAdmin() {
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
   const [avisoOt, setAvisoOt] = useState<OTSnap | null>(null);
   const [vista, setVista] = useState<7 | 14>(7);
-  const [reagrupando, setReagrupando] = useState(false);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
   const esMobile = useEsMobile();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
-
-  // Backfill puntual: reúne las OTs que quedaron partidas de la etapa en que se
-  // dividían (une las partes pendientes de cada grupo en una sola OT).
-  const reagruparPartidas = async () => {
-    if (reagrupando) return;
-    setReagrupando(true);
-    try {
-      const r = await lavFetch("/api/lavanderia/ots/recombinar", { method: "POST" });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok) {
-        alert(`Reagrupadas: ${d.gruposRecombinados ?? 0} OT(s), ${d.otsEliminadas ?? 0} partes unidas.`);
-        await refrescar();
-      } else {
-        alert(`No se pudo reagrupar (${r.status}): ${d.error ?? "error"}`);
-      }
-    } catch {
-      alert("No se pudo reagrupar (sin conexión).");
-    } finally {
-      setReagrupando(false);
-    }
-  };
 
   // Mientras se arrastra no sincronizamos desde el snapshot, para no pisar el
   // reordenamiento optimista en curso. Usamos un ref (no dependencia del effect)
@@ -453,10 +431,6 @@ export function TableroAdmin() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={reagruparPartidas} disabled={reagrupando} title="Une en una sola OT las que quedaron partidas">
-            {reagrupando ? <Loader2 className="animate-spin" /> : null}
-            Reagrupar partidas
-          </Button>
           <ToggleVista vista={vista} onVista={setVista} />
           <BuscadorOT dias={diasView} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
         </div>
