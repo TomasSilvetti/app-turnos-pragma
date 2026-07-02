@@ -1,6 +1,41 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { prisma } from "@/lib/prisma";
 import { hoyAR } from "./fecha";
+import { calcularCostoUsd } from "./ia-precios";
+
+// Registra el consumo de una llamada a Claude. No debe romper el flujo si falla:
+// el escaneo ya terminó, esto es solo contabilidad. El costo se congela acá.
+async function registrarUsoIA(
+  modelo: string,
+  usage: Anthropic.Usage,
+  contexto: string
+): Promise<void> {
+  try {
+    const inputTokens = usage.input_tokens ?? 0;
+    const outputTokens = usage.output_tokens ?? 0;
+    const cacheCreacionTokens = usage.cache_creation_input_tokens ?? 0;
+    const cacheLecturaTokens = usage.cache_read_input_tokens ?? 0;
+    const costoUsd = calcularCostoUsd(modelo, {
+      inputTokens,
+      outputTokens,
+      cacheCreacionTokens,
+      cacheLecturaTokens,
+    });
+    await prisma.lavIAUso.create({
+      data: {
+        modelo,
+        contexto,
+        inputTokens,
+        outputTokens,
+        cacheCreacionTokens,
+        cacheLecturaTokens,
+        costoUsd,
+      },
+    });
+  } catch (e) {
+    console.error("[lavanderia] no se pudo registrar el uso de IA:", e);
+  }
+}
 
 // Modelo de visión configurable. Sonnet da buen balance OCR/costo para tickets.
 const MODELO = process.env.LAV_IA_MODEL || "claude-sonnet-4-6";
@@ -137,6 +172,8 @@ export async function escanearComanda(
       },
     ],
   });
+
+  await registrarUsoIA(MODELO, res.usage, "escaneo-comanda");
 
   const bloque = res.content.find((c) => c.type === "tool_use");
   if (!bloque || bloque.type !== "tool_use") {

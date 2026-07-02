@@ -762,3 +762,22 @@ model LavOTEvento {
   @@index([en])
   @@map("lav_ot_eventos")
 }
+
+// Registro de consumo de la API de Claude (una fila por llamada). El costo se
+// calcula y congela al insertar con la tabla de precios vigente en ese momento,
+// para que el histórico quede fiel a lo facturado aunque los precios cambien.
+model LavIAUso {
+  id                  String   @id @default(cuid())
+  creadoEn            DateTime @default(now())
+  modelo              String
+  contexto            String? // ej. "escaneo-comanda"
+  otId                String? // OT asociada si se conoce
+  inputTokens         Int      @default(0)
+  outputTokens        Int      @default(0)
+  cacheCreacionTokens Int      @default(0)
+  cacheLecturaTokens  Int      @default(0)
+  costoUsd            Decimal  @db.Decimal(12, 6)
+
+  @@index([creadoEn])
+  @@map("lav_ia_uso")
+}

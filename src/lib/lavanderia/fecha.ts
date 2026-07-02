@@ -29,6 +29,16 @@ export function hoyAR(): string {
   return ahoraAR().fecha;
 }
 
+// Convierte una Date a "yyyy-MM-dd" en la zona horaria de Argentina.
+export function fechaARDe(date: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
 // diaSemana 0=Domingo .. 6=Sabado para una fecha yyyy-MM-dd (interpretada como local AR).
 export function diaSemanaDe(fecha: string): number {
   const [y, m, d] = fecha.split("-").map(Number);

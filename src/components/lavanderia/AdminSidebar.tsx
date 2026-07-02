@@ -10,6 +10,7 @@ import {
   BarChart3,
   Clock,
   PackageCheck,
+  Sparkles,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -23,6 +24,7 @@ const ITEMS = [
   { href: "/lavanderia/admin/empleados", label: "Empleados", icon: Users },
   { href: "/lavanderia/admin/horarios", label: "Horarios", icon: Clock },
   { href: "/lavanderia/admin/metricas", label: "Métricas", icon: BarChart3 },
+  { href: "/lavanderia/admin/consumo-ia", label: "Consumo IA", icon: Sparkles },
 ];
 
 const STORAGE_KEY = "lav_admin_sidebar_colapsado";
