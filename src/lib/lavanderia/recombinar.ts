@@ -1,18 +1,22 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { calcularDuracion } from "./duraciones";
 import { recompactar } from "./capacidad";
 
 export type ResultadoRecombinar = {
   gruposRecombinados: number; // grupos que se volvieron a unir en una sola OT
-  otsEliminadas: number; // sub-OTs que se colapsaron
+  otsEliminadas: number; // sub-OTs pendientes que se colapsaron
 };
 
-// Backfill: como ya no se parten las OTs, vuelve a unir en una sola OT los grupos
-// de sub-OTs pendientes que quedaron de la etapa en que sí se partía. Sólo toca
-// grupos cuyas partes están TODAS pendientes (si alguna ya está en progreso o
-// terminada, no se puede unir sin romper el trabajo en curso). La duración se
-// recalcula con la matriz. Se corre una vez tras el deploy.
+// Backfill: como ya no se parten las OTs, colapsa en una sola OT las partes
+// PENDIENTES de cada grupo que quedaron de la etapa en que sí se partía.
+//
+//  - Une lo que quede pendiente aunque haya hermanos ya terminados / en progreso
+//    (esos no se tocan; solo se juntan las partes que todavía no se empezaron).
+//  - La duración se SUMA de las partes (no se recalcula con la matriz: para un
+//    valet parcial la matriz daría la carga completa, inflando la OT).
+//  - Un grupo con una sola parte pendiente igual se "desagrupa" (pierde la etiqueta
+//    X/Y y queda como OT normal).
+// Se corre una vez tras el deploy.
 export async function recombinarTodas(): Promise<ResultadoRecombinar> {
   const partes = await prisma.lavOT.findMany({
     where: { estado: "pendiente", grupoId: { not: null } },
@@ -31,23 +35,35 @@ export async function recombinarTodas(): Promise<ResultadoRecombinar> {
   let otsEliminadas = 0;
 
   for (const ps of porGrupo.values()) {
-    if (ps.length <= 1) continue;
-    // Si faltan hermanos del grupo (parteTotal > partes pendientes), alguno ya está
-    // en progreso/terminado: no se recombina.
-    const total = ps[0].parteTotal ?? ps.length;
-    if (ps.length < total) continue;
+    // Una sola parte pendiente: solo se le quita la marca de grupo (queda entera).
+    if (ps.length === 1) {
+      await prisma.lavOT.update({
+        where: { id: ps[0].id },
+        data: { grupoId: null, parteIndice: null, parteTotal: null },
+      });
+      gruposRecombinados++;
+      otsEliminadas += 1;
+      continue;
+    }
 
-    // Re-unir los items (por prenda + procesos + descripción) y recalcular duración.
-    const acc = new Map<string, { prendaId: string | null; descripcion: string; cantidad: number; procesoIds: string[] }>();
+    // Varias partes pendientes: se colapsan en una sola OT. Los items se unen por
+    // (prenda + procesos + descripción) sumando cantidad y duración; la duración
+    // total es la suma de las partes (el trabajo que realmente queda por hacer).
+    const acc = new Map<string, { prendaId: string | null; descripcion: string; cantidad: number; procesoIds: string[]; duracionMin: number }>();
     for (const p of ps) {
       for (const it of p.items) {
         const key = `${it.prendaId ?? ""}|${[...it.procesoIds].sort().join(",")}|${it.descripcion}`;
         const e = acc.get(key);
-        if (e) e.cantidad += it.cantidad;
-        else acc.set(key, { prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, procesoIds: it.procesoIds });
+        if (e) {
+          e.cantidad += it.cantidad;
+          e.duracionMin += it.duracionMin;
+        } else {
+          acc.set(key, { prendaId: it.prendaId, descripcion: it.descripcion, cantidad: it.cantidad, procesoIds: it.procesoIds, duracionMin: it.duracionMin });
+        }
       }
     }
-    const calc = await calcularDuracion([...acc.values()]);
+    const items = [...acc.values()];
+    const duracionTotal = items.reduce((a, it) => a + it.duracionMin, 0);
 
     const base = ps[0]; // menor parteIndice (orden de creación como desempate)
     const createdAt = ps.reduce((min, p) => (p.createdAt < min ? p.createdAt : min), ps[0].createdAt);
@@ -64,15 +80,15 @@ export async function recombinarTodas(): Promise<ResultadoRecombinar> {
           estado: "pendiente",
           fechaAsignada: base.fechaAsignada,
           orden: base.orden,
-          duracionMin: calc.duracionTotal,
-          aRevisar: calc.aRevisar,
+          duracionMin: duracionTotal,
+          aRevisar: ps.some((p) => p.aRevisar),
           urgente: base.urgente,
           fechaNecesaria: base.fechaNecesaria,
           empleadoCargaId: base.empleadoCargaId,
           datosIA: base.datosIA === null ? undefined : (base.datosIA as Prisma.InputJsonValue),
           createdAt,
           items: {
-            create: calc.items.map((it) => ({
+            create: items.map((it) => ({
               descripcion: it.descripcion,
               prendaId: it.prendaId,
               cantidad: it.cantidad,
