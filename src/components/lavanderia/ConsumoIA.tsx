@@ -93,7 +93,7 @@ export function ConsumoIA() {
               <YAxis tick={{ fontSize: 12 }} tickFormatter={(v: number) => `$${v.toFixed(2)}`} />
               <Tooltip
                 contentStyle={{ fontSize: 12 }}
-                formatter={(v: number) => [usd(v), "Costo"]}
+                formatter={(v) => [usd(Number(v)), "Costo"] as [string, string]}
                 labelFormatter={(l) => `Día ${l}`}
               />
               <Bar name="Costo" dataKey="costoUsd" fill="#2563eb" radius={[4, 4, 0, 0]} />
