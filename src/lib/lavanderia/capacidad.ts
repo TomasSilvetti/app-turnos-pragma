@@ -335,9 +335,9 @@ export async function recompactar(): Promise<number> {
   }
   for (const o of cola) colocarEntera(o, ultimoLab); // sobrantes al ultimo dia
 
-  // 2c. Fill inteligente: rellenar dias laborables VACIOS partiendo la OT pendiente
-  // mas proxima de un dia posterior. No parte si el fragmento seria muy chico ni si
-  // rompe el orden de las partes de un grupo.
+  // 2c. Fill inteligente: rellenar la capacidad libre de cada dia laborable (este
+  // vacio o a medias) partiendo la OT pendiente mas proxima de un dia posterior. No
+  // parte si el fragmento seria muy chico ni si rompe el orden de partes de un grupo.
   const esPartible = (c: Colocacion) => c.ot.estado === "pendiente" && !esUrgenteHoy(c.ot) && c.dur > 0;
   const siblingsSafe = (c: Colocacion, fechaDestino: string) => {
     if (c.ot.grupoId == null || c.ot.parteIndice == null) return true;
@@ -353,8 +353,8 @@ export async function recompactar(): Promise<number> {
   };
 
   for (const d of dias) {
-    if ((usado.get(d.fecha) ?? 0) > 0 || d.cap <= 0) continue; // solo dias vacios
-    let restante = d.cap;
+    if (d.cap <= 0) continue;
+    let restante = d.cap - (usado.get(d.fecha) ?? 0); // capacidad libre del dia
     while (restante >= MIN_FRAGMENTO_MIN) {
       const cand = colocaciones
         .filter((c) => esPartible(c) && (idxDia.get(c.fecha) ?? 1e9) > (idxDia.get(d.fecha) ?? -1) && siblingsSafe(c, d.fecha))
