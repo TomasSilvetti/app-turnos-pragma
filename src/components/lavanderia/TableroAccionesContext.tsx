@@ -12,10 +12,13 @@ const TableroAccionesContext = createContext<{
   aplicarLocal: (otId: string, patch: Partial<OTSnap>) => void;
   // quitarLocal: saca la OT del tablero al instante (al terminarla).
   quitarLocal: (otId: string) => void;
+  // avisarWhatsapp: abre el aviso para notificar al cliente al terminar una OT.
+  avisarWhatsapp: (ot: OTSnap) => void;
 }>({
   refrescar: async () => {},
   aplicarLocal: () => {},
   quitarLocal: () => {},
+  avisarWhatsapp: () => {},
 });
 
 export const TableroAccionesProvider = TableroAccionesContext.Provider;

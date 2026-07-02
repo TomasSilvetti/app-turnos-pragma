@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { X, Plus, Trash2, Loader2, Check, Play, AlertTriangle, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LavSelect } from "./LavSelect";
+import { AvisoWhatsappModal } from "./AvisoWhatsappModal";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
@@ -47,6 +48,8 @@ export function OTModal({
   const [eliminando, setEliminando] = useState(false);
   const [confirmandoEliminar, setConfirmandoEliminar] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Al terminar mostramos el aviso de WhatsApp antes de cerrar el modal.
+  const [aviso, setAviso] = useState(false);
 
   useEffect(() => {
     lavFetch("/api/lavanderia/prendas")
@@ -132,8 +135,14 @@ export function OTModal({
         body: JSON.stringify({ accion }),
       });
       if (res.ok) {
-        onActualizar();
-        onCerrar();
+        // Al terminar, mostramos el aviso de WhatsApp; el modal se cierra cuando
+        // el aviso se cierra. Empezar sigue cerrando directo.
+        if (accion === "terminar") {
+          setAviso(true);
+        } else {
+          onActualizar();
+          onCerrar();
+        }
       } else {
         const d = await res.json().catch(() => ({}));
         setError(d.error || "No se pudo actualizar");
@@ -165,6 +174,18 @@ export function OTModal({
       setEliminando(false);
     }
   };
+
+  if (aviso) {
+    return (
+      <AvisoWhatsappModal
+        ot={{ ...ot, numero: numero.trim() || null, nombreCliente: cliente.trim() || null, telefono: telefono.trim() || null }}
+        onCerrar={() => {
+          onActualizar();
+          onCerrar();
+        }}
+      />
+    );
+  }
 
   return createPortal(
     <div

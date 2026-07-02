@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { etiquetaDia } from "./fecha";
+import { primerDiaLaborable } from "./capacidad";
 import type { OTSnap } from "./tablero";
 import { cargaTaller, historicoAlCerrar, registrarEvento } from "./historico";
 
@@ -206,4 +207,54 @@ export async function marcarEntregada(id: string): Promise<number> {
   }
 
   return res.count;
+}
+
+// Devuelve una OT terminada por error al tablero como "en progreso". La reubica
+// en el día laborable de hoy (al final de la cola) y limpia terminadoEn,
+// conservando quién la empezó. Si el id es de una card combinada ("grupo-<gid>")
+// vuelven todas sus partes. Devuelve cuántas OTs se reabrieron.
+export async function volverAlTablero(id: string): Promise<number> {
+  const where = id.startsWith("grupo-")
+    ? { grupoId: id.slice("grupo-".length), estado: "terminado", entregadoEn: null }
+    : { id, estado: "terminado", entregadoEn: null };
+
+  const afectadas = await prisma.lavOT.findMany({
+    where,
+    select: { id: true, numero: true, grupoId: true, duracionMin: true },
+  });
+  if (afectadas.length === 0) return 0;
+
+  const target = await primerDiaLaborable();
+  const ultima = await prisma.lavOT.findFirst({
+    where: { fechaAsignada: target },
+    orderBy: { orden: "desc" },
+    select: { orden: true },
+  });
+  const base = (ultima?.orden ?? -1) + 1;
+
+  await prisma.$transaction(
+    afectadas.map((ot, i) =>
+      prisma.lavOT.update({
+        where: { id: ot.id },
+        data: { estado: "en_progreso", terminadoEn: null, fechaAsignada: target, orden: base + i },
+      })
+    )
+  );
+
+  // Histórico: dejamos rastro de la reapertura (no cerramos labels: la OT sigue viva).
+  for (const ot of afectadas) {
+    const backlog = await cargaTaller(ot.id);
+    await registrarEvento({
+      otId: ot.id,
+      tipo: "reabierta",
+      numero: ot.numero,
+      grupoId: ot.grupoId,
+      duracionMin: ot.duracionMin,
+      fechaAsignada: target,
+      backlogCount: backlog.count,
+      backlogMin: backlog.min,
+    });
+  }
+
+  return afectadas.length;
 }

@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ItemOT } from "@/components/lavanderia/ItemOT";
 import { OTModal } from "@/components/lavanderia/OTModal";
+import { AvisoWhatsappModal } from "@/components/lavanderia/AvisoWhatsappModal";
 import { BuscadorOT } from "@/components/lavanderia/BuscadorOT";
 import { BarraDiaMini, nivelOcupacion } from "@/components/lavanderia/BarraDiaMini";
 import { ToggleVista } from "@/components/lavanderia/ToggleVista";
@@ -308,6 +309,7 @@ export function TableroAdmin() {
   const [sobreFecha, setSobreFecha] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [avisoOt, setAvisoOt] = useState<OTSnap | null>(null);
   const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
   const esMobile = useEsMobile();
@@ -419,7 +421,7 @@ export function TableroAdmin() {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
-    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal }}>
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal, avisarWhatsapp: setAvisoOt }}>
     <div className="space-y-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -487,6 +489,8 @@ export function TableroAdmin() {
           }}
         />
       )}
+
+      {avisoOt && <AvisoWhatsappModal ot={avisoOt} onCerrar={() => setAvisoOt(null)} />}
 
       {confirmar && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setConfirmar(null)}>

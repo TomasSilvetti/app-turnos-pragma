@@ -9,12 +9,14 @@ import { ColumnaDia } from "./ColumnaDia";
 import { BuscadorOT } from "./BuscadorOT";
 import { ToggleVista } from "./ToggleVista";
 import { OTModal } from "./OTModal";
+import { AvisoWhatsappModal } from "./AvisoWhatsappModal";
 import { TableroAccionesProvider } from "./TableroAccionesContext";
 import type { OTSnap } from "@/lib/lavanderia/tablero";
 
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const { snapshot, conectado, refrescar, aplicarLocal, quitarLocal } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [avisoOt, setAvisoOt] = useState<OTSnap | null>(null);
   const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
 
@@ -32,7 +34,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
   return (
-    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal }}>
+    <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal, avisarWhatsapp: setAvisoOt }}>
     <div className="px-3 py-5 sm:px-5">
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {conectado ? (
@@ -77,6 +79,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
         // El SSE refresca el snapshot solo; al actualizar solo cerramos el modal.
         <OTModal ot={otModal} onCerrar={() => setOtModal(null)} onActualizar={() => setOtModal(null)} />
       )}
+      {avisoOt && <AvisoWhatsappModal ot={avisoOt} onCerrar={() => setAvisoOt(null)} />}
     </div>
     </TableroAccionesProvider>
   );

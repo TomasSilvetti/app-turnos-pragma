@@ -1,9 +1,11 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, PackageCheck, Check, Clock, User, AlertTriangle, Inbox } from "lucide-react";
+import { Loader2, PackageCheck, Check, Clock, User, AlertTriangle, Inbox, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BuscadorOT } from "./BuscadorOT";
+import { WhatsappIcon } from "./WhatsappIcon";
+import { linkWhatsappPrendasListas } from "@/lib/lavanderia/telefono";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { useResaltarOT } from "@/hooks/useResaltarOT";
 import { formatoDuracion } from "@/lib/lavanderia/timeline";
@@ -16,15 +18,28 @@ function CardTerminado({
   ot,
   resaltada,
   onEntregar,
+  onVolver,
 }: {
   ot: TerminadoSnap;
   resaltada: boolean;
   onEntregar: (ot: TerminadoSnap) => Promise<void>;
+  onVolver: (ot: TerminadoSnap) => Promise<void>;
 }) {
   const [confirmando, setConfirmando] = useState(false);
   const [procesando, setProcesando] = useState(false);
+  const [volviendo, setVolviendo] = useState(false);
+
+  const volver = async () => {
+    setVolviendo(true);
+    try {
+      await onVolver(ot);
+    } finally {
+      setVolviendo(false);
+    }
+  };
 
   const titulo = ot.numero ? `OT ${ot.numero}` : ot.nombreCliente || "OT";
+  const waLink = linkWhatsappPrendasListas(ot.telefono);
   const esCombinada = ot.partesCompletadas != null;
   const parteBadge = esCombinada
     ? `completa · ${ot.partesCompletadas} partes`
@@ -126,13 +141,36 @@ function CardTerminado({
             </Button>
           </span>
         ) : (
-          <Button
-            size="xs"
-            onClick={() => setConfirmando(true)}
-            className="shrink-0 rounded-full border-0 bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-[0_4px_12px_-3px_rgba(56,120,255,0.6)] hover:from-sky-600 hover:to-indigo-600"
-          >
-            <PackageCheck /> Entregar
-          </Button>
+          <span className="inline-flex shrink-0 items-center gap-1.5">
+            {waLink && (
+              <a href={waLink} target="_blank" rel="noopener noreferrer" title="Reenviar aviso por WhatsApp">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  className="rounded-full text-[#25D366] hover:bg-[#25D366]/10 hover:text-[#1ebe5b]"
+                >
+                  <WhatsappIcon className="size-4" />
+                </Button>
+              </a>
+            )}
+            <Button
+              size="xs"
+              variant="ghost"
+              onClick={volver}
+              disabled={volviendo}
+              title="Se marcó terminada por error: volver al tablero"
+              className="rounded-full text-muted-foreground hover:text-foreground"
+            >
+              {volviendo ? <Loader2 className="animate-spin" /> : <RotateCcw />} Al tablero
+            </Button>
+            <Button
+              size="xs"
+              onClick={() => setConfirmando(true)}
+              className="rounded-full border-0 bg-gradient-to-br from-sky-500 to-indigo-500 text-white shadow-[0_4px_12px_-3px_rgba(56,120,255,0.6)] hover:from-sky-600 hover:to-indigo-600"
+            >
+              <PackageCheck /> Entregar
+            </Button>
+          </span>
         )}
       </div>
     </article>
@@ -203,6 +241,20 @@ export function TerminadosGrid() {
     }
   };
 
+  // Deshace un "terminar" hecho por error: la OT vuelve al tablero (en progreso).
+  const volver = async (ot: TerminadoSnap) => {
+    setOts((prev) => prev?.filter((o) => o.id !== ot.id) ?? prev);
+    try {
+      const r = await lavFetch("/api/lavanderia/terminados", {
+        method: "PATCH",
+        body: JSON.stringify({ id: ot.id, accion: "volver" }),
+      });
+      if (!r.ok) await cargar();
+    } catch {
+      await cargar();
+    }
+  };
+
   if (!ots && !error) {
     return (
       <div className="flex justify-center py-24 text-muted-foreground">
@@ -233,7 +285,7 @@ export function TerminadosGrid() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {ots?.map((ot) => (
-            <CardTerminado key={ot.id} ot={ot} resaltada={ot.id === resaltadaId} onEntregar={entregar} />
+            <CardTerminado key={ot.id} ot={ot} resaltada={ot.id === resaltadaId} onEntregar={entregar} onVolver={volver} />
           ))}
         </div>
       )}

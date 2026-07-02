@@ -46,7 +46,8 @@ export type EventoTipo =
   | "terminada"
   | "entregada"
   | "editada"
-  | "movida";
+  | "movida"
+  | "reabierta";
 
 type ItemDB = {
   descripcion: string;

@@ -26,7 +26,7 @@ export function ItemOT({
   resaltada?: boolean;
 }) {
   const [procesando, setProcesando] = useState(false);
-  const { refrescar, aplicarLocal, quitarLocal } = useTableroAcciones();
+  const { refrescar, aplicarLocal, quitarLocal, avisarWhatsapp } = useTableroAcciones();
 
   const accion = async (accion: "empezar" | "terminar") => {
     setProcesando(true);
@@ -43,6 +43,9 @@ export function ItemOT({
         method: "PATCH",
         body: JSON.stringify({ accion }),
       });
+      // Al terminar, ofrecemos avisarle al cliente por WhatsApp. El aviso vive en
+      // el tablero (no en esta tarjeta, que ya se quitó), así que sobrevive.
+      if (accion === "terminar" && r.ok) avisarWhatsapp(ot);
       // Reconciliamos con el estado real (posicion, empleado). Si fallo, esto
       // revierte el parche optimista al traer el snapshot verdadero.
       await refrescar();
