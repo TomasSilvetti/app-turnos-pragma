@@ -9,6 +9,7 @@ import {
   Users,
   BarChart3,
   Clock,
+  PackageCheck,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/lavanderia/admin/tablero", label: "Tablero", icon: LayoutGrid },
+  { href: "/lavanderia/admin/terminados", label: "Terminados", icon: PackageCheck },
   { href: "/lavanderia/admin/trabajos", label: "Trabajos", icon: Shirt },
   { href: "/lavanderia/admin/empleados", label: "Empleados", icon: Users },
   { href: "/lavanderia/admin/horarios", label: "Horarios", icon: Clock },
