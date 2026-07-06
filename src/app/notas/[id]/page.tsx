@@ -60,6 +60,14 @@ export default function NotaEditorPage() {
     if (!ready) return;
     if (!deviceId) { setEstado("404"); return; }
     setEstado("cargando");
+
+    // Nota vacía para poder escribir offline (nota recién creada sin conexión).
+    const abrirVacia = () => {
+      setNota({ id: notaId, title: "", content: { type: "doc", content: [{ type: "paragraph" }] } });
+      setTitle("");
+      setEstado("ok");
+    };
+
     notasFetch(`/api/notas/${notaId}`)
       .then((r) => {
         if (r.status === 404) {
@@ -67,20 +75,25 @@ export default function NotaEditorPage() {
           return null;
         }
         if (!r.ok) {
-          // Cualquier otro error (500/401/…): mostramos pantalla de error en
-          // lugar de quedar girando para siempre.
           setEstado("error");
           return null;
         }
         return r.json();
       })
-      .then((d: { nota: NotaFull } | null) => {
-        if (!d) return;
-        setNota(d.nota);
-        setTitle(d.nota.title ?? "");
-        setEstado("ok");
+      .then((d: { nota?: NotaFull; offline?: boolean } | null) => {
+        if (d?.nota) {
+          setNota(d.nota);
+          setTitle(d.nota.title ?? "");
+          setEstado("ok");
+        } else if (d && (d.offline || !d.nota) && typeof navigator !== "undefined" && !navigator.onLine) {
+          // Sin conexión y sin copia cacheada: abrir en blanco para editar.
+          abrirVacia();
+        }
       })
-      .catch(() => setEstado("error"));
+      .catch(() => {
+        if (typeof navigator !== "undefined" && !navigator.onLine) abrirVacia();
+        else setEstado("error");
+      });
   }, [ready, deviceId, notaId]);
 
   const onTitleChange = (value: string) => {

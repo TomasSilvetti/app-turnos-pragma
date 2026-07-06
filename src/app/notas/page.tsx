@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/notas/ThemeToggle";
 import { PushToggle } from "@/components/notas/PushToggle";
 import { NotasSettings } from "@/components/notas/NotasSettings";
 import { NotasNav } from "@/components/notas/NotasNav";
+import { OfflineBadge } from "@/components/notas/OfflineBadge";
 
 type NotaItem = { id: string; title: string; updatedAt: string };
 
@@ -53,10 +54,16 @@ export default function NotasListPage() {
   const crearNota = async () => {
     setCreando(true);
     try {
-      const res = await notasFetch("/api/notas", { method: "POST", body: "{}" });
-      if (res.ok) {
-        const { nota } = await res.json();
-        router.push(`/notas/${nota.id}`);
+      // Id generado en el cliente: la nota conserva su id aunque se cree offline
+      // (el POST se encola y sincroniza después). Navegamos igual en ambos casos.
+      const id = `loc-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      const res = await notasFetch("/api/notas", { method: "POST", body: JSON.stringify({ id }) });
+      if (res.status === 201) {
+        const { nota } = await res.json().catch(() => ({ nota: null }));
+        router.push(`/notas/${nota?.id ?? id}`);
+      } else {
+        // 202 (offline) u otro: navegar con el id local.
+        router.push(`/notas/${id}`);
       }
     } finally {
       setCreando(false);
@@ -68,6 +75,7 @@ export default function NotasListPage() {
       <header className="mb-6 flex items-center justify-between gap-2">
         <NotasNav actual="notas" />
         <div className="flex items-center gap-2">
+          <OfflineBadge />
           <PushToggle deviceReady={ready} />
           <ThemeToggle />
           <Button variant="outline" size="icon" onClick={() => setAjustes(true)} aria-label="Ajustes">

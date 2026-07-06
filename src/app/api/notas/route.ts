@@ -17,13 +17,17 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ notas });
 }
 
-// POST: crea una nota vacía y la devuelve.
+// POST: crea una nota vacía y la devuelve. Acepta `id` opcional (generado por el
+// cliente) para que las notas creadas sin conexión conserven su id al sincronizar.
 export async function POST(request: NextRequest) {
   const deviceId = await resolveDeviceId(request);
   if (!deviceId) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+  const body = await request.json().catch(() => ({}));
+  const id = typeof body?.id === "string" && body.id ? body.id : undefined;
+
   const nota = await prisma.nota.create({
-    data: { deviceId, title: "", content: DOC_VACIO },
+    data: { ...(id ? { id } : {}), deviceId, title: "", content: DOC_VACIO },
     select: { id: true, title: true, content: true, updatedAt: true },
   });
   return NextResponse.json({ nota }, { status: 201 });

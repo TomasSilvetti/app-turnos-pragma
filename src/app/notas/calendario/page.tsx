@@ -7,6 +7,7 @@ import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { useCalendar, type CalendarEvent } from "@/hooks/useCalendar";
 import { NotasNav } from "@/components/notas/NotasNav";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
+import { OfflineBadge } from "@/components/notas/OfflineBadge";
 import { MonthView } from "@/components/notas/calendar/MonthView";
 import { WeekView } from "@/components/notas/calendar/WeekView";
 import { CalendarEventModal, type CalendarEventValues } from "@/components/notas/CalendarEventModal";
@@ -109,7 +110,10 @@ export default function CalendarioPage() {
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6">
       <header className="mb-5 flex items-center justify-between gap-2">
         <NotasNav actual="calendario" />
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <OfflineBadge />
+          <ThemeToggle />
+        </div>
       </header>
 
       {/* Toggle de vista mes / semana */}

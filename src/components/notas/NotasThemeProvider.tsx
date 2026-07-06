@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { iniciarSyncOffline } from "@/lib/notas/client";
 
 // Los temas de la app de notas usan las mismas variables CSS que el root, pero
 // el fondo del body global es oscuro (#080c14). Sincronizamos el fondo del
@@ -44,6 +45,15 @@ export function NotasThemeProvider({
       syncBodyBg(next);
       return next;
     });
+  }, []);
+
+  // Registrar el service worker (caché offline + push) y arrancar la sincronización
+  // del outbox. Corre una sola vez para toda la app de notas.
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+    iniciarSyncOffline();
   }, []);
 
   // Sincronizar al montar también (el body tiene bg oscuro del layout raíz).

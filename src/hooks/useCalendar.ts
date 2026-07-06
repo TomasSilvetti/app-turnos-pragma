@@ -45,9 +45,11 @@ export function useCalendar(deviceReady: boolean, from: string, to: string) {
       method: "POST",
       body: JSON.stringify({ id, ...v }),
     }).catch(() => null);
-    if (res?.ok) {
-      const { event } = await res.json();
-      setEvents((prev) => prev.map((e) => (e.id === id ? event : e)));
+    // 201: el servidor confirmó y devolvió el evento. 202: encolado offline
+    // (se mantiene la versión optimista con el mismo id hasta sincronizar).
+    if (res?.status === 201) {
+      const { event } = await res.json().catch(() => ({ event: null }));
+      if (event) setEvents((prev) => prev.map((e) => (e.id === id ? event : e)));
     }
   }, []);
 
