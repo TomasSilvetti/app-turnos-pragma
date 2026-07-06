@@ -8,6 +8,7 @@ import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Modal } from "./Modal";
+import { TimePicker24h } from "@/components/ui/TimePicker24h";
 import { CALENDAR_COLORS, DIAS_CORTOS, MESES, fromDateStr } from "@/lib/notas/calendar";
 
 export type CalendarEventValues = {
@@ -80,21 +81,11 @@ export function CalendarEventModal({
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Desde</label>
-            <input
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            />
+            <TimePicker24h value={startTime} onChange={setStartTime} />
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Hasta</label>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            />
+            <TimePicker24h value={endTime} onChange={setEndTime} dropdownAlign="right" />
           </div>
         </div>
 

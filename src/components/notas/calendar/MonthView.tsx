@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/hooks/useCalendar";
-import { DIAS_CORTOS, MESES, colorHex, hoyStr, monthGrid, toDateStr } from "@/lib/notas/calendar";
+import { DIAS_CORTOS, MESES, colorHex, hoyStr, monthGrid, ocupacionPct, toDateStr } from "@/lib/notas/calendar";
 
 export function MonthView({
   year,
@@ -58,6 +58,7 @@ export function MonthView({
           const delMes = d.getMonth() === month;
           const esHoy = ds === hoy;
           const evs = porDia.get(ds) ?? [];
+          const pctOcup = evs.length ? ocupacionPct(evs) : 0;
           return (
             <button
               key={ds}
@@ -67,13 +68,23 @@ export function MonthView({
                 !delMes && "opacity-40"
               )}
             >
-              <span
-                className={cn(
-                  "text-xs font-medium",
-                  esHoy && "flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+              <span className="flex items-center justify-between gap-1">
+                <span
+                  className={cn(
+                    "text-xs font-medium",
+                    esHoy && "flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
+                  )}
+                >
+                  {d.getDate()}
+                </span>
+                {evs.length > 0 && (
+                  <span
+                    className="rounded-full bg-primary/10 px-1 text-[9px] font-semibold leading-tight text-primary"
+                    title={`${pctOcup}% ocupado (6:00–24:00)`}
+                  >
+                    {pctOcup}%
+                  </span>
                 )}
-              >
-                {d.getDate()}
               </span>
               <div className="flex flex-col gap-0.5 overflow-hidden">
                 {evs.slice(0, 3).map((ev) => (

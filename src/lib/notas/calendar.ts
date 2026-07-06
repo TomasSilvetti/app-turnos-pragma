@@ -112,3 +112,30 @@ export function formatDur(min: number): string {
   if (m === 0) return `${h}hs`;
   return `${h}h ${m}m`;
 }
+
+// Porcentaje ocupado de la franja 6:00–24:00 para un conjunto de eventos de un día.
+// Fusiona solapamientos para no contar doble. Devuelve un entero 0..100.
+export function ocupacionPct(eventos: { startTime: string; endTime: string }[]): number {
+  const clampT = (n: number) => Math.max(TIMELINE_START, Math.min(TIMELINE_END, n));
+  const ivs = eventos
+    .map((ev) => {
+      const [sh, sm] = ev.startTime.split(":").map(Number);
+      const [eh, em] = ev.endTime.split(":").map(Number);
+      return { s: clampT(sh * 60 + sm), e: clampT(eh * 60 + em) };
+    })
+    .filter((x) => x.e > x.s)
+    .sort((a, b) => a.s - b.s);
+
+  let ocupado = 0;
+  let prevEnd = TIMELINE_START;
+  for (const iv of ivs) {
+    const s = Math.max(iv.s, prevEnd);
+    if (iv.e > s) {
+      ocupado += iv.e - s;
+      prevEnd = iv.e;
+    } else if (iv.e > prevEnd) {
+      prevEnd = iv.e;
+    }
+  }
+  return Math.round((ocupado / (TIMELINE_END - TIMELINE_START)) * 100);
+}

@@ -192,6 +192,13 @@ body {
   caret-color: #2A2829;
   transition: background-color 5000s ease-in-out 0s !important;
 }
+/* ───────── Módulo Notas ───────── */
+/* El TimePicker24h (reutilizado de la app de turnos) usa --brand-color;
+   en notas lo mapeamos al color primario del tema. */
+.notas-app {
+  --brand-color: var(--primary);
+}
+
 /* ───────── Módulo Notas: editor TipTap ───────── */
 .notas-prose :where(h1) {
   font-size: 1.6rem;
