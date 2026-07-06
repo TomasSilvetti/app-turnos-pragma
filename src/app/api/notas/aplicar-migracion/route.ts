@@ -381,6 +381,14 @@ const MIGRATIONS: Migration[] = [
        END IF; END $$`,
     ],
   },
+  {
+    name: "20260706120000_add_calendar_reminders",
+    checksum: "a52484e9e1f5c2b0a986cc61eb0fdd78d346d79c33485c8c3f4dd2bbd386c31d",
+    statements: [
+      `ALTER TABLE "nota_calendar_events" ADD COLUMN IF NOT EXISTS "reminderOffsets" INTEGER[] NOT NULL DEFAULT '{}'`,
+      `ALTER TABLE "nota_calendar_events" ADD COLUMN IF NOT EXISTS "firedKeys" TEXT[] NOT NULL DEFAULT '{}'`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

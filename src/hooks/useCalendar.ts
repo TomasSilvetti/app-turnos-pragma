@@ -11,6 +11,7 @@ export type CalendarEvent = {
   endTime: string;
   title: string;
   color: string;
+  reminderOffsets: number[];
 };
 
 // Genera un id local (para eventos creados sin conexión). El servidor lo respeta.

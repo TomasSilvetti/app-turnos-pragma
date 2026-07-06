@@ -55,14 +55,14 @@ export default function CalendarioPage() {
   const [modal, setModal] = useState<ModalState>({
     open: false,
     mode: "create",
-    values: { date: "", startTime: "09:00", endTime: "10:00", title: "", color: "blue" },
+    values: { date: "", startTime: "09:00", endTime: "10:00", title: "", color: "blue", reminderOffsets: [] },
   });
 
   const abrirCrearDia = (dateStr: string) => {
     setModal({
       open: true,
       mode: "create",
-      values: { date: dateStr, startTime: "09:00", endTime: "10:00", title: "", color: "blue" },
+      values: { date: dateStr, startTime: "09:00", endTime: "10:00", title: "", color: "blue", reminderOffsets: [] },
     });
   };
 
@@ -71,7 +71,7 @@ export default function CalendarioPage() {
     setModal({
       open: true,
       mode: "create",
-      values: { date: dateStr, startTime: fr.start, endTime: fr.end, title: "", color: "blue" },
+      values: { date: dateStr, startTime: fr.start, endTime: fr.end, title: "", color: "blue", reminderOffsets: [] },
     });
   };
 
@@ -79,7 +79,7 @@ export default function CalendarioPage() {
     setModal({
       open: true,
       mode: "create",
-      values: { date: dateStr, startTime, endTime, title: "", color: "blue" },
+      values: { date: dateStr, startTime, endTime, title: "", color: "blue", reminderOffsets: [] },
     });
   };
 
@@ -88,7 +88,7 @@ export default function CalendarioPage() {
       open: true,
       mode: "edit",
       eventId: ev.id,
-      values: { date: ev.date, startTime: ev.startTime, endTime: ev.endTime, title: ev.title, color: ev.color },
+      values: { date: ev.date, startTime: ev.startTime, endTime: ev.endTime, title: ev.title, color: ev.color, reminderOffsets: ev.reminderOffsets ?? [] },
     });
   };
 

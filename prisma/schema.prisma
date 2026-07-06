@@ -378,6 +378,10 @@ model NotaCalendarEvent {
   endTime     String // HH:mm
   title       String   @default("")
   color       String   @default("blue")
+  // Recordatorios: minutos antes del inicio en que avisar (varios por actividad).
+  reminderOffsets Int[]    @default([])
+  // Claves de recordatorios ya enviados (dedup del cron).
+  firedKeys       String[] @default([])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

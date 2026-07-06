@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CalendarEvent } from "@/hooks/useCalendar";
-import { DIAS_CORTOS, MESES, colorHex, hoyStr, monthGrid, ocupacionPct, toDateStr } from "@/lib/notas/calendar";
+import { DIAS_CORTOS, MESES, hoyStr, monthGrid, ocupacionColor, ocupacionPct, toDateStr } from "@/lib/notas/calendar";
 
 export function MonthView({
   year,
@@ -58,49 +58,35 @@ export function MonthView({
           const delMes = d.getMonth() === month;
           const esHoy = ds === hoy;
           const evs = porDia.get(ds) ?? [];
-          const pctOcup = evs.length ? ocupacionPct(evs) : 0;
+          const conEventos = evs.length > 0;
+          const pctOcup = conEventos ? ocupacionPct(evs) : 0;
           return (
             <button
               key={ds}
               onClick={() => onSelectDay(ds)}
+              style={conEventos ? { backgroundColor: ocupacionColor(pctOcup) } : undefined}
               className={cn(
-                "flex min-h-[64px] flex-col gap-1 rounded-lg border border-border/60 p-1.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40",
+                "flex min-h-[64px] flex-col items-start justify-between gap-1 rounded-lg border border-border/60 p-1.5 text-left transition-colors hover:border-primary/40",
+                !conEventos && "hover:bg-muted/40",
                 !delMes && "opacity-40"
               )}
             >
-              <span className="flex items-center justify-between gap-1">
-                <span
-                  className={cn(
-                    "text-xs font-medium",
-                    esHoy && "flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
-                  )}
-                >
-                  {d.getDate()}
-                </span>
-                {evs.length > 0 && (
-                  <span
-                    className="rounded-full bg-primary/10 px-1 text-[9px] font-semibold leading-tight text-primary"
-                    title={`${pctOcup}% ocupado (6:00–24:00)`}
-                  >
-                    {pctOcup}%
-                  </span>
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  esHoy && "flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground"
                 )}
+              >
+                {d.getDate()}
               </span>
-              <div className="flex flex-col gap-0.5 overflow-hidden">
-                {evs.slice(0, 3).map((ev) => (
-                  <span
-                    key={ev.id}
-                    className="truncate rounded px-1 py-0.5 text-[10px] font-medium text-white"
-                    style={{ backgroundColor: colorHex(ev.color) }}
-                    title={`${ev.startTime}–${ev.endTime} ${ev.title}`}
-                  >
-                    {ev.startTime} {ev.title || "Ocupado"}
-                  </span>
-                ))}
-                {evs.length > 3 && (
-                  <span className="px-1 text-[10px] text-muted-foreground">+{evs.length - 3}</span>
-                )}
-              </div>
+              {conEventos && (
+                <span
+                  className="self-end rounded-md bg-background/70 px-1.5 py-0.5 text-[11px] font-bold leading-none text-foreground"
+                  title={`${pctOcup}% ocupado (6:00–24:00)`}
+                >
+                  {pctOcup}%
+                </span>
+              )}
             </button>
           );
         })}

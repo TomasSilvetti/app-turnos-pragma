@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Modal } from "./Modal";
 import { TimePicker24h } from "@/components/ui/TimePicker24h";
+import { Bell } from "lucide-react";
 import { CALENDAR_COLORS, DIAS_CORTOS, MESES, fromDateStr } from "@/lib/notas/calendar";
 
 export type CalendarEventValues = {
@@ -17,7 +18,29 @@ export type CalendarEventValues = {
   endTime: string;
   title: string;
   color: string;
+  reminderOffsets: number[];
 };
+
+// Presets de "cuánto antes" avisar (minutos). Se pueden combinar varios.
+const PRESETS_RECORDATORIO: { min: number; label: string }[] = [
+  { min: 0, label: "Al momento" },
+  { min: 5, label: "5 min antes" },
+  { min: 10, label: "10 min antes" },
+  { min: 15, label: "15 min antes" },
+  { min: 30, label: "30 min antes" },
+  { min: 60, label: "1 hora antes" },
+  { min: 120, label: "2 horas antes" },
+  { min: 1440, label: "1 día antes" },
+];
+
+function etiquetaOffset(min: number): string {
+  const p = PRESETS_RECORDATORIO.find((x) => x.min === min);
+  if (p) return p.label;
+  if (min === 0) return "Al momento";
+  if (min % 1440 === 0) return `${min / 1440} día${min / 1440 > 1 ? "s" : ""} antes`;
+  if (min % 60 === 0) return `${min / 60} h antes`;
+  return `${min} min antes`;
+}
 
 function fechaBonita(dateStr: string): string {
   const d = fromDateStr(dateStr);
@@ -43,6 +66,7 @@ export function CalendarEventModal({
   const [endTime, setEndTime] = useState(initial.endTime);
   const [title, setTitle] = useState(initial.title);
   const [color, setColor] = useState(initial.color);
+  const [recordatorios, setRecordatorios] = useState<number[]>(initial.reminderOffsets ?? []);
   const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
@@ -51,13 +75,27 @@ export function CalendarEventModal({
       setEndTime(initial.endTime);
       setTitle(initial.title);
       setColor(initial.color);
+      setRecordatorios(initial.reminderOffsets ?? []);
       setGuardando(false);
     }
   }, [open, initial]);
 
+  const toggleRecordatorio = (min: number) => {
+    setRecordatorios((prev) =>
+      prev.includes(min) ? prev.filter((x) => x !== min) : [...prev, min].sort((a, b) => a - b)
+    );
+  };
+
   const guardar = async () => {
     setGuardando(true);
-    await onSave({ date: initial.date, startTime, endTime, title: title.trim(), color });
+    await onSave({
+      date: initial.date,
+      startTime,
+      endTime,
+      title: title.trim(),
+      color,
+      reminderOffsets: recordatorios,
+    });
     setGuardando(false);
   };
 
@@ -106,6 +144,41 @@ export function CalendarEventModal({
               />
             ))}
           </div>
+        </div>
+
+        {/* Recordatorios: se pueden activar varios (cuánto antes avisar). */}
+        <div className="space-y-2">
+          <label className="flex items-center gap-1.5 text-sm font-medium">
+            <Bell className="size-4 text-muted-foreground" />
+            Recordatorios
+          </label>
+          <div className="flex flex-wrap gap-1.5">
+            {PRESETS_RECORDATORIO.map((p) => {
+              const activo = recordatorios.includes(p.min);
+              return (
+                <button
+                  key={p.min}
+                  type="button"
+                  onClick={() => toggleRecordatorio(p.min)}
+                  className={cn(
+                    "rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
+                    activo
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border text-muted-foreground hover:bg-muted"
+                  )}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+          {recordatorios.length > 0 ? (
+            <p className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
+              Avisaré {recordatorios.map(etiquetaOffset).join(", ").toLowerCase()}.
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">Sin recordatorios. Tocá una opción para agregar (podés elegir varias).</p>
+          )}
         </div>
 
         <div className="flex items-center justify-between gap-2 pt-1">

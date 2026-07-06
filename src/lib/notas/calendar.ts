@@ -139,3 +139,13 @@ export function ocupacionPct(eventos: { startTime: string; endTime: string }[]):
   }
   return Math.round((ocupado / (TIMELINE_END - TIMELINE_START)) * 100);
 }
+
+// Color de fondo del día según ocupación: verde claro (poco) → amarillo (medio)
+// → rojo (muy ocupado). Devuelve un hsl con alpha, para que tiñe bien en claro y
+// oscuro sin tapar el texto.
+export function ocupacionColor(pct: number): string {
+  const p = Math.max(0, Math.min(100, pct));
+  const hue = 140 * (1 - p / 100); // 140 (verde) → 0 (rojo)
+  const alpha = 0.18 + (p / 100) * 0.42; // 0.18 → 0.60
+  return `hsl(${Math.round(hue)} 75% 45% / ${alpha.toFixed(2)})`;
+}

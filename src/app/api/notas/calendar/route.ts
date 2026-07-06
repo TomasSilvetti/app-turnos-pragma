@@ -5,6 +5,18 @@ import { esHoraValida } from "@/lib/notas/time";
 
 const FECHA_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Normaliza los minutos-antes de los recordatorios: enteros 0..10080 (hasta 1 semana),
+// sin duplicados y ordenados. Máximo 10 recordatorios por actividad.
+export function normalizarOffsets(input: unknown): number[] {
+  if (!Array.isArray(input)) return [];
+  const set = new Set<number>();
+  for (const v of input) {
+    const n = Math.trunc(Number(v));
+    if (Number.isFinite(n) && n >= 0 && n <= 10080) set.add(n);
+  }
+  return [...set].sort((a, b) => a - b).slice(0, 10);
+}
+
 // GET: eventos del calendario del device en un rango [from, to] (yyyy-MM-dd).
 export async function GET(request: NextRequest) {
   const deviceId = await resolveDeviceId(request);
@@ -40,6 +52,7 @@ export async function POST(request: NextRequest) {
 
   const title = typeof body.title === "string" ? body.title.slice(0, 200) : "";
   const color = typeof body.color === "string" ? body.color.slice(0, 20) : "blue";
+  const reminderOffsets = normalizarOffsets(body.reminderOffsets);
 
   const event = await prisma.notaCalendarEvent.create({
     data: {
@@ -50,6 +63,7 @@ export async function POST(request: NextRequest) {
       endTime: body.endTime,
       title,
       color,
+      reminderOffsets,
     },
   });
   return NextResponse.json({ event }, { status: 201 });

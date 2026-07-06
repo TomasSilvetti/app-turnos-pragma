@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveDeviceId } from "@/lib/notas/device";
 import { esHoraValida } from "@/lib/notas/time";
+import { normalizarOffsets } from "../route";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -25,12 +26,19 @@ export async function PUT(request: NextRequest, ctx: Ctx) {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Body inválido" }, { status: 400 });
 
-  const data: Record<string, string> = {};
+  const data: Record<string, unknown> = {};
   if (typeof body.date === "string" && FECHA_RE.test(body.date)) data.date = body.date;
   if (typeof body.startTime === "string" && esHoraValida(body.startTime)) data.startTime = body.startTime;
   if (typeof body.endTime === "string" && esHoraValida(body.endTime)) data.endTime = body.endTime;
   if (typeof body.title === "string") data.title = body.title.slice(0, 200);
   if (typeof body.color === "string") data.color = body.color.slice(0, 20);
+  if ("reminderOffsets" in body) data.reminderOffsets = normalizarOffsets(body.reminderOffsets);
+
+  // Si cambió la fecha/hora o los recordatorios, reiniciamos los envíos ya hechos
+  // para que los recordatorios vuelvan a evaluarse con los nuevos valores.
+  if ("date" in data || "startTime" in data || "reminderOffsets" in data) {
+    data.firedKeys = [];
+  }
 
   const event = await prisma.notaCalendarEvent.update({ where: { id }, data });
   return NextResponse.json({ event });
