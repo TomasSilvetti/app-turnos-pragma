@@ -9,6 +9,7 @@ import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
 import { PushToggle } from "@/components/notas/PushToggle";
 import { NotasSettings } from "@/components/notas/NotasSettings";
+import { NotasNav } from "@/components/notas/NotasNav";
 
 type NotaItem = { id: string; title: string; updatedAt: string };
 
@@ -65,7 +66,7 @@ export default function NotasListPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6">
       <header className="mb-6 flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold tracking-tight">Notas</h1>
+        <NotasNav actual="notas" />
         <div className="flex items-center gap-2">
           <PushToggle deviceReady={ready} />
           <ThemeToggle />

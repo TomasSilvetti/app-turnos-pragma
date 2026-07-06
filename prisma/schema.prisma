@@ -365,8 +365,26 @@ model NotaDevice {
 
   notas             Nota[]
   pushSubscriptions NotaPushSubscription[]
+  calendarEvents    NotaCalendarEvent[]
 
   @@map("nota_devices")
+}
+
+model NotaCalendarEvent {
+  id          String   @id @default(cuid())
+  deviceId    String
+  date        String // yyyy-MM-dd (hora Argentina)
+  startTime   String // HH:mm
+  endTime     String // HH:mm
+  title       String   @default("")
+  color       String   @default("blue")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, date])
+  @@map("nota_calendar_events")
 }
 
 model Nota {
