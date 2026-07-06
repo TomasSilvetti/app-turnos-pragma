@@ -93,3 +93,22 @@ export function franjaDeHora(time: string): Franja {
   if (h >= 12 && h < 19) return "tarde";
   return "noche";
 }
+
+// Rango de la barra de línea de tiempo de la vista semanal: 6:00 → 24:00.
+export const TIMELINE_START = 6 * 60; // 360
+export const TIMELINE_END = 24 * 60; // 1440
+
+export function minutesToTime(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${pad(h === 24 ? 0 : h)}:${pad(m)}`;
+}
+
+// Formatea una duración en minutos de forma compacta: "7hs", "1h 30m", "45min".
+export function formatDur(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h === 0) return `${m}min`;
+  if (m === 0) return `${h}hs`;
+  return `${h}h ${m}m`;
+}

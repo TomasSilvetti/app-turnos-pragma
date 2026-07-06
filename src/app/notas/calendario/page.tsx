@@ -75,6 +75,14 @@ export default function CalendarioPage() {
     });
   };
 
+  const abrirCrearSlot = (dateStr: string, startTime: string, endTime: string) => {
+    setModal({
+      open: true,
+      mode: "create",
+      values: { date: dateStr, startTime, endTime, title: "", color: "blue" },
+    });
+  };
+
   const abrirEditar = (ev: CalendarEvent) => {
     setModal({
       open: true,
@@ -165,6 +173,7 @@ export default function CalendarioPage() {
               onPrev={() => setWeekRef((d) => addDays(d, -7))}
               onNext={() => setWeekRef((d) => addDays(d, 7))}
               onSelectFranja={abrirCrearFranja}
+              onSelectSlot={abrirCrearSlot}
               onEditEvent={abrirEditar}
             />
           )}
