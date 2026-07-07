@@ -158,35 +158,36 @@ export function NotaEditor({
   const guardarReminder = async (v: ReminderValues) => {
     if (!editor) return;
     if (reminderModal.mode === "create") {
-      const res = await notasFetch(`/api/notas/${notaId}/reminders`, {
+      // Id generado en el cliente: la card se inserta con los valores ingresados
+      // sin depender de la respuesta del servidor, así también funciona offline.
+      const id = `loc-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      notasFetch(`/api/notas/${notaId}/reminders`, {
         method: "POST",
-        body: JSON.stringify(v),
-      });
-      if (res.ok) {
-        const { reminder } = await res.json();
-        const savedPos = insertPosRef.current;
-        const chain = editor.chain();
-        if (savedPos !== null) {
-          chain.setTextSelection(savedPos);
-        } else {
-          chain.focus();
-        }
-        chain
-          .insertContent({
-            type: "reminderChip",
-            attrs: {
-              reminderId: reminder.id,
-              time: reminder.time,
-              days: reminder.daysOfWeek,
-              text: reminder.text,
-              interval: reminder.intervalMinutes ?? null,
-              endTime: reminder.endTime ?? "",
-            },
-          })
-          .insertContent(" ")
-          .run();
-        insertPosRef.current = null;
+        body: JSON.stringify({ id, ...v }),
+      }).catch(() => {});
+
+      const savedPos = insertPosRef.current;
+      const chain = editor.chain();
+      if (savedPos !== null) {
+        chain.setTextSelection(savedPos);
+      } else {
+        chain.focus();
       }
+      chain
+        .insertContent({
+          type: "reminderChip",
+          attrs: {
+            reminderId: id,
+            time: v.time,
+            days: v.daysOfWeek,
+            text: v.text,
+            interval: v.intervalMinutes ?? null,
+            endTime: v.endTime ?? "",
+          },
+        })
+        .insertContent(" ")
+        .run();
+      insertPosRef.current = null;
     } else if (reminderModal.reminderId) {
       const id = reminderModal.reminderId;
       await notasFetch(`/api/notas/reminders/${id}`, { method: "PUT", body: JSON.stringify(v) });
@@ -228,22 +229,22 @@ export function NotaEditor({
   const guardarProgress = async (v: ProgressValues) => {
     if (!editor) return;
     if (progressModal.mode === "create") {
-      const res = await notasFetch(`/api/notas/${notaId}/progress`, {
+      // Id del cliente: se inserta la card sin depender de la respuesta (offline OK).
+      const id = `loc-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      notasFetch(`/api/notas/${notaId}/progress`, {
         method: "POST",
-        body: JSON.stringify(v),
-      });
-      if (res.ok) {
-        const { progress } = await res.json();
-        const savedPos = insertPosRef.current;
-        const chain = editor.chain();
-        if (savedPos !== null) {
-          chain.setTextSelection(savedPos);
-        } else {
-          chain.focus();
-        }
-        chain.insertContent({ type: "progressCard", attrs: { progressId: progress.id } }).run();
-        insertPosRef.current = null;
+        body: JSON.stringify({ id, ...v }),
+      }).catch(() => {});
+
+      const savedPos = insertPosRef.current;
+      const chain = editor.chain();
+      if (savedPos !== null) {
+        chain.setTextSelection(savedPos);
+      } else {
+        chain.focus();
       }
+      chain.insertContent({ type: "progressCard", attrs: { progressId: id } }).run();
+      insertPosRef.current = null;
     } else if (progressModal.progressId) {
       const res = await notasFetch(`/api/notas/progress/${progressModal.progressId}`, {
         method: "PUT",

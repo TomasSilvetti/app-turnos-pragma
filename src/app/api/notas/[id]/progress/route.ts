@@ -20,9 +20,11 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   const goal = hasGoal ? Math.max(1, Math.trunc(Number(body?.goal) || 1)) : null;
   const label = typeof body?.label === "string" ? body.label.slice(0, 120) : "";
   const color = typeof body?.color === "string" ? body.color : "blue";
+  // Id opcional del cliente (para progresos creados sin conexión).
+  const idCliente = typeof body?.id === "string" && body.id ? { id: body.id } : {};
 
   const progress = await prisma.notaProgress.create({
-    data: { notaId, hasGoal, goal, label, color, count: 0 },
+    data: { ...idCliente, notaId, hasGoal, goal, label, color, count: 0 },
   });
   return NextResponse.json({ progress }, { status: 201 });
 }
