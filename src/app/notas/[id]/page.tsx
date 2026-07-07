@@ -13,6 +13,7 @@ import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
 import { EditorToolbar } from "@/components/notas/EditorToolbar";
 import { NotaEditor } from "@/components/notas/NotaEditor";
+import { obtenerNotaLocal, guardarNotaLocal, parchearNotaLocal, eliminarNotaLocal } from "@/lib/notas/notasLocal";
 
 type NotaFull = { id: string; title: string; content: object };
 
@@ -61,10 +62,16 @@ export default function NotaEditorPage() {
     if (!deviceId) { setEstado("404"); return; }
     setEstado("cargando");
 
-    // Nota vacía para poder escribir offline (nota recién creada sin conexión).
-    const abrirVacia = () => {
-      setNota({ id: notaId, title: "", content: { type: "doc", content: [{ type: "paragraph" }] } });
-      setTitle("");
+    // Fallback offline: leer del espejo local; si no está, abrir en blanco.
+    const abrirDesdeLocal = async () => {
+      const local = await obtenerNotaLocal(notaId);
+      if (local) {
+        setNota({ id: local.id, title: local.title, content: local.content });
+        setTitle(local.title ?? "");
+      } else {
+        setNota({ id: notaId, title: "", content: { type: "doc", content: [{ type: "paragraph" }] } });
+        setTitle("");
+      }
       setEstado("ok");
     };
 
@@ -80,24 +87,26 @@ export default function NotaEditorPage() {
         }
         return r.json();
       })
-      .then((d: { nota?: NotaFull; offline?: boolean } | null) => {
+      .then(async (d: { nota?: NotaFull; offline?: boolean } | null) => {
         if (d?.nota) {
           setNota(d.nota);
           setTitle(d.nota.title ?? "");
           setEstado("ok");
-        } else if (d && (d.offline || !d.nota) && typeof navigator !== "undefined" && !navigator.onLine) {
-          // Sin conexión y sin copia cacheada: abrir en blanco para editar.
-          abrirVacia();
+          // Refrescar el espejo local con la copia del servidor.
+          guardarNotaLocal({ id: d.nota.id, title: d.nota.title ?? "", content: d.nota.content, updatedAt: new Date().toISOString() });
+        } else if (d && (d.offline || !d.nota)) {
+          await abrirDesdeLocal();
         }
       })
-      .catch(() => {
-        if (typeof navigator !== "undefined" && !navigator.onLine) abrirVacia();
-        else setEstado("error");
+      .catch(async () => {
+        await abrirDesdeLocal();
       });
   }, [ready, deviceId, notaId]);
 
   const onTitleChange = (value: string) => {
     setTitle(value);
+    // Espejo local inmediato para que el título persista offline.
+    parchearNotaLocal(notaId, { title: value, updatedAt: new Date().toISOString() });
     if (titleTimer.current) clearTimeout(titleTimer.current);
     titleTimer.current = setTimeout(() => {
       notasFetch(`/api/notas/${notaId}`, { method: "PUT", body: JSON.stringify({ title: value }) }).catch(() => {});
@@ -106,7 +115,8 @@ export default function NotaEditorPage() {
 
   const eliminarNota = async () => {
     if (!confirm("¿Eliminar esta nota? No se puede deshacer.")) return;
-    await notasFetch(`/api/notas/${notaId}`, { method: "DELETE" });
+    await eliminarNotaLocal(notaId);
+    await notasFetch(`/api/notas/${notaId}`, { method: "DELETE" }).catch(() => {});
     router.push("/notas");
   };
 

@@ -7,7 +7,10 @@
 
 const DB_NAME = "notas-offline";
 const STORE = "outbox";
-const DB_VERSION = 1;
+// Stores del espejo local (para trabajar sin conexión).
+export const STORE_NOTES = "notes";
+export const STORE_EVENTS = "events";
+const DB_VERSION = 2;
 
 export type OutboxItem = {
   id?: number;
@@ -20,7 +23,7 @@ export type OutboxItem = {
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 
-function abrirDB(): Promise<IDBDatabase> {
+export function abrirDB(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -28,6 +31,12 @@ function abrirDB(): Promise<IDBDatabase> {
       const db = req.result;
       if (!db.objectStoreNames.contains(STORE)) {
         db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains(STORE_NOTES)) {
+        db.createObjectStore(STORE_NOTES, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(STORE_EVENTS)) {
+        db.createObjectStore(STORE_EVENTS, { keyPath: "id" });
       }
     };
     req.onsuccess = () => resolve(req.result);

@@ -11,6 +11,13 @@ import { PushToggle } from "@/components/notas/PushToggle";
 import { NotasSettings } from "@/components/notas/NotasSettings";
 import { NotasNav } from "@/components/notas/NotasNav";
 import { OfflineBadge } from "@/components/notas/OfflineBadge";
+import {
+  listarNotasLocal,
+  parchearNotaLocal,
+  eliminarNotaLocal,
+  guardarNotaLocal,
+  obtenerNotaLocal,
+} from "@/lib/notas/notasLocal";
 
 type NotaItem = { id: string; title: string; updatedAt: string };
 
@@ -28,18 +35,49 @@ export default function NotasListPage() {
     e.stopPropagation();
     if (!confirm("¿Eliminar esta nota? No se puede deshacer.")) return;
     setBorrando(notaId);
+    await eliminarNotaLocal(notaId);
     await notasFetch(`/api/notas/${notaId}`, { method: "DELETE" }).catch(() => {});
     setNotas((prev) => prev.filter((n) => n.id !== notaId));
     setBorrando(null);
   };
 
+  // Descarga en segundo plano el contenido de las notas que aún no están en el
+  // espejo local, para poder abrirlas sin conexión más adelante.
+  const precargarContenidos = useCallback(async (items: NotaItem[]) => {
+    for (const it of items) {
+      // Prefetch de la ruta para que la navegación funcione offline (cachea RSC).
+      router.prefetch(`/notas/${it.id}`);
+      const local = await obtenerNotaLocal(it.id);
+      const sinContenido = !local || !local.content;
+      if (sinContenido) {
+        const nota = await notasFetch(`/api/notas/${it.id}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => d?.nota ?? null)
+          .catch(() => null);
+        if (nota) await guardarNotaLocal({ id: nota.id, title: nota.title ?? "", content: nota.content, updatedAt: it.updatedAt });
+      }
+    }
+  }, [router]);
+
   const cargar = useCallback(() => {
     notasFetch("/api/notas")
-      .then((r) => (r.ok ? r.json() : { notas: [] }))
-      .then((d: { notas: NotaItem[] }) => setNotas(d.notas ?? []))
-      .catch(() => {})
+      .then((r) => (r.ok ? r.json() : null))
+      .then(async (d: { notas?: NotaItem[] } | null) => {
+        if (d?.notas) {
+          setNotas(d.notas);
+          // Espejo local: título/fecha ahora, contenido en segundo plano.
+          await Promise.all(d.notas.map((n) => parchearNotaLocal(n.id, { title: n.title, updatedAt: n.updatedAt })));
+          precargarContenidos(d.notas);
+        } else {
+          // Sin conexión: leer del espejo local.
+          setNotas(await listarNotasLocal());
+        }
+      })
+      .catch(async () => {
+        setNotas(await listarNotasLocal());
+      })
       .finally(() => setCargando(false));
-  }, []);
+  }, [precargarContenidos]);
 
   useEffect(() => {
     if (!ready) return;
@@ -57,6 +95,13 @@ export default function NotasListPage() {
       // Id generado en el cliente: la nota conserva su id aunque se cree offline
       // (el POST se encola y sincroniza después). Navegamos igual en ambos casos.
       const id = `loc-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+      // Guardar la nota vacía en el espejo local para poder abrirla offline.
+      await guardarNotaLocal({
+        id,
+        title: "",
+        content: { type: "doc", content: [{ type: "paragraph" }] },
+        updatedAt: new Date().toISOString(),
+      });
       const res = await notasFetch("/api/notas", { method: "POST", body: JSON.stringify({ id }) });
       if (res.status === 201) {
         const { nota } = await res.json().catch(() => ({ nota: null }));

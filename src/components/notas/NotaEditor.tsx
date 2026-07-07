@@ -10,6 +10,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { notasFetch } from "@/lib/notas/client";
+import { parchearNotaLocal } from "@/lib/notas/notasLocal";
 import { SlashCommands, type SlashCommandType } from "./editor/slashCommands";
 import { ReminderChip } from "./editor/reminderChip";
 import { ProgressCard, PROGRESS_UPDATED_EVENT } from "./editor/progressCard";
@@ -68,6 +69,8 @@ export function NotaEditor({
     (content: object) => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       setEstado("saving");
+      // Espejo local inmediato: el contenido queda disponible offline.
+      parchearNotaLocal(notaId, { content, updatedAt: new Date().toISOString() });
       saveTimer.current = setTimeout(async () => {
         await notasFetch(`/api/notas/${notaId}`, {
           method: "PUT",

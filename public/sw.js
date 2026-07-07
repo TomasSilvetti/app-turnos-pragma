@@ -1,6 +1,6 @@
-// v5 — push + caché offline para la app de notas (/notas y /api/notas).
-const CACHE_SHELL = "notas-shell-v5";
-const CACHE_DATA = "notas-data-v5";
+// v6 — push + caché offline para la app de notas (/notas y /api/notas).
+const CACHE_SHELL = "notas-shell-v6";
+const CACHE_DATA = "notas-data-v6";
 
 // Recursos base de la app de notas para que cargue sin conexión.
 const SHELL_URLS = ["/notas", "/notas/calendario", "/notas.webmanifest", "/icon-192.png", "/icon-512.png"];
@@ -31,8 +31,10 @@ self.addEventListener("activate", (event) => {
 function esApiNotas(url) {
   return url.pathname.startsWith("/api/notas");
 }
-function esNavegacionNotas(request, url) {
-  return request.mode === "navigate" && url.pathname.startsWith("/notas");
+// Cualquier request a una ruta /notas (navegación completa o payload RSC de la
+// navegación client-side de Next). Excluye /api/notas, que se maneja aparte.
+function esRutaNotas(url) {
+  return url.pathname.startsWith("/notas") && !url.pathname.startsWith("/api/");
 }
 
 self.addEventListener("fetch", (event) => {
@@ -41,18 +43,23 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Navegación a /notas: network-first, fallback a la última copia cacheada.
-  if (esNavegacionNotas(request, url)) {
+  // Rutas /notas (navegación o RSC): network-first, fallback a la última copia
+  // cacheada. Cachea por URL completa (incluye ?_rsc=) para servir SPA offline.
+  if (esRutaNotas(url)) {
     event.respondWith(
       (async () => {
+        const cache = await caches.open(CACHE_SHELL);
         try {
           const fresh = await fetch(request);
-          const cache = await caches.open(CACHE_SHELL);
-          cache.put(request, fresh.clone());
+          if (fresh.ok) cache.put(request, fresh.clone());
           return fresh;
         } catch {
-          const cache = await caches.open(CACHE_SHELL);
-          return (await cache.match(request)) || (await cache.match("/notas")) || Response.error();
+          return (
+            (await cache.match(request)) ||
+            (await cache.match(request, { ignoreSearch: true })) ||
+            (await cache.match("/notas")) ||
+            Response.error()
+          );
         }
       })()
     );
