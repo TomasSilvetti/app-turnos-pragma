@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Save, Check, Clock, Sun, Sunset, Sparkles } from "lucide-react";
+import { Loader2, Save, Check, Clock, Sun, Sunset, Sparkles, CalendarOff, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
@@ -11,8 +11,15 @@ type Tipo = (typeof TIPOS)[number];
 
 type TurnoDTO = { horaInicio: string; horaFin: string; habilitado: boolean };
 type DiaDTO = { diaSemana: number; atiende: boolean; turnos: Record<Tipo, TurnoDTO> };
+type FeriadoDTO = { fecha: string; motivo: string | null };
 
 const HORA_REGEX = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+// yyyy-MM-dd → dd/MM/yyyy para mostrar al usuario.
+function fechaLegible(fecha: string): string {
+  const [y, m, d] = fecha.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 // Orden de presentación: lunes → domingo.
 const ORDEN = [1, 2, 3, 4, 5, 6, 0];
@@ -49,6 +56,12 @@ export function HorariosConfig() {
   const [error, setError] = useState<string | null>(null);
   const [guardado, setGuardado] = useState(false);
 
+  const [feriados, setFeriados] = useState<FeriadoDTO[]>([]);
+  const [nuevoFeriado, setNuevoFeriado] = useState("");
+  const [nuevoMotivo, setNuevoMotivo] = useState("");
+  const [feriadoBusy, setFeriadoBusy] = useState(false);
+  const [errorFeriado, setErrorFeriado] = useState<string | null>(null);
+
   const cargar = useCallback(() => {
     lavFetch("/api/lavanderia/turnos")
       .then((r) => (r.ok ? r.json() : { dias: [] }))
@@ -57,7 +70,53 @@ export function HorariosConfig() {
       .finally(() => setCargando(false));
   }, []);
 
+  const cargarFeriados = useCallback(() => {
+    lavFetch("/api/lavanderia/feriados")
+      .then((r) => (r.ok ? r.json() : { feriados: [] }))
+      .then((d: { feriados: FeriadoDTO[] }) => setFeriados(d.feriados ?? []))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => cargar(), [cargar]);
+  useEffect(() => cargarFeriados(), [cargarFeriados]);
+
+  const agregarFeriado = async () => {
+    if (!nuevoFeriado) return;
+    setFeriadoBusy(true);
+    setErrorFeriado(null);
+    try {
+      const res = await lavFetch("/api/lavanderia/feriados", {
+        method: "POST",
+        body: JSON.stringify({ fecha: nuevoFeriado, motivo: nuevoMotivo }),
+      });
+      if (res.ok) {
+        setNuevoFeriado("");
+        setNuevoMotivo("");
+        cargarFeriados();
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setErrorFeriado(d.error ?? "No se pudo agregar el feriado");
+      }
+    } catch {
+      setErrorFeriado("Error de red");
+    } finally {
+      setFeriadoBusy(false);
+    }
+  };
+
+  const quitarFeriado = async (fecha: string) => {
+    setFeriadoBusy(true);
+    setErrorFeriado(null);
+    try {
+      const res = await lavFetch(`/api/lavanderia/feriados?fecha=${fecha}`, { method: "DELETE" });
+      if (res.ok) cargarFeriados();
+      else setErrorFeriado("No se pudo quitar el feriado");
+    } catch {
+      setErrorFeriado("Error de red");
+    } finally {
+      setFeriadoBusy(false);
+    }
+  };
 
   const actualizarDia = (diaSemana: number, cambios: Partial<DiaDTO>) =>
     setDias((arr) => arr?.map((d) => (d.diaSemana === diaSemana ? { ...d, ...cambios } : d)) ?? arr);
@@ -207,6 +266,70 @@ export function HorariosConfig() {
           <span className="inline-flex items-center gap-1 text-sm text-emerald-600">
             <Check className="size-4" /> Guardado
           </span>
+        )}
+      </div>
+
+      <div className="space-y-3 rounded-xl border border-border p-4">
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-bold tracking-tight">
+            <CalendarOff className="size-5 text-rose-500" /> Feriados
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Un día feriado no aparece en el tablero y no se le asignan tareas: las OTs se corren
+            al siguiente día hábil y los huecos que queden se rellenan automáticamente.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-2">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Fecha</label>
+            <input
+              type="date"
+              value={nuevoFeriado}
+              onChange={(e) => setNuevoFeriado(e.target.value)}
+              className={cn(inputCls, "w-40")}
+            />
+          </div>
+          <div className="flex flex-1 flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
+            <input
+              type="text"
+              value={nuevoMotivo}
+              onChange={(e) => setNuevoMotivo(e.target.value)}
+              placeholder="Ej: Día del trabajador"
+              className={cn(inputCls, "w-full min-w-40")}
+            />
+          </div>
+          <Button onClick={agregarFeriado} disabled={feriadoBusy || !nuevoFeriado} variant="outline">
+            {feriadoBusy ? <Loader2 className="animate-spin" /> : <Plus />}
+            Agregar
+          </Button>
+        </div>
+
+        {errorFeriado && <p className="text-sm text-red-500">{errorFeriado}</p>}
+
+        {feriados.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No hay feriados cargados.</p>
+        ) : (
+          <ul className="divide-y divide-border rounded-lg border border-border">
+            {feriados.map((f) => (
+              <li key={f.fecha} className="flex items-center justify-between gap-3 px-3 py-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">{fechaLegible(f.fecha)}</span>
+                  {f.motivo && <span className="text-muted-foreground">— {f.motivo}</span>}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => quitarFeriado(f.fecha)}
+                  disabled={feriadoBusy}
+                  className="text-muted-foreground transition-colors hover:text-rose-500 disabled:opacity-50"
+                  aria-label={`Quitar feriado ${fechaLegible(f.fecha)}`}
+                >
+                  <Trash2 className="size-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     </div>

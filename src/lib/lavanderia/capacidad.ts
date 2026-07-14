@@ -20,6 +20,7 @@ export type TurnoConfigRow = {
 export type ConfigTurnos = {
   turnos: TurnoConfigRow[];
   diasAtiende: Set<number>; // días de la semana con atiende=true
+  feriados: Set<string>; // fechas yyyy-MM-dd marcadas como feriado (sin turnos)
 };
 
 const HORIZONTE_DIAS = 60; // limite de busqueda al asignar
@@ -35,6 +36,7 @@ export function turnosDelDia(
   config: ConfigTurnos,
   diasExtraHabilitados: Set<string>
 ): TurnoAplicable[] {
+  if (config.feriados.has(fecha)) return []; // feriado: el dia no trabaja
   const dia = diaSemanaDe(fecha);
   if (!config.diasAtiende.has(dia)) return [];
   const res: TurnoAplicable[] = [];
@@ -65,17 +67,22 @@ export async function primerDiaLaborable(): Promise<string> {
 
 // Carga la config de turnos y los dias extra habilitados en un rango.
 export async function cargarConfigTurnos(fechaDesde: string, fechaHasta: string) {
-  const [turnos, dias, extras] = await Promise.all([
+  const [turnos, dias, extras, feriados] = await Promise.all([
     prisma.lavTurnoConfig.findMany(),
     prisma.lavDiaConfig.findMany({ where: { atiende: true }, select: { diaSemana: true } }),
     prisma.lavDiaExtra.findMany({
       where: { habilitado: true, fecha: { gte: fechaDesde, lte: fechaHasta } },
       select: { fecha: true },
     }),
+    prisma.lavDiaFeriado.findMany({
+      where: { fecha: { gte: fechaDesde, lte: fechaHasta } },
+      select: { fecha: true },
+    }),
   ]);
   const config: ConfigTurnos = {
     turnos: turnos as TurnoConfigRow[],
     diasAtiende: new Set(dias.map((d) => d.diaSemana)),
+    feriados: new Set(feriados.map((f) => f.fecha)),
   };
   return { config, diasExtra: new Set(extras.map((e) => e.fecha)) };
 }

@@ -604,6 +604,15 @@ model LavDiaConfig {
   @@map("lav_dia_config")
 }
 
+// Marca una fecha puntual (yyyy-MM-dd) como feriado: ese dia no tiene turnos, no
+// aparece en el tablero y no se le asignan OTs (se saltea al siguiente dia habil).
+model LavDiaFeriado {
+  fecha  String  @id // yyyy-MM-dd
+  motivo String?
+
+  @@map("lav_dia_feriado")
+}
+
 // Habilita el turno extra para un dia puntual (fecha en formato yyyy-MM-dd).
 model LavDiaExtra {
   id         String  @id @default(cuid())
