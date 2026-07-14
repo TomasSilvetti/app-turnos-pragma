@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Loader2, Save, Check, Clock, Sun, Sunset, Sparkles, CalendarOff, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { FeriadoDatePicker } from "@/components/lavanderia/FeriadoDatePicker";
 import { lavFetch } from "@/lib/lavanderia/client";
 import { cn } from "@/lib/utils";
 
@@ -283,12 +284,7 @@ export function HorariosConfig() {
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">Fecha</label>
-            <input
-              type="date"
-              value={nuevoFeriado}
-              onChange={(e) => setNuevoFeriado(e.target.value)}
-              className={cn(inputCls, "w-40")}
-            />
+            <FeriadoDatePicker value={nuevoFeriado} onChange={setNuevoFeriado} className="w-44" />
           </div>
           <div className="flex flex-1 flex-col gap-1">
             <label className="text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
