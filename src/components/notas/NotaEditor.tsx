@@ -14,8 +14,11 @@ import { parchearNotaLocal } from "@/lib/notas/notasLocal";
 import { SlashCommands, type SlashCommandType } from "./editor/slashCommands";
 import { ReminderChip } from "./editor/reminderChip";
 import { ProgressCard, PROGRESS_UPDATED_EVENT } from "./editor/progressCard";
+import { NotaImage, INSERT_IMAGE_EVENT } from "./editor/notaImage";
 import { ReminderModal, type ReminderValues } from "./ReminderModal";
 import { ProgressModal, type ProgressValues } from "./ProgressModal";
+import { ImageCropModal } from "./ImageCropModal";
+import { archivoAImagenComprimida, esImagen } from "@/lib/notas/imagen";
 
 type Estado = "idle" | "saving" | "saved";
 
@@ -32,7 +35,13 @@ type ProgressModalState = {
   initial?: Partial<ProgressValues>;
 };
 
+type CropModalState = { open: boolean; imgId?: string; src?: string };
+
 type NodeHit = { pos: number; size: number; attrs: Record<string, unknown> };
+
+function nuevoId(): string {
+  return `loc-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+}
 
 function findNode(editor: Editor, name: string, attr: string, id: string): NodeHit | null {
   let res: NodeHit | null = null;
@@ -61,9 +70,11 @@ export function NotaEditor({
   const [estado, setEstado] = useState<Estado>("idle");
   const [reminderModal, setReminderModal] = useState<ReminderModalState>({ open: false, mode: "create" });
   const [progressModal, setProgressModal] = useState<ProgressModalState>({ open: false, mode: "create" });
+  const [cropModal, setCropModal] = useState<CropModalState>({ open: false });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const editorRef = useRef<Editor | null>(null);
   const insertPosRef = useRef<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const guardarContenido = useCallback(
     (content: object) => {
@@ -82,11 +93,57 @@ export function NotaEditor({
     [notaId]
   );
 
+  // Inserta imágenes ya comprimidas como data URL: quedan dentro del JSON de la
+  // nota, así el espejo local sigue mostrándolas sin conexión.
+  const insertarImagenes = useCallback(async (files: File[], pos?: number) => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    for (const file of files) {
+      if (!esImagen(file)) continue;
+      try {
+        const src = await archivoAImagenComprimida(file);
+        const chain = editor.chain();
+        if (pos !== undefined) chain.setTextSelection(pos);
+        else chain.focus();
+        chain.insertContent({ type: "notaImage", attrs: { imgId: nuevoId(), src, width: 100 } }).run();
+      } catch {
+        // Un archivo ilegible no debe cortar el resto del pegado.
+      }
+    }
+  }, []);
+
   const onSlashCommand = useCallback((cmd: SlashCommandType) => {
     insertPosRef.current = editorRef.current?.state.selection.from ?? null;
     if (cmd === "recordatorio") setReminderModal({ open: true, mode: "create" });
+    else if (cmd === "imagen") fileInputRef.current?.click();
     else setProgressModal({ open: true, mode: "create" });
   }, []);
+
+  const onCropImagen = useCallback((imgId: string, src: string) => {
+    setCropModal({ open: true, imgId, src });
+  }, []);
+
+  const aplicarRecorte = useCallback(
+    (nuevoSrc: string) => {
+      const editor = editorRef.current;
+      const imgId = cropModal.imgId;
+      if (editor && imgId) {
+        const info = findNode(editor, "notaImage", "imgId", imgId);
+        if (info) {
+          const pos = info.pos;
+          editor
+            .chain()
+            .command(({ tr }) => {
+              tr.setNodeAttribute(pos, "src", nuevoSrc);
+              return true;
+            })
+            .run();
+        }
+      }
+      setCropModal({ open: false });
+    },
+    [cropModal.imgId]
+  );
 
   const onEditReminder = useCallback((reminderId: string) => {
     const info = editorRef.current && findNode(editorRef.current, "reminderChip", "reminderId", reminderId);
@@ -127,10 +184,29 @@ export function NotaEditor({
       SlashCommands.configure({ onCommand: onSlashCommand }),
       ReminderChip.configure({ onEdit: onEditReminder }),
       ProgressCard.configure({ onEdit: onEditProgress }),
+      NotaImage.configure({ onCrop: onCropImagen }),
     ],
     content: initialContent,
     editorProps: {
       attributes: { class: "notas-prose focus:outline-none min-h-[60vh] px-4 py-4" },
+      // Pegar captura / imagen del portapapeles.
+      handlePaste: (_view, event) => {
+        const imagenes = Array.from(event.clipboardData?.files ?? []).filter(esImagen);
+        if (imagenes.length === 0) return false;
+        event.preventDefault();
+        insertarImagenes(imagenes);
+        return true;
+      },
+      // Arrastrar y soltar archivos de imagen sobre el editor.
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved) return false;
+        const imagenes = Array.from(event.dataTransfer?.files ?? []).filter(esImagen);
+        if (imagenes.length === 0) return false;
+        event.preventDefault();
+        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        insertarImagenes(imagenes, coords?.pos);
+        return true;
+      },
     },
     onUpdate: ({ editor }) => guardarContenido(editor.getJSON()),
   });
@@ -139,6 +215,16 @@ export function NotaEditor({
     editorRef.current = editor;
     onEditorReady?.(editor);
   }, [editor, onEditorReady]);
+
+  // Botón "Imagen" de la toolbar fija de la página.
+  useEffect(() => {
+    const abrirSelector = () => {
+      insertPosRef.current = editorRef.current?.state.selection.from ?? null;
+      fileInputRef.current?.click();
+    };
+    window.addEventListener(INSERT_IMAGE_EVENT, abrirSelector);
+    return () => window.removeEventListener(INSERT_IMAGE_EVENT, abrirSelector);
+  }, []);
 
   // Deep-link: enfocar el recordatorio indicado por la notificación.
   useEffect(() => {
@@ -281,6 +367,27 @@ export function NotaEditor({
           {estado === "saving" ? "Guardando…" : estado === "saved" ? "Guardado" : ""}
         </span>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = "";
+          if (files.length) insertarImagenes(files, insertPosRef.current ?? undefined);
+          insertPosRef.current = null;
+        }}
+      />
+
+      <ImageCropModal
+        open={cropModal.open}
+        src={cropModal.src ?? null}
+        onClose={() => setCropModal({ open: false })}
+        onApply={aplicarRecorte}
+      />
 
       <ReminderModal
         open={reminderModal.open}

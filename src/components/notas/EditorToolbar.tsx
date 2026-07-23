@@ -11,9 +11,11 @@ import {
   Heading1,
   Heading2,
   Ban,
+  ImagePlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TEXT_COLORS } from "./editor/colors";
+import { INSERT_IMAGE_EVENT } from "./editor/notaImage";
 
 function Btn({
   active,
@@ -110,6 +112,13 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       ))}
       <Btn label="Quitar color" onClick={() => editor.chain().focus().unsetColor().run()}>
         <Ban />
+      </Btn>
+      {sep}
+      <Btn
+        label="Insertar imagen"
+        onClick={() => window.dispatchEvent(new CustomEvent(INSERT_IMAGE_EVENT))}
+      >
+        <ImagePlus />
       </Btn>
     </div>
   );

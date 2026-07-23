@@ -5,11 +5,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
-import { Bell, Target } from "lucide-react";
+import { Bell, ImagePlus, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SlashItem = {
-  id: "recordatorio" | "progreso";
+  id: "recordatorio" | "progreso" | "imagen";
   title: string;
   description: string;
   keywords: string[];
@@ -28,11 +28,18 @@ export const SLASH_ITEMS: SlashItem[] = [
     description: "Contador u objetivo a seguir",
     keywords: ["progreso", "contador", "objetivo", "habito", "meta"],
   },
+  {
+    id: "imagen",
+    title: "Imagen",
+    description: "Subí una imagen (o pegala con Ctrl+V)",
+    keywords: ["imagen", "foto", "captura", "screenshot", "picture", "img"],
+  },
 ];
 
 const ICONS: Record<SlashItem["id"], React.ReactNode> = {
   recordatorio: <Bell className="size-4" />,
   progreso: <Target className="size-4" />,
+  imagen: <ImagePlus className="size-4" />,
 };
 
 export type SlashMenuRef = {
