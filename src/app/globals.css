@@ -329,3 +329,13 @@ body {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(300%); }
 }
+
+/* Bandeja en modo revisión: las ventanas llevan encima dos renglones —la manija
+   de arrastre y los controles— y necesitan lugar donde vivir. Sin este aire, la
+   cabecera de una ventana le cae encima al último párrafo de la anterior. */
+.bandeja-revision .notas-prose > * {
+  margin-top: 3.5rem;
+}
+.bandeja-revision .notas-prose > *:first-child {
+  margin-top: 1rem;
+}

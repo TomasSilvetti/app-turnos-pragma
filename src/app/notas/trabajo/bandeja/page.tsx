@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Sparkles, AlertTriangle, Clock, CheckCheck, PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
@@ -212,7 +213,7 @@ export default function BandejaPage() {
           <Loader2 className="animate-spin" />
         </div>
       ) : (
-        <div className="relative">
+        <div className={cn("relative", enRevision && "bandeja-revision")}>
           <PromptEditor
             key={`bandeja-${version}`}
             bandejaId={bandeja.id}

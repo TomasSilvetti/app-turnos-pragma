@@ -173,8 +173,26 @@ export function OverlaySugerencias({
               activa && "shadow-lg"
             )}
           >
-            {/* Cabecera: título editable y qué hacer con la ventana */}
-            <div className="absolute -top-3.5 left-2 right-2 flex items-center gap-1.5">
+            {/* Cabecera en dos renglones: arriba la manija para agrandar o
+                achicar el alcance, abajo los controles. Juntos, el área de
+                arrastre le robaba el puntero al input del título y a los
+                botones, y no había forma de tocarlos sin empezar a arrastrar. */}
+            <div className="absolute inset-x-0 -top-11 flex flex-col items-stretch gap-1">
+              <div
+                onPointerDown={(e) => iniciarArrastre(e, s, "arriba")}
+                role="slider"
+                aria-label="Borde superior del ítem"
+                aria-valuenow={0}
+                tabIndex={-1}
+                title="Arrastrá para incluir o excluir párrafos de arriba"
+                className="flex h-4 cursor-ns-resize touch-none items-center justify-center"
+              >
+                <span className={cn("flex h-3.5 w-16 items-center justify-center rounded-full shadow-sm", color.manija)}>
+                  <GripHorizontal className="size-3 text-white" />
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1.5">
               <input
                 value={s.titulo}
                 onChange={(e) => onCambiarTitulo(s.id, e.target.value)}
@@ -217,26 +235,22 @@ export function OverlaySugerencias({
               >
                 <Trash2 className="size-3.5" />
               </button>
+              </div>
             </div>
 
-            {(["arriba", "abajo"] as const).map((borde) => (
-              <div
-                key={borde}
-                onPointerDown={(e) => iniciarArrastre(e, s, borde)}
-                role="slider"
-                aria-label={`Borde ${borde} del ítem`}
-                aria-valuenow={0}
-                tabIndex={-1}
-                className={cn(
-                  "absolute inset-x-0 flex h-4 cursor-ns-resize touch-none items-center justify-center",
-                  borde === "arriba" ? "-top-2" : "-bottom-2"
-                )}
-              >
-                <span className={cn("flex h-3 w-10 items-center justify-center rounded-full opacity-80", color.manija)}>
-                  <GripHorizontal className="size-3 text-white" />
-                </span>
-              </div>
-            ))}
+            <div
+              onPointerDown={(e) => iniciarArrastre(e, s, "abajo")}
+              role="slider"
+              aria-label="Borde inferior del ítem"
+              aria-valuenow={0}
+              tabIndex={-1}
+              title="Arrastrá para incluir o excluir párrafos de abajo"
+              className="absolute inset-x-0 -bottom-2 flex h-4 cursor-ns-resize touch-none items-center justify-center"
+            >
+              <span className={cn("flex h-3.5 w-16 items-center justify-center rounded-full shadow-sm", color.manija)}>
+                <GripHorizontal className="size-3 text-white" />
+              </span>
+            </div>
           </div>
         );
       })}
