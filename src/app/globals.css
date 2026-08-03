@@ -308,3 +308,24 @@ body {
 .fila-entra-derecha {
   animation: fila-entra-derecha 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* Sección Trabajo: el ítem que el harness está ejecutando ahora mismo. El pulso
+   va en el borde y no en la opacidad del bloque entero, para que el log siga
+   siendo legible mientras late. */
+.nota-item-trabajando {
+  animation: nota-trabajando 2s ease-in-out infinite;
+}
+@keyframes nota-trabajando {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 45%, transparent); }
+  50% { box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-primary) 12%, transparent); }
+}
+
+/* Barra de avance de una tarea en curso que no declaró pasos numerados: no hay
+   porcentaje honesto que mostrar, así que se muestra actividad y nada más. */
+.nota-barra-indeterminada {
+  animation: nota-barra-indeterminada 1.4s ease-in-out infinite;
+}
+@keyframes nota-barra-indeterminada {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}

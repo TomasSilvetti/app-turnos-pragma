@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, FileText, CalendarDays, Check } from "lucide-react";
+import { ChevronDown, FileText, CalendarDays, Check, Hammer } from "lucide-react";
 
-type Seccion = "notas" | "calendario";
+type Seccion = "notas" | "calendario" | "trabajo";
 
 const OPCIONES: { id: Seccion; label: string; href: string; icon: typeof FileText }[] = [
   { id: "notas", label: "Notas", href: "/notas", icon: FileText },
   { id: "calendario", label: "Calendario", href: "/notas/calendario", icon: CalendarDays },
+  { id: "trabajo", label: "Trabajo", href: "/notas/trabajo", icon: Hammer },
 ];
 
 // Dropdown en la parte superior para cambiar entre las secciones de la app.

@@ -46,7 +46,10 @@ function Btn({
   );
 }
 
-export function EditorToolbar({ editor }: { editor: Editor }) {
+// `onInsertImage` lo usan los editores que conviven varios en la misma pantalla
+// (los prompts de la sección Trabajo): ahí el evento global insertaría la imagen
+// en todos los editores montados a la vez.
+export function EditorToolbar({ editor, onInsertImage }: { editor: Editor; onInsertImage?: () => void }) {
   const state = useEditorState({
     editor,
     selector: ({ editor: e }) => ({
@@ -116,7 +119,7 @@ export function EditorToolbar({ editor }: { editor: Editor }) {
       {sep}
       <Btn
         label="Insertar imagen"
-        onClick={() => window.dispatchEvent(new CustomEvent(INSERT_IMAGE_EVENT))}
+        onClick={() => (onInsertImage ? onInsertImage() : window.dispatchEvent(new CustomEvent(INSERT_IMAGE_EVENT)))}
       >
         <ImagePlus />
       </Btn>

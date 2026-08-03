@@ -366,6 +366,9 @@ model NotaDevice {
   notas             Nota[]
   pushSubscriptions NotaPushSubscription[]
   calendarEvents    NotaCalendarEvent[]
+  trabajoItems      TrabajoItem[]
+  harnessCuentas    HarnessCuenta[]
+  harnessEstado     HarnessEstado?
 
   @@map("nota_devices")
 }
@@ -811,4 +814,168 @@ model LavIAUso {
 
   @@index([creadoEn])
   @@map("lav_ia_uso")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Sección Trabajo de la app de notas. Es la cola del harness de
+// cuentas, que corre en la máquina del usuario: la app es la
+// única entrada de trabajo y la única vista del progreso.
+//
+// El ítem NO vive dentro del JSON de una nota a propósito: el
+// harness escribe el log mientras el usuario puede estar
+// editando el prompt, y un solo documento compartido haría que
+// una escritura pise a la otra.
+// ─────────────────────────────────────────────────────────────
+
+model TrabajoItem {
+  id       String @id @default(cuid())
+  deviceId String
+  titulo   String @default("")
+  // pendiente | en_curso | bloqueado | completado
+  estado   String @default("pendiente")
+  // Posición dentro de su lista; el harness toma el pendiente de menor orden.
+  orden    Int    @default(0)
+  // Clave de proyectos.json en el harness: dice en qué repo trabajar.
+  proyecto String @default("")
+
+  // Progreso: los pasos numerados del prompt. La sesión los declara al
+  // arrancar y va marcando cuál cursa; sin ellos la barra no se dibuja.
+  pasoActual  Int @default(0)
+  pasosTotales Int @default(0)
+  // Cuántas sesiones lo tomaron sin cerrarlo. A los 3 el harness lo bloquea.
+  intentos    Int @default(0)
+
+  // Sesión en curso, para el cronómetro contra el techo del runner.
+  sesionInicio DateTime?
+  cuenta       String?
+  // Motivo cuando estado = bloqueado (lo escribe el harness o el runner).
+  motivoBloqueo String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completadoEn DateTime?
+
+  device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  prompts  TrabajoPrompt[]
+  logs     TrabajoLogEntry[]
+  imagenes TrabajoImagen[]
+  enCursoDe HarnessEstado[]
+
+  @@index([deviceId, estado, orden])
+  @@map("trabajo_items")
+}
+
+// Un ítem puede tener varios prompts: el inicial y los de desbloqueo que se
+// escriben desde la lista de bloqueados. Se acumulan en vez de pisarse porque
+// la sesión que retoma necesita leer los dos para entender qué cambió.
+model TrabajoPrompt {
+  id      String @id @default(cuid())
+  itemId  String
+  // inicial | desbloqueo
+  tipo    String @default("inicial")
+  // Documento de Tiptap. Las imágenes van por URL de Blob, no embebidas.
+  contenido Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  item     TrabajoItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  imagenes TrabajoImagen[]
+
+  @@index([itemId])
+  @@map("trabajo_prompts")
+}
+
+// Lo que la sesión va dejando: hitos, problemas y cómo los resolvió. Lo sube el
+// puente leyendo el ndjson que la sesión escribe en disco; la sesión nunca
+// habla con esta API.
+model TrabajoLogEntry {
+  id     String @id @default(cuid())
+  itemId String
+  // hito | problema | solucion | bloqueo | handoff
+  tipo   String @default("hito")
+  texto  String @default("")
+  paso   Int?
+  cuenta String?
+  // Marca el problema que la sesión no puede resolver sola. En la UI habilita
+  // el botón que convierte ese texto en un ítem de trabajo nuevo.
+  requiereIntervencion Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  item     TrabajoItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  imagenes TrabajoImagen[]
+
+  @@index([itemId, createdAt])
+  @@map("trabajo_log_entries")
+}
+
+// Toda imagen de la sección vive en Vercel Blob; acá queda su referencia.
+// `pathname` es lo que permite borrarla del store cuando se elimina el ítem:
+// sin eso quedarían archivos huérfanos ocupando lugar para siempre.
+model TrabajoImagen {
+  id         String  @id @default(cuid())
+  itemId     String
+  logEntryId String?
+  promptId   String?
+  url        String
+  pathname   String
+  ancho      Int     @default(0)
+  alto       Int     @default(0)
+  bytes      Int     @default(0)
+  createdAt  DateTime @default(now())
+
+  item     TrabajoItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  logEntry TrabajoLogEntry? @relation(fields: [logEntryId], references: [id], onDelete: Cascade)
+  prompt   TrabajoPrompt?   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([logEntryId])
+  @@index([promptId])
+  @@map("trabajo_imagenes")
+}
+
+// Una fila por cuenta del harness (cuentas\1, cuentas\2, ...). Los tokens no se
+// pueden consultar: el CLI no expone /usage. Se acumulan sumando lo que cada
+// sesión reporta con --output-format json, y el techo se aprende solo: cuando
+// una cuenta corta por límite, lo acumulado en esa ventana ES su techo.
+model HarnessCuenta {
+  id       String @id @default(cuid())
+  deviceId String
+  nombre   String
+  // activa | agotada | login_requerido
+  estado   String @default("activa")
+  tokensVentana  Int  @default(0)
+  // Techo observado la última vez que esta cuenta cortó por límite. null = todavía
+  // no cortó nunca, y entonces la barra se muestra sin porcentaje.
+  techoObservado Int?
+  // Hora en que vuelve la cuota, parseada del propio mensaje del CLI
+  // ("resets 2:50am"). Es el único dato exacto que hay sobre la cuota.
+  resetAt        DateTime?
+  ventanaInicio  DateTime?
+  ultimaSesionAt DateTime?
+  updatedAt      DateTime @updatedAt
+
+  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, nombre])
+  @@map("harness_cuentas")
+}
+
+// Latido del runner, una fila por device. Si `actualizadoAt` quedó viejo, la UI
+// muestra el harness como detenido: es la forma de enterarse de que la máquina
+// se apagó sin que nadie avise.
+model HarnessEstado {
+  id       String @id @default(cuid())
+  deviceId String @unique
+  // detenido | ocioso | trabajando
+  estado   String @default("detenido")
+  itemEnCursoId String?
+  sesionInicio  DateTime?
+  cuentaActual  String?
+  limiteSesionMin Int @default(90)
+  actualizadoAt DateTime @default(now())
+
+  device     NotaDevice   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  itemEnCurso TrabajoItem? @relation(fields: [itemEnCursoId], references: [id], onDelete: SetNull)
+
+  @@map("harness_estado")
 }
