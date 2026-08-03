@@ -46,7 +46,17 @@ export async function DELETE(request: NextRequest, ctx: Ctx) {
   if (!deviceId) return noAutorizado();
   const { id } = await ctx.params;
 
-  if (!(await sugerenciaDelDevice(id, deviceId))) return noEncontrado();
+  const actual = await sugerenciaDelDevice(id, deviceId);
+  if (!actual) return noEncontrado();
+
   await prisma.trabajoSugerencia.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
+
+  // Descartar la última devuelve la bandeja a modo edición. Sin esto queda en
+  // "lista" sin nada que listar, y el cartel de revisión no se va nunca.
+  const quedan = await prisma.trabajoSugerencia.count({ where: { bandejaId: actual.bandeja.id } });
+  if (quedan === 0) {
+    await prisma.trabajoBandeja.update({ where: { id: actual.bandeja.id }, data: { estado: "vacia" } });
+  }
+
+  return NextResponse.json({ ok: true, quedan });
 }
