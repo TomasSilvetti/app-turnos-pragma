@@ -69,9 +69,17 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       // vuelta y el botón no serviría para nada.
       if (estadoPrevio === "bloqueado") data.intentos = 0;
     }
-    // Pausar no es fracasar: los intentos quedan como estaban, así reanudarla no
-    // la deja a un paso de que el harness la saltee por trabada.
-    if (body.estado === "pausada") data.sesionInicio = null;
+    // Pausar no es fracasar, y por eso además de no sumar intentos hay que
+    // DEVOLVER el que ya cobró la bajada de la sesión que estaba corriendo. Si
+    // no, pausar y reanudar tres veces bloquea sola una tarea que nunca falló:
+    // el mismo agujero por el que se fueron 17 ítems el 03/08, con otra puerta.
+    if (body.estado === "pausada") {
+      data.sesionInicio = null;
+      if (estadoPrevio === "en_curso") {
+        const previo = await prisma.trabajoItem.findUnique({ where: { id }, select: { intentos: true } });
+        data.intentos = Math.max(0, (previo?.intentos ?? 1) - 1);
+      }
+    }
   }
 
   const item = await prisma.trabajoItem.update({ where: { id }, data });
