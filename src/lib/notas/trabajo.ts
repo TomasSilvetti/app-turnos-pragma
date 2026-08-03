@@ -50,19 +50,35 @@ export async function itemDelDevice(id: string, deviceId: string) {
 // Borra del store las imágenes de un ítem antes de borrar sus filas. El orden
 // importa: si se borraran las filas primero y fallara el del(), quedarían blobs
 // sin nadie que sepa que existen — imposibles de encontrar para limpiarlos.
+//
+// Un mismo blob puede estar referenciado más de una vez: al confirmar una
+// sugerencia, la imagen que estaba en la bandeja se copia al ítem conservando el
+// `pathname`. Por eso sólo se borra del store el que no le queda a nadie más;
+// si no, borrar el ítem dejaría a la bandeja mostrando una imagen rota.
 export async function borrarImagenesDeItem(itemId: string): Promise<number> {
   const imagenes = await prisma.trabajoImagen.findMany({
     where: { itemId },
-    select: { url: true },
+    select: { url: true, pathname: true },
   });
   if (imagenes.length === 0) return 0;
-  try {
-    await del(imagenes.map((i) => i.url));
-  } catch {
-    // Un blob que ya no está, o un corte de red, no debe impedir borrar el ítem:
-    // lo contrario deja al usuario con un ítem que no se puede eliminar nunca.
+
+  const sinDuenio: string[] = [];
+  for (const img of imagenes) {
+    const otras = await prisma.trabajoImagen.count({
+      where: { pathname: img.pathname, itemId: { not: itemId } },
+    });
+    if (otras === 0) sinDuenio.push(img.url);
   }
-  return imagenes.length;
+
+  if (sinDuenio.length > 0) {
+    try {
+      await del(sinDuenio);
+    } catch {
+      // Un blob que ya no está, o un corte de red, no debe impedir borrar el
+      // ítem: lo contrario deja un ítem que no se puede eliminar nunca.
+    }
+  }
+  return sinDuenio.length;
 }
 
 // Estado del harness listo para la UI, con el latido ya evaluado.

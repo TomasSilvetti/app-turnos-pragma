@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
+import type { Extensions } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { Placeholder } from "@tiptap/extension-placeholder";
@@ -27,17 +28,25 @@ function nuevoId(): string {
 export function PromptEditor({
   itemId,
   promptId,
+  bandejaId,
   contenidoInicial,
   editable = true,
   placeholder = PLACEHOLDER,
   onGuardado,
+  extensiones = [],
+  onEditor,
 }: {
-  itemId: string;
-  promptId: string;
+  itemId?: string;
+  promptId?: string;
+  // La bandeja usa el mismo editor con otro destino: su contenido se guarda en
+  // la bandeja y sus imágenes cuelgan de ella hasta que se confirme un ítem.
+  bandejaId?: string;
   contenidoInicial: object;
   editable?: boolean;
   placeholder?: string;
   onGuardado?: () => void;
+  extensiones?: Extensions;
+  onEditor?: (editor: Editor | null) => void;
 }) {
   const [estado, setEstado] = useState<"idle" | "saving" | "saved">("idle");
   const [subiendo, setSubiendo] = useState(false);
@@ -50,15 +59,13 @@ export function PromptEditor({
       if (saveTimer.current) clearTimeout(saveTimer.current);
       setEstado("saving");
       saveTimer.current = setTimeout(async () => {
-        await notasFetch(`/api/notas/trabajo/prompts/${promptId}`, {
-          method: "PUT",
-          body: JSON.stringify({ contenido }),
-        }).catch(() => {});
+        const url = bandejaId ? "/api/notas/trabajo/bandeja" : `/api/notas/trabajo/prompts/${promptId}`;
+        await notasFetch(url, { method: "PUT", body: JSON.stringify({ contenido }) }).catch(() => {});
         setEstado("saved");
         onGuardado?.();
       }, 800);
     },
-    [promptId, onGuardado]
+    [promptId, bandejaId, onGuardado]
   );
 
   // La imagen se comprime en el navegador igual que en las notas, y recién
@@ -77,8 +84,9 @@ export function PromptEditor({
 
           const form = new FormData();
           form.append("file", new File([blob], "captura.webp", { type: blob.type }));
-          form.append("itemId", itemId);
-          form.append("promptId", promptId);
+          if (bandejaId) form.append("bandejaId", bandejaId);
+          if (itemId) form.append("itemId", itemId);
+          if (promptId) form.append("promptId", promptId);
 
           const res = await notasFetch("/api/notas/trabajo/imagenes", { method: "POST", body: form });
           if (!res.ok) continue;
@@ -93,7 +101,7 @@ export function PromptEditor({
         setSubiendo(false);
       }
     },
-    [itemId, promptId]
+    [itemId, promptId, bandejaId]
   );
 
   const editor = useEditor({
@@ -107,6 +115,7 @@ export function PromptEditor({
       // El recorte necesita el modal de la página de notas; acá se sube la
       // imagen ya recortada desde el celular, así que el botón queda inerte.
       NotaImage.configure({ onCrop: () => {} }),
+      ...extensiones,
     ],
     content: contenidoInicial,
     editorProps: {
@@ -132,7 +141,8 @@ export function PromptEditor({
 
   useEffect(() => {
     editorRef.current = editor;
-  }, [editor]);
+    onEditor?.(editor);
+  }, [editor, onEditor]);
 
   return (
     <div className="rounded-lg border border-border bg-background">

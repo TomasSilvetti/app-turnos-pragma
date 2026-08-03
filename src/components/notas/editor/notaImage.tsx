@@ -72,7 +72,10 @@ function NotaImageView({ node, updateAttributes, deleteNode, selected, extension
   }, [arrastrando]);
 
   return (
-    <NodeViewWrapper className="my-3">
+    // data-bid lo usa el overlay de la bandeja para medir dónde está este
+    // bloque. Con un NodeView de React los atributos del nodo no llegan solos al
+    // DOM, así que se propaga a mano; en el editor de notas viene vacío.
+    <NodeViewWrapper className="my-3" data-bid={(node.attrs.bid as string) || undefined}>
       <div
         ref={contenedor}
         contentEditable={false}

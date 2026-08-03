@@ -66,6 +66,32 @@ export type EstadoHarness = {
   cuentas: CuentaHarness[];
 };
 
+export type SugerenciaTrabajo = {
+  id: string;
+  titulo: string;
+  proyecto: string;
+  desdeBid: string;
+  hastaBid: string;
+  orden: number;
+};
+
+export type EstadoBandeja = "vacia" | "lista" | "pendiente" | "analizando" | "error";
+
+export type Bandeja = {
+  id: string;
+  contenido: object;
+  estado: EstadoBandeja;
+  error: string | null;
+  pedidoEn: string | null;
+  updatedAt: string;
+  sugerencias: SugerenciaTrabajo[];
+};
+
+// Los proyectos sobre los que puede trabajar el harness. Tiene que coincidir con
+// las claves de harness-cuentas/proyectos.json: si acá dice algo que allá no
+// existe, la sesión arranca en el proyecto por defecto sin avisar.
+export const PROYECTOS = ["app-turnos", "construia"];
+
 export const LISTAS = {
   pendiente: { titulo: "Lista de trabajo pendiente", estado: "pendiente" as const },
   bloqueados: { titulo: "Bloqueados", estado: "bloqueado" as const },

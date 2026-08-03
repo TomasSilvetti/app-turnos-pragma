@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ListTodo, OctagonAlert, CheckCheck, Loader2 } from "lucide-react";
+import { ListTodo, OctagonAlert, CheckCheck, Loader2, Inbox } from "lucide-react";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
@@ -19,6 +19,13 @@ import type { ItemTrabajo } from "@/lib/notas/trabajoClient";
 // entre las que el ítem se mueve solo (pendiente → completado, o → bloqueado
 // cuando la sesión necesita algo del usuario).
 const NOTAS_FIJAS = [
+  {
+    clave: "bandeja",
+    titulo: "Bandeja en crudo",
+    descripcion: "Pegá el pegote acá y salen los ítems.",
+    icono: Inbox,
+    color: "text-muted-foreground",
+  },
   {
     clave: "pendiente",
     titulo: "Lista de trabajo pendiente",
@@ -46,14 +53,24 @@ export default function TrabajoPage() {
   const router = useRouter();
   const { deviceId, ready } = useNotaDevice();
   const [items, setItems] = useState<ItemTrabajo[] | null>(null);
+  // Lo que se muestra en la tarjeta de la bandeja no son ítems sino ventanas
+  // esperando que las confirmes.
+  const [sugerencias, setSugerencias] = useState(0);
 
   const cargar = useCallback(async () => {
-    const res = await notasFetch("/api/notas/trabajo/items").catch(() => null);
-    if (res?.ok) {
-      const { items } = await res.json();
+    const [resItems, resBandeja] = await Promise.all([
+      notasFetch("/api/notas/trabajo/items").catch(() => null),
+      notasFetch("/api/notas/trabajo/bandeja").catch(() => null),
+    ]);
+    if (resItems?.ok) {
+      const { items } = await resItems.json();
       setItems(items);
     } else {
       setItems([]);
+    }
+    if (resBandeja?.ok) {
+      const { bandeja } = await resBandeja.json();
+      setSugerencias(bandeja?.sugerencias?.length ?? 0);
     }
   }, []);
 
@@ -62,6 +79,7 @@ export default function TrabajoPage() {
   }, [ready, deviceId, cargar]);
 
   const contar = (clave: string) => {
+    if (clave === "bandeja") return sugerencias;
     if (!items) return null;
     if (clave === "pendiente") return items.filter((i) => i.estado === "pendiente" || i.estado === "en_curso").length;
     if (clave === "bloqueados") return items.filter((i) => i.estado === "bloqueado").length;

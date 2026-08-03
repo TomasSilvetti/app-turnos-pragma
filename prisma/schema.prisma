@@ -367,6 +367,7 @@ model NotaDevice {
   pushSubscriptions NotaPushSubscription[]
   calendarEvents    NotaCalendarEvent[]
   trabajoItems      TrabajoItem[]
+  trabajoBandeja    TrabajoBandeja?
   harnessCuentas    HarnessCuenta[]
   harnessEstado     HarnessEstado?
 
@@ -913,7 +914,11 @@ model TrabajoLogEntry {
 // sin eso quedarían archivos huérfanos ocupando lugar para siempre.
 model TrabajoImagen {
   id         String  @id @default(cuid())
-  itemId     String
+  // Nullable desde que existe la bandeja: una imagen pegada en el crudo todavia
+  // no pertenece a ningun item, y recien lo hace cuando se confirma la ventana
+  // que la contiene.
+  itemId     String?
+  bandejaId  String?
   logEntryId String?
   promptId   String?
   url        String
@@ -923,14 +928,67 @@ model TrabajoImagen {
   bytes      Int     @default(0)
   createdAt  DateTime @default(now())
 
-  item     TrabajoItem      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  item     TrabajoItem?     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  bandeja  TrabajoBandeja?  @relation(fields: [bandejaId], references: [id], onDelete: Cascade)
   logEntry TrabajoLogEntry? @relation(fields: [logEntryId], references: [id], onDelete: Cascade)
   prompt   TrabajoPrompt?   @relation(fields: [promptId], references: [id], onDelete: Cascade)
 
   @@index([itemId])
+  @@index([bandejaId])
   @@index([logEntryId])
   @@index([promptId])
+  @@index([pathname])
   @@map("trabajo_imagenes")
+}
+
+// Donde se pega el trabajo en crudo, tal como llega: un pegote con
+// explicaciones y capturas en el medio. De ahi salen los items.
+//
+// El analisis lo hace el HARNESS con el OAuth de las cuentas, no la API de
+// Anthropic: esto es una herramienta de desarrollo propia y sale de la
+// suscripcion. `estado` es todo el ida y vuelta con el runner.
+model TrabajoBandeja {
+  id       String @id @default(cuid())
+  deviceId String @unique
+  contenido Json
+  // vacia | lista | pendiente | analizando | error
+  //   pendiente  = el usuario apreto Analizar y el harness todavia no lo tomo
+  //   analizando = hay una sesion trabajando en el
+  //   lista      = hay sugerencias para revisar
+  estado   String @default("vacia")
+  error    String?
+  pedidoEn DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device      NotaDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  sugerencias TrabajoSugerencia[]
+  imagenes    TrabajoImagen[]
+
+  @@map("trabajo_bandejas")
+}
+
+// Un item propuesto. NO guarda el texto: guarda a que bloques del crudo apunta.
+// Por eso arrastrar el borde de la ventana es cambiar un id, y el texto nunca
+// queda duplicado en dos lados desincronizandose.
+model TrabajoSugerencia {
+  id        String @id @default(cuid())
+  bandejaId String
+  titulo    String @default("")
+  proyecto  String @default("")
+  // Ids de bloque (atributo `bid` del documento) del primero y el ultimo bloque
+  // incluidos. Ids y no indices: confirmar una ventana borra bloques, y con
+  // indices se correrian todas las de abajo en silencio.
+  desdeBid  String
+  hastaBid  String
+  orden     Int    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bandeja TrabajoBandeja @relation(fields: [bandejaId], references: [id], onDelete: Cascade)
+
+  @@index([bandejaId, orden])
+  @@map("trabajo_sugerencias")
 }
 
 // Una fila por cuenta del harness (cuentas\1, cuentas\2, ...). Los tokens no se

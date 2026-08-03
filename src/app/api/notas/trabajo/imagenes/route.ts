@@ -20,23 +20,38 @@ export async function POST(request: NextRequest) {
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   const itemId = form?.get("itemId");
+  const bandejaId = form?.get("bandejaId");
   const promptId = form?.get("promptId");
 
-  if (!(file instanceof File) || typeof itemId !== "string") {
-    return NextResponse.json({ error: "Falta el archivo o el ítem" }, { status: 400 });
+  // Una imagen pegada en la bandeja todavía no pertenece a ningún ítem: cuelga
+  // de la bandeja hasta que se confirme la ventana que la contiene.
+  const esBandeja = typeof bandejaId === "string" && bandejaId.length > 0;
+  if (!(file instanceof File) || (!esBandeja && typeof itemId !== "string")) {
+    return NextResponse.json({ error: "Falta el archivo o el destino" }, { status: 400 });
   }
-  if (!(await itemDelDevice(itemId, deviceId))) return noEncontrado();
+
+  if (esBandeja) {
+    const bandeja = await prisma.trabajoBandeja.findUnique({
+      where: { id: bandejaId },
+      select: { deviceId: true },
+    });
+    if (bandeja?.deviceId !== deviceId) return noEncontrado();
+  } else if (!(await itemDelDevice(itemId as string, deviceId))) {
+    return noEncontrado();
+  }
 
   const ext = file.type === "image/png" ? "png" : file.type === "image/jpeg" ? "jpg" : "webp";
-  // El prefijo por ítem es lo que hace barato el borrado en cascada y deja el
+  // El prefijo por dueño es lo que hace barato el borrado en cascada y deja el
   // store legible cuando hay que mirarlo a mano.
-  const nombre = `trabajo/${itemId}/prompt-${Date.now().toString(36)}.${ext}`;
+  const carpeta = esBandeja ? `bandeja/${bandejaId}` : `trabajo/${itemId}`;
+  const nombre = `${carpeta}/prompt-${Date.now().toString(36)}.${ext}`;
 
   const blob = await put(nombre, file, { access: "public", addRandomSuffix: true });
 
   const imagen = await prisma.trabajoImagen.create({
     data: {
-      itemId,
+      itemId: esBandeja ? null : (itemId as string),
+      bandejaId: esBandeja ? bandejaId : null,
       promptId: typeof promptId === "string" && promptId ? promptId : null,
       url: blob.url,
       pathname: blob.pathname,
