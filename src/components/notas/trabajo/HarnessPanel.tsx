@@ -211,9 +211,9 @@ export function HarnessPanel() {
             const pct = porcentajeCuota(c, cuentas);
             const apagada = !c.habilitada;
             return (
-              <li key={c.id} className={cn(apagada && "opacity-50")}>
+              <li key={c.id}>
                 <div className="mb-1 flex items-center gap-2 text-xs">
-                  <div className="min-w-0 flex-1">
+                  <div className={cn("min-w-0 flex-1", apagada && "opacity-50")}>
                     <p className="truncate font-medium">{c.email || `Cuenta ${c.nombre}`}</p>
                     <p className="text-[10px] text-muted-foreground">
                       cuentas\{c.nombre}
@@ -257,14 +257,14 @@ export function HarnessPanel() {
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform",
-                        c.habilitada ? "translate-x-4" : "translate-x-0.5"
+                        "absolute left-0.5 top-0.5 size-4 rounded-full bg-white shadow transition-transform",
+                        c.habilitada ? "translate-x-4" : "translate-x-0"
                       )}
                     />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className={cn("flex items-center gap-2", apagada && "opacity-50")}>
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                     <div
                       className={cn(

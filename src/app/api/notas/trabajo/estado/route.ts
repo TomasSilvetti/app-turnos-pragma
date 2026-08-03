@@ -61,11 +61,16 @@ export async function PUT(request: NextRequest) {
     // `habilitada` y `carril` NO se tocan acá: los maneja la app (el interruptor
     // del panel y la reserva). Si el latido los pisara, desactivar una cuenta
     // duraría hasta el próximo latido, cinco segundos después.
+    //
+    // `techoObservado` tampoco se pisa con null: el runner lo guarda en memoria
+    // y lo manda en cada latido, pero si reinicia arranca de cero y mandaría
+    // null hasta el próximo corte de cuota — eso borraría el único dato de
+    // cuota que hay. Sólo se actualiza cuando llega un valor nuevo.
     const valores = {
       ...(typeof c.email === "string" && c.email ? { email: c.email } : {}),
       estado: typeof c.estado === "string" ? c.estado : "activa",
       tokensVentana: typeof c.tokensVentana === "number" ? Math.trunc(c.tokensVentana) : 0,
-      techoObservado: typeof c.techoObservado === "number" ? Math.trunc(c.techoObservado) : null,
+      ...(typeof c.techoObservado === "number" ? { techoObservado: Math.trunc(c.techoObservado) } : {}),
       resetAt: fecha(c.resetAt),
       ventanaInicio: fecha(c.ventanaInicio),
       ultimaSesionAt: fecha(c.ultimaSesionAt),

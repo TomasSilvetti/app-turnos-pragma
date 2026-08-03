@@ -16,10 +16,11 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
 
   const body = await request.json().catch(() => null);
   const texto = typeof body?.texto === "string" ? body.texto.trim() : "";
-  if (!texto) return NextResponse.json({ error: "Falta el texto" }, { status: 400 });
+  const imagenes = Array.isArray(body?.imagenes) ? body.imagenes.filter((u: unknown) => typeof u === "string") : [];
+  if (!texto && imagenes.length === 0) return NextResponse.json({ error: "Falta el texto" }, { status: 400 });
 
   const mensaje = await prisma.consolaMensaje.create({
-    data: { sesionId: id, rol: "usuario", texto },
+    data: { sesionId: id, rol: "usuario", texto, imagenes },
   });
 
   await prisma.consolaSesion.update({
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       error: null,
       // La primera línea de lo que escribiste sirve de título hasta que le
       // pongas otro: "Sin título" en una lista de diez no ayuda a nadie.
-      ...(sesion.titulo ? {} : { titulo: texto.slice(0, 60) }),
+      ...(sesion.titulo ? {} : { titulo: (texto || "Imagen").slice(0, 60) }),
     },
   });
 
