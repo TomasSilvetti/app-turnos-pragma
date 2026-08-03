@@ -369,7 +369,7 @@ model NotaDevice {
   trabajoItems      TrabajoItem[]
   trabajoBandeja    TrabajoBandeja?
   harnessCuentas    HarnessCuenta[]
-  harnessEstado     HarnessEstado?
+  harnessEstado     HarnessEstado[]
 
   @@map("nota_devices")
 }
@@ -832,7 +832,9 @@ model TrabajoItem {
   id       String @id @default(cuid())
   deviceId String
   titulo   String @default("")
-  // pendiente | en_curso | bloqueado | completado
+  // pendiente | en_curso | pausada | bloqueado | completado
+  //   pausada = la frenaste vos. La cola no la entrega hasta que la reanudes,
+  //   y sus intentos no suben: no fracaso, la sacaste de circulacion.
   estado   String @default("pendiente")
   // Posición dentro de su lista; el harness toma el pendiente de menor orden.
   orden    Int    @default(0)
@@ -998,7 +1000,19 @@ model TrabajoSugerencia {
 model HarnessCuenta {
   id       String @id @default(cuid())
   deviceId String
+  // Nombre de la carpeta en cuentas\ (1, 2, 3). Es la clave con la que el
+  // runner cambia CLAUDE_CONFIG_DIR, asi que no se puede tocar.
   nombre   String
+  // Lo que se muestra en pantalla: "cuenta 2" no dice nada cuando hay que
+  // decidir cual sacar de la rotacion.
+  email    String?
+  // Desactivada = fuera de la rotacion. Sirve para reservarse una cuenta para
+  // uso interactivo mientras el harness trabaja con las otras.
+  habilitada Boolean @default(true)
+  // Que carril la tiene tomada ahora: trabajo | itemizacion | null. La asigna
+  // la app y no el runner, porque es la unica que ve los dos carriles a la vez
+  // y sabe cuales habilitaste.
+  carril   String?
   // activa | agotada | login_requerido
   estado   String @default("activa")
   tokensVentana  Int  @default(0)
@@ -1018,12 +1032,17 @@ model HarnessCuenta {
   @@map("harness_cuentas")
 }
 
-// Latido del runner, una fila por device. Si `actualizadoAt` quedó viejo, la UI
-// muestra el harness como detenido: es la forma de enterarse de que la máquina
-// se apagó sin que nadie avise.
+// Latido de un carril del runner. Si `actualizadoAt` quedó viejo, la UI lo
+// muestra detenido: es la forma de enterarse de que la máquina se apagó sin que
+// nadie avise.
+//
+// Una fila por carril: el que hace las tareas de código y el que itemiza la
+// bandeja corren a la vez y con cuentas distintas, así que cada uno late aparte.
 model HarnessEstado {
   id       String @id @default(cuid())
-  deviceId String @unique
+  deviceId String
+  // trabajo | itemizacion
+  carril   String @default("trabajo")
   // detenido | ocioso | trabajando
   estado   String @default("detenido")
   itemEnCursoId String?
@@ -1035,5 +1054,6 @@ model HarnessEstado {
   device     NotaDevice   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   itemEnCurso TrabajoItem? @relation(fields: [itemEnCursoId], references: [id], onDelete: SetNull)
 
+  @@unique([deviceId, carril])
   @@map("harness_estado")
 }

@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
   const peek = request.nextUrl.searchParams.get("peek") === "1";
   const cuenta = request.nextUrl.searchParams.get("cuenta") ?? null;
 
+  // "pausada" no entra: es trabajo que sacaste de circulación a mano.
   const elegir = () =>
     prisma.trabajoItem.findFirst({
       where: { deviceId, estado: { in: ["en_curso", "pendiente"] } },

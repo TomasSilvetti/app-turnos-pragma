@@ -11,10 +11,11 @@ export async function GET(request: NextRequest) {
   if (!deviceId) return noAutorizado();
 
   const pedido = request.nextUrl.searchParams.get("estado");
-  // "pendiente" incluye el que está corriendo: es la misma lista en pantalla.
+  // "pendiente" incluye el que está corriendo y los pausados: es la misma lista
+  // en pantalla, y una tarea pausada sigue siendo trabajo por hacer.
   const estados: EstadoItem[] =
     pedido === "pendiente"
-      ? ["pendiente", "en_curso"]
+      ? ["pendiente", "en_curso", "pausada"]
       : ESTADOS.includes(pedido as EstadoItem)
         ? [pedido as EstadoItem]
         : [...ESTADOS];

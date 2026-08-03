@@ -7,8 +7,15 @@ import { resolveDeviceId } from "./device";
 // el navegador (device anónimo, como el resto de notas) y el puente del harness,
 // que corre fuera del navegador y por eso necesita además un token compartido.
 
-export const ESTADOS = ["pendiente", "en_curso", "bloqueado", "completado"] as const;
+export const ESTADOS = ["pendiente", "en_curso", "pausada", "bloqueado", "completado"] as const;
 export type EstadoItem = (typeof ESTADOS)[number];
+
+export const CARRILES = ["trabajo", "itemizacion"] as const;
+export type Carril = (typeof CARRILES)[number];
+
+export function esCarril(v: unknown): v is Carril {
+  return typeof v === "string" && CARRILES.includes(v as Carril);
+}
 
 export const TIPOS_LOG = ["hito", "problema", "solucion", "bloqueo", "handoff"] as const;
 export type TipoLog = (typeof TIPOS_LOG)[number];
@@ -81,25 +88,44 @@ export async function borrarImagenesDeItem(itemId: string): Promise<number> {
   return sinDuenio.length;
 }
 
-// Estado del harness listo para la UI, con el latido ya evaluado.
+// Estado del harness listo para la UI: un carril por cada proceso, con el latido
+// ya evaluado, más las cuentas.
 export async function estadoHarness(deviceId: string) {
-  const [estado, cuentas] = await Promise.all([
-    prisma.harnessEstado.findUnique({
+  const [filas, cuentas] = await Promise.all([
+    prisma.harnessEstado.findMany({
       where: { deviceId },
       include: { itemEnCurso: { select: { id: true, titulo: true, pasoActual: true, pasosTotales: true, intentos: true } } },
     }),
     prisma.harnessCuenta.findMany({ where: { deviceId }, orderBy: { nombre: "asc" } }),
   ]);
 
-  const vivo = Boolean(estado && Date.now() - estado.actualizadoAt.getTime() < LATIDO_VENCE_MS);
+  const carriles = CARRILES.map((carril) => {
+    const fila = filas.find((f) => f.carril === carril);
+    const vivo = Boolean(fila && Date.now() - fila.actualizadoAt.getTime() < LATIDO_VENCE_MS);
+    return {
+      carril,
+      vivo,
+      estado: vivo ? fila!.estado : "detenido",
+      itemEnCurso: vivo ? fila!.itemEnCurso : null,
+      sesionInicio: vivo ? fila!.sesionInicio : null,
+      cuentaActual: vivo ? fila!.cuentaActual : null,
+      limiteSesionMin: fila?.limiteSesionMin ?? 90,
+      actualizadoAt: fila?.actualizadoAt ?? null,
+    };
+  });
+
+  const trabajo = carriles[0];
   return {
-    vivo,
-    estado: vivo ? estado!.estado : "detenido",
-    itemEnCurso: vivo ? estado!.itemEnCurso : null,
-    sesionInicio: vivo ? estado!.sesionInicio : null,
-    cuentaActual: vivo ? estado!.cuentaActual : null,
-    limiteSesionMin: estado?.limiteSesionMin ?? 90,
-    actualizadoAt: estado?.actualizadoAt ?? null,
+    carriles,
     cuentas,
+    // Resumen plano del carril de trabajo, que es lo que ya consumen las
+    // pantallas que sólo quieren saber si el harness está vivo.
+    vivo: carriles.some((c) => c.vivo),
+    estado: trabajo.estado,
+    itemEnCurso: trabajo.itemEnCurso,
+    sesionInicio: trabajo.sesionInicio,
+    cuentaActual: trabajo.cuentaActual,
+    limiteSesionMin: trabajo.limiteSesionMin,
+    actualizadoAt: carriles.map((c) => c.actualizadoAt).filter(Boolean).sort().pop() ?? null,
   };
 }

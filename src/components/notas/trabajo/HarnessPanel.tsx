@@ -5,33 +5,83 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Moon, PowerOff, KeyRound, Clock } from "lucide-react";
+import { Activity, Moon, PowerOff, KeyRound, Clock, Hammer, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
-import { duracion, type CuentaHarness, type EstadoHarness } from "@/lib/notas/trabajoClient";
+import {
+  duracion,
+  porcentajeCuota,
+  NOMBRE_CARRIL,
+  type Carril,
+  type CuentaHarness,
+  type EstadoCarril,
+  type EstadoHarness,
+} from "@/lib/notas/trabajoClient";
 
-// Panel de arriba de la sección: qué está haciendo el harness y cómo andan las
+// Panel de arriba de la sección: qué está haciendo cada carril y cómo andan las
 // cuentas.
 //
 // Sobre los tokens: el CLI de Claude no expone la cuota (`/usage` es del cliente
 // interactivo, no hay comando). Lo que se muestra se arma con lo que sí es
 // exacto: los tokens que cada sesión reporta al terminar, y la hora de reset que
 // el propio CLI informa cuando corta. El porcentaje sale contra un techo que se
-// aprende solo —lo acumulado la vez que esa cuenta cortó— así que hasta el
-// primer corte la cuenta muestra tokens sin barra, y se dice por qué.
+// aprende solo, así que hasta el primer corte de alguna cuenta no hay barra.
 
-const ESTADO_CUENTA: Record<CuentaHarness["estado"], { label: string; clase: string }> = {
-  activa: { label: "Activa", clase: "text-emerald-600 dark:text-emerald-400" },
-  agotada: { label: "Sin cuota", clase: "text-amber-600 dark:text-amber-400" },
-  login_requerido: { label: "Necesita login", clase: "text-destructive" },
+const ICONO_CARRIL: Record<Carril, typeof Hammer> = {
+  trabajo: Hammer,
+  itemizacion: Sparkles,
 };
 
 function horaReset(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
 
+function FilaCarril({ c }: { c: EstadoCarril }) {
+  const trabajando = c.estado === "trabajando";
+  const Icono = !c.vivo ? PowerOff : trabajando ? Activity : Moon;
+  const IconoCarril = ICONO_CARRIL[c.carril];
+
+  return (
+    <div className="flex items-start gap-2.5">
+      <span
+        className={cn(
+          "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
+          trabajando && c.vivo ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+        )}
+      >
+        <Icono className={cn("size-4", trabajando && c.vivo && "animate-pulse")} />
+      </span>
+
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-1.5 text-sm font-semibold">
+          <IconoCarril className="size-3.5 text-muted-foreground" />
+          {NOMBRE_CARRIL[c.carril]}
+          <span className="text-xs font-normal text-muted-foreground">
+            · {!c.vivo ? "detenido" : trabajando ? "trabajando" : "sin trabajo"}
+          </span>
+        </p>
+        {c.vivo && trabajando ? (
+          <p className="truncate text-xs text-muted-foreground">
+            {c.itemEnCurso ? `«${c.itemEnCurso.titulo || "Sin título"}»` : "analizando la bandeja"}
+            {c.sesionInicio && ` · ${duracion(c.sesionInicio)} de ${c.limiteSesionMin} min`}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            {!c.vivo
+              ? c.actualizadoAt
+                ? `Último latido hace ${duracion(c.actualizadoAt)}.`
+                : "Nunca reportó."
+              : "A la espera."}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function HarnessPanel() {
   const [datos, setDatos] = useState<EstadoHarness | null>(null);
+  const [cambiando, setCambiando] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
   const cargar = useCallback(async () => {
@@ -57,64 +107,91 @@ export function HarnessPanel() {
     };
   }, [cargar]);
 
-  const trabajando = datos?.estado === "trabajando";
-  const Icono = !datos?.vivo ? PowerOff : trabajando ? Activity : Moon;
+  const alternarCuenta = async (cuenta: CuentaHarness) => {
+    if (
+      cuenta.habilitada &&
+      cuenta.carril &&
+      !confirm(
+        `«${cuenta.email || cuenta.nombre}» la está usando ${NOMBRE_CARRIL[cuenta.carril]} ahora mismo.\n\n` +
+          "Desactivarla corta esa sesión. Lo que haya escrito en disco queda y otra cuenta lo retoma."
+      )
+    )
+      return;
+
+    setCambiando(cuenta.id);
+    await notasFetch(`/api/notas/trabajo/cuentas/${cuenta.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ habilitada: !cuenta.habilitada }),
+    }).catch(() => {});
+    setCambiando(null);
+    cargar();
+  };
+
+  const cuentas = datos?.cuentas ?? [];
 
   return (
-    <section className="mb-6 rounded-xl border border-border bg-card p-4">
-      <div className="flex items-start gap-3">
-        <span
-          className={cn(
-            "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg",
-            !datos?.vivo ? "bg-muted text-muted-foreground" : trabajando ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-          )}
-        >
-          <Icono className={cn("size-4", trabajando && "animate-pulse")} />
-        </span>
+    <section className="mb-6 space-y-3 rounded-xl border border-border bg-card p-4">
+      {datos?.carriles.map((c) => <FilaCarril key={c.carril} c={c} />) ?? (
+        <p className="text-sm text-muted-foreground">…</p>
+      )}
 
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold">
-            {!datos ? "…" : !datos.vivo ? "Harness detenido" : trabajando ? "Trabajando" : "Sin tareas pendientes"}
-          </p>
-          {datos?.vivo && trabajando && datos.itemEnCurso ? (
-            <p className="truncate text-xs text-muted-foreground">
-              «{datos.itemEnCurso.titulo || "Sin título"}»
-              {datos.sesionInicio && ` · ${duracion(datos.sesionInicio)} de ${datos.limiteSesionMin} min`}
-              {datos.cuentaActual && ` · cuenta ${datos.cuentaActual}`}
-            </p>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {!datos?.vivo
-                ? datos?.actualizadoAt
-                  ? `Último latido hace ${duracion(datos.actualizadoAt)}. Arrancalo con runner.ps1.`
-                  : "Nunca reportó. Arrancalo con runner.ps1 en la máquina."
-                : "A la espera de que cargues trabajo."}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {datos && datos.cuentas.length > 0 && (
-        <ul className="mt-4 space-y-2.5 border-t border-border pt-3">
-          {datos.cuentas.map((c) => {
-            const pct =
-              c.techoObservado && c.techoObservado > 0
-                ? Math.min(100, Math.round((c.tokensVentana / c.techoObservado) * 100))
-                : null;
-            const estilo = ESTADO_CUENTA[c.estado] ?? ESTADO_CUENTA.activa;
+      {cuentas.length > 0 && (
+        <ul className="space-y-3 border-t border-border pt-3">
+          {cuentas.map((c) => {
+            const pct = porcentajeCuota(c, cuentas);
+            const apagada = !c.habilitada;
             return (
-              <li key={c.id}>
+              <li key={c.id} className={cn(apagada && "opacity-50")}>
                 <div className="mb-1 flex items-center gap-2 text-xs">
-                  <span className="font-medium">Cuenta {c.nombre}</span>
-                  {c.nombre === datos.cuentaActual && datos.vivo && (
-                    <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary">
-                      en uso
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{c.email || `Cuenta ${c.nombre}`}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      cuentas\{c.nombre}
+                      {c.estado === "agotada" && c.resetAt && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 text-amber-600 dark:text-amber-400">
+                          <Clock className="size-2.5" />
+                          vuelve {horaReset(c.resetAt)}
+                        </span>
+                      )}
+                      {c.estado === "login_requerido" && (
+                        <span className="ml-1.5 inline-flex items-center gap-0.5 text-destructive">
+                          <KeyRound className="size-2.5" />
+                          .\login-cuenta.ps1 {c.nombre}
+                        </span>
+                      )}
+                    </p>
+                  </div>
+
+                  {c.carril && !apagada && (
+                    <span className="flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      {(() => {
+                        const I = ICONO_CARRIL[c.carril];
+                        return <I className="size-2.5" />;
+                      })()}
+                      {NOMBRE_CARRIL[c.carril]}
                     </span>
                   )}
-                  <span className={cn("ml-auto flex items-center gap-1", estilo.clase)}>
-                    {c.estado === "login_requerido" && <KeyRound className="size-3" />}
-                    {estilo.label}
-                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => alternarCuenta(c)}
+                    disabled={cambiando === c.id}
+                    role="switch"
+                    aria-checked={c.habilitada}
+                    aria-label={c.habilitada ? "Desactivar cuenta" : "Activar cuenta"}
+                    title={c.habilitada ? "Sacarla de la rotación" : "Volver a usarla"}
+                    className={cn(
+                      "relative h-5 w-9 shrink-0 rounded-full transition-colors disabled:opacity-50",
+                      c.habilitada ? "bg-primary" : "bg-muted-foreground/30"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 size-4 rounded-full bg-white shadow transition-transform",
+                        c.habilitada ? "translate-x-4" : "translate-x-0.5"
+                      )}
+                    />
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -124,31 +201,22 @@ export function HarnessPanel() {
                         "h-full rounded-full transition-all",
                         c.estado === "agotada" ? "bg-amber-500" : "bg-primary"
                       )}
-                      style={{ width: `${c.estado === "agotada" ? 100 : (pct ?? 0)}%` }}
+                      style={{ width: `${pct ?? 0}%` }}
                     />
                   </div>
                   <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
-                    {pct !== null ? `${pct}%` : `${(c.tokensVentana / 1000).toFixed(0)}k tokens`}
+                    {pct !== null ? `${pct}%` : `${(c.tokensVentana / 1000).toFixed(0)}k`}
                   </span>
                 </div>
-
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  {c.estado === "agotada" && c.resetAt ? (
-                    <span className="flex items-center gap-1">
-                      <Clock className="size-3" />
-                      Vuelve a las {horaReset(c.resetAt)}
-                    </span>
-                  ) : c.estado === "login_requerido" ? (
-                    `Correr: .\\login-cuenta.ps1 ${c.nombre}`
-                  ) : pct === null ? (
-                    "Sin porcentaje todavía: el techo se calibra la primera vez que esta cuenta corte por límite."
-                  ) : (
-                    `${(c.tokensVentana / 1000).toFixed(0)}k de ~${((c.techoObservado ?? 0) / 1000).toFixed(0)}k tokens estimados`
-                  )}
-                </p>
               </li>
             );
           })}
+          {cuentas.every((c) => !c.techoObservado) && (
+            <li className="text-[11px] text-muted-foreground">
+              El porcentaje aparece cuando alguna cuenta corte por límite: ahí se aprende el techo. Hasta
+              entonces se muestran los tokens usados en la ventana.
+            </li>
+          )}
         </ul>
       )}
     </section>

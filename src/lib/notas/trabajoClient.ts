@@ -1,6 +1,12 @@
 // Tipos y helpers compartidos por la UI de la sección Trabajo.
 
-export type EstadoItem = "pendiente" | "en_curso" | "bloqueado" | "completado";
+export type EstadoItem = "pendiente" | "en_curso" | "pausada" | "bloqueado" | "completado";
+export type Carril = "trabajo" | "itemizacion";
+
+export const NOMBRE_CARRIL: Record<Carril, string> = {
+  trabajo: "Features",
+  itemizacion: "Itemizador",
+};
 export type TipoLog = "hito" | "problema" | "solucion" | "bloqueo" | "handoff";
 
 export type ImagenTrabajo = { id: string; url: string; ancho: number; alto: number };
@@ -47,6 +53,9 @@ export type ItemTrabajo = {
 export type CuentaHarness = {
   id: string;
   nombre: string;
+  email: string | null;
+  habilitada: boolean;
+  carril: Carril | null;
   estado: "activa" | "agotada" | "login_requerido";
   tokensVentana: number;
   techoObservado: number | null;
@@ -55,7 +64,8 @@ export type CuentaHarness = {
   ultimaSesionAt: string | null;
 };
 
-export type EstadoHarness = {
+export type EstadoCarril = {
+  carril: Carril;
   vivo: boolean;
   estado: "detenido" | "ocioso" | "trabajando";
   itemEnCurso: { id: string; titulo: string; pasoActual: number; pasosTotales: number; intentos: number } | null;
@@ -63,8 +73,30 @@ export type EstadoHarness = {
   cuentaActual: string | null;
   limiteSesionMin: number;
   actualizadoAt: string | null;
-  cuentas: CuentaHarness[];
 };
+
+export type EstadoHarness = {
+  carriles: EstadoCarril[];
+  cuentas: CuentaHarness[];
+  vivo: boolean;
+  estado: "detenido" | "ocioso" | "trabajando";
+  itemEnCurso: EstadoCarril["itemEnCurso"];
+  sesionInicio: string | null;
+  cuentaActual: string | null;
+  limiteSesionMin: number;
+  actualizadoAt: string | null;
+};
+
+// El techo de cuota no se puede consultar: se aprende cuando una cuenta corta.
+// Una cuenta que todavía no cortó nunca toma prestado el mayor techo observado
+// entre las demás — son todas del mismo plan, así que sirve de referencia y
+// permite mostrar un porcentaje desde el primer corte de cualquiera.
+export function porcentajeCuota(cuenta: CuentaHarness, cuentas: CuentaHarness[]): number | null {
+  if (cuenta.estado === "agotada") return 100;
+  const techo = cuenta.techoObservado ?? Math.max(0, ...cuentas.map((c) => c.techoObservado ?? 0));
+  if (!techo) return null;
+  return Math.min(100, Math.round((cuenta.tokensVentana / techo) * 100));
+}
 
 export type SugerenciaTrabajo = {
   id: string;

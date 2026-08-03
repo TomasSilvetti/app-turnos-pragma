@@ -551,6 +551,19 @@ const MIGRATIONS: Migration[] = [
        END IF; END $$`,
     ],
   },
+  {
+    name: "20260803160000_harness_carriles",
+    checksum: "8e5292691b819b3c6f7984760b5100ddab0c92d4156fd82a81a1ce594629f4b6",
+    statements: [
+      `ALTER TABLE "harness_cuentas" ADD COLUMN IF NOT EXISTS "email" TEXT`,
+      `ALTER TABLE "harness_cuentas" ADD COLUMN IF NOT EXISTS "habilitada" BOOLEAN NOT NULL DEFAULT true`,
+      `ALTER TABLE "harness_cuentas" ADD COLUMN IF NOT EXISTS "carril" TEXT`,
+      // El latido pasa a ser uno por carril. Lo que había era del de trabajo.
+      `ALTER TABLE "harness_estado" ADD COLUMN IF NOT EXISTS "carril" TEXT NOT NULL DEFAULT 'trabajo'`,
+      `DROP INDEX IF EXISTS "harness_estado_deviceId_key"`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS "harness_estado_deviceId_carril_key" ON "harness_estado"("deviceId", "carril")`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

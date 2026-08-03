@@ -63,6 +63,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
       data.motivoBloqueo = null;
       data.sesionInicio = null;
     }
+    // Pausar no es fracasar: los intentos quedan como estaban, así reanudarla no
+    // la deja a un paso de que el harness la saltee por trabada.
+    if (body.estado === "pausada") data.sesionInicio = null;
   }
 
   const item = await prisma.trabajoItem.update({ where: { id }, data });

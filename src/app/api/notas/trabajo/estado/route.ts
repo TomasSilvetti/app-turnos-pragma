@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resolveDeviceId } from "@/lib/notas/device";
-import { estadoHarness, noAutorizado, resolveHarness } from "@/lib/notas/trabajo";
+import { esCarril, estadoHarness, noAutorizado, resolveHarness } from "@/lib/notas/trabajo";
 
 // GET: lo que pinta el panel de la sección Trabajo (navegador).
 export async function GET(request: NextRequest) {
@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
 
 type CuentaEntrante = {
   nombre?: unknown;
+  email?: unknown;
   estado?: unknown;
   tokensVentana?: unknown;
   techoObservado?: unknown;
@@ -34,6 +35,7 @@ export async function PUT(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}));
   const estado = ["detenido", "ocioso", "trabajando"].includes(body?.estado) ? body.estado : "ocioso";
+  const carril = esCarril(body?.carril) ? body.carril : "trabajo";
 
   const datos = {
     estado,
@@ -45,15 +47,19 @@ export async function PUT(request: NextRequest) {
   };
 
   await prisma.harnessEstado.upsert({
-    where: { deviceId },
-    create: { deviceId, ...datos },
+    where: { deviceId_carril: { deviceId, carril } },
+    create: { deviceId, carril, ...datos },
     update: datos,
   });
 
   const cuentas: CuentaEntrante[] = Array.isArray(body?.cuentas) ? body.cuentas : [];
   for (const c of cuentas) {
     if (typeof c.nombre !== "string" || !c.nombre) continue;
+    // `habilitada` y `carril` NO se tocan acá: los maneja la app (el interruptor
+    // del panel y la reserva). Si el latido los pisara, desactivar una cuenta
+    // duraría hasta el próximo latido, cinco segundos después.
     const valores = {
+      ...(typeof c.email === "string" && c.email ? { email: c.email } : {}),
       estado: typeof c.estado === "string" ? c.estado : "activa",
       tokensVentana: typeof c.tokensVentana === "number" ? Math.trunc(c.tokensVentana) : 0,
       techoObservado: typeof c.techoObservado === "number" ? Math.trunc(c.techoObservado) : null,

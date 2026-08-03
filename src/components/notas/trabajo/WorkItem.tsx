@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Loader2, Trash2, Check, Timer, RotateCw, FileText, Terminal } from "lucide-react";
+import { ChevronRight, Loader2, Trash2, Check, Timer, RotateCw, FileText, Terminal, Pause, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
 import { PromptEditor } from "./PromptEditor";
@@ -38,6 +38,7 @@ export function WorkItem({
   const [, setTick] = useState(0);
 
   const enCurso = item.estado === "en_curso";
+  const pausada = item.estado === "pausada";
   const pct = porcentaje(item);
 
   const cargarDetalle = useCallback(async () => {
@@ -78,6 +79,20 @@ export function WorkItem({
     onCambio();
   };
 
+  // Pausar la que está corriendo corta la sesión: el runner lo ve en su próxima
+  // consulta de órdenes. Lo que escribió en disco queda y al reanudar retoma
+  // desde ahí, así que cortar no tira el trabajo — pero conviene avisarlo.
+  const pausar = async () => {
+    if (
+      enCurso &&
+      !confirm(
+        "El harness está trabajando en esta tarea.\n\nPausarla corta la sesión ahora. Lo que haya escrito queda en disco y al reanudarla retoma desde ahí."
+      )
+    )
+      return;
+    await patch({ estado: "pausada" });
+  };
+
   const eliminar = async () => {
     if (
       !confirm(
@@ -112,7 +127,8 @@ export function WorkItem({
       className={cn(
         "overflow-hidden rounded-xl border bg-card transition-colors",
         enCurso ? "nota-item-trabajando border-primary/60" : "border-border",
-        item.estado === "bloqueado" && "border-amber-500/50"
+        item.estado === "bloqueado" && "border-amber-500/50",
+        pausada && "opacity-60"
       )}
     >
       {/* Cabecera — el párrafo padre */}
@@ -152,6 +168,7 @@ export function WorkItem({
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-xs text-muted-foreground">
             {item.proyecto && <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{item.proyecto}</span>}
+            {pausada && <span className="font-medium">en pausa</span>}
             {enCurso && item.sesionInicio && (
               <span className="flex items-center gap-1 text-primary">
                 <Timer className="size-3" />
@@ -189,6 +206,29 @@ export function WorkItem({
 
         {pct !== null && (
           <span className="mt-0.5 shrink-0 text-xs font-semibold tabular-nums text-muted-foreground">{pct}%</span>
+        )}
+
+        {(item.estado === "pendiente" || enCurso || pausada) && (
+          <button
+            type="button"
+            onClick={() => (pausada ? patch({ estado: "pendiente" }) : pausar())}
+            aria-label={pausada ? "Reanudar tarea" : "Pausar tarea"}
+            title={
+              pausada
+                ? "Reanudar: vuelve a la cola"
+                : enCurso
+                  ? "Pausar: corta la sesión en curso"
+                  : "Pausar: el harness no la va a tomar"
+            }
+            className={cn(
+              "mt-0.5 shrink-0 rounded-md p-1 transition-colors",
+              pausada
+                ? "text-primary hover:bg-primary/10"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            )}
+          >
+            {pausada ? <Play className="size-4" /> : <Pause className="size-4" />}
+          </button>
         )}
 
         {(item.estado === "completado" || item.estado === "bloqueado") && (
