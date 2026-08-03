@@ -25,6 +25,14 @@ export async function POST(request: NextRequest) {
     ? body.imagenes.filter((i: unknown) => typeof i === "string")
     : [];
 
+  // Al rotar de cuenta hay que tirar lo que alcanzó a escribir el intento
+  // fallido: si no, el "You've hit your session limit" de la cuenta que cortó
+  // queda pegado arriba de la respuesta buena.
+  if (body?.reiniciar === true) {
+    await prisma.consolaMensaje.deleteMany({ where: { sesionId, rol: "asistente", parcial: true } });
+    return NextResponse.json({ ok: true, reiniciado: true });
+  }
+
   const abierto = await prisma.consolaMensaje.findFirst({
     where: { sesionId, rol: "asistente", parcial: true },
     orderBy: { createdAt: "desc" },
