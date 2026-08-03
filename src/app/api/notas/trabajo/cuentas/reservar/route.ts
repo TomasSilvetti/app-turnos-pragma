@@ -33,25 +33,58 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  // Una cuenta que cortó por cuota vuelve sola a la rotación cuando pasa la hora
+  // de reset que informó el CLI. Se hace acá y no en el runner porque el runner
+  // olvida todo al reiniciar: el 03/08 se reinició veinticinco veces y en cada
+  // una volvió a pedir la cuenta 1 —la primera de la lista, sin cuota hasta las
+  // 16:10— gastando un intento del ítem de turno en cada vuelta.
+  const ahora = new Date();
+  const vencidas = await prisma.harnessCuenta.findMany({
+    where: { deviceId, estado: "agotada", resetAt: { not: null, lte: ahora } },
+    select: { id: true },
+  });
+  if (vencidas.length > 0) {
+    await prisma.harnessCuenta.updateMany({
+      where: { id: { in: vencidas.map((c) => c.id) } },
+      // Ventana nueva: los tokens de la anterior ya no cuentan. El techo
+      // observado se conserva, que es justamente para lo que sirve.
+      data: { estado: "activa", resetAt: null, tokensVentana: 0, ventanaInicio: ahora },
+    });
+  }
+
   const todas = await prisma.harnessCuenta.findMany({ where: { deviceId }, orderBy: { nombre: "asc" } });
   const tomadaPorElOtro = todas.find((c) => c.carril === otro)?.nombre;
+
+  // Sin cuota hasta su reset: no alcanza con la lista que manda el runner, que
+  // es lo que ESTE proceso aprendió desde que arrancó. La app se acuerda aunque
+  // el runner se reinicie, y es lo que hace que la rotación llegue a la cuenta 3
+  // en vez de quedarse golpeando la 1.
+  const sinCuota = (c: { estado: string; resetAt: Date | null }) =>
+    c.estado === "agotada" && c.resetAt !== null && c.resetAt > ahora;
 
   const elegible = todas.find(
     (c) =>
       c.habilitada &&
       c.estado !== "login_requerido" &&
+      !sinCuota(c) &&
       !agotadas.includes(c.nombre) &&
       c.nombre !== tomadaPorElOtro
   );
 
   if (!elegible) {
     const habilitadas = todas.filter((c) => c.habilitada).length;
+    const proxima = todas
+      .filter((c) => c.habilitada && sinCuota(c))
+      .map((c) => c.resetAt!.getTime())
+      .sort((a, b) => a - b)[0];
     const motivo =
       habilitadas === 0
         ? "No hay ninguna cuenta habilitada. Activá una desde el panel."
         : tomadaPorElOtro
           ? `La única cuenta libre la está usando el carril de ${otro}.`
-          : "Todas las cuentas habilitadas están sin cuota.";
+          : proxima
+            ? `Todas las cuentas habilitadas están sin cuota. La primera vuelve ${new Date(proxima).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" })}.`
+            : "Todas las cuentas habilitadas están sin cuota.";
     // Soltar la que tenía este carril: si se queda marcada, el otro tampoco
     // puede usarla y quedan los dos esperando una cuenta que nadie ocupa.
     await prisma.harnessCuenta.updateMany({ where: { deviceId, carril }, data: { carril: null } });

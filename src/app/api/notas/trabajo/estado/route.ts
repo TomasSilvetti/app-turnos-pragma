@@ -56,8 +56,24 @@ export async function PUT(request: NextRequest) {
   });
 
   const cuentas: CuentaEntrante[] = Array.isArray(body?.cuentas) ? body.cuentas : [];
+  const previas = cuentas.length
+    ? await prisma.harnessCuenta.findMany({ where: { deviceId }, select: { nombre: true, estado: true, resetAt: true } })
+    : [];
+
   for (const c of cuentas) {
     if (typeof c.nombre !== "string" || !c.nombre) continue;
+    // Un runner recién arrancado cree que todas las cuentas están activas: su
+    // memoria de quién cortó vive en el proceso. Si su primer latido pisara lo
+    // guardado, borraría la hora de reset —el único dato exacto que hay sobre la
+    // cuota— y la app volvería a asignar una cuenta que no tiene nada. Lo que
+    // sabe la app manda hasta que pase esa hora.
+    const previa = previas.find((p) => p.nombre === c.nombre);
+    const sigueSinCuota =
+      previa?.estado === "agotada" && previa.resetAt !== null && previa.resetAt > new Date();
+    if (sigueSinCuota && c.estado === "activa" && !fecha(c.resetAt)) {
+      c.estado = "agotada";
+      c.resetAt = previa!.resetAt!.toISOString();
+    }
     // `habilitada` y `carril` NO se tocan acá: los maneja la app (el interruptor
     // del panel y la reserva). Si el latido los pisara, desactivar una cuenta
     // duraría hasta el próximo latido, cinco segundos después.
