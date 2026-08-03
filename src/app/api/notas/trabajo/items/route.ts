@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
 
   const items = await prisma.trabajoItem.findMany({
     where: { deviceId, estado: { in: estados } },
-    orderBy: [{ orden: "asc" }, { createdAt: "asc" }],
+    // `en_curso` primero (alfabéticamente va antes que `pausada` y `pendiente`):
+    // la que se está ejecutando tiene que estar arriba de todo hasta que cierre,
+    // que es lo que uno mira cuando abre la pantalla.
+    orderBy: [{ estado: "asc" }, { orden: "asc" }, { createdAt: "asc" }],
     select: {
       id: true, titulo: true, estado: true, orden: true, proyecto: true,
       pasoActual: true, pasosTotales: true, intentos: true,

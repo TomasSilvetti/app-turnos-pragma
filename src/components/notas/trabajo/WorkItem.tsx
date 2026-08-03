@@ -169,10 +169,11 @@ export function WorkItem({
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-xs text-muted-foreground">
             {item.proyecto && <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{item.proyecto}</span>}
             {pausada && <span className="font-medium">en pausa</span>}
-            {enCurso && item.sesionInicio && (
-              <span className="flex items-center gap-1 text-primary">
+            {enCurso && (
+              <span className="flex items-center gap-1 font-medium text-primary">
                 <Timer className="size-3" />
-                {duracion(item.sesionInicio)}
+                ejecutándose{item.sesionInicio ? ` · ${duracion(item.sesionInicio)}` : ""}
+                {item.cuenta ? ` · cuenta ${item.cuenta}` : ""}
               </span>
             )}
             {item.intentos > 1 && item.estado !== "completado" && (
@@ -182,6 +183,9 @@ export function WorkItem({
               </span>
             )}
             {item._count && item._count.logs > 0 && <span>{item._count.logs} anotaciones</span>}
+            {!enCurso && !pausada && item.intentos >= 3 && (
+              <span className="font-medium text-amber-600 dark:text-amber-400">sin intentos</span>
+            )}
           </div>
 
           {/* Barra de progreso — sólo si el prompt declaró pasos numerados */}
