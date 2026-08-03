@@ -76,6 +76,14 @@ export type EstadoCarril = {
   actualizadoAt: string | null;
 };
 
+export type EventoHarness = {
+  id: string;
+  carril: Carril;
+  tipo: "arranque" | "apagado" | "cuota" | "error" | "info";
+  texto: string;
+  createdAt: string;
+};
+
 export type EstadoHarness = {
   carriles: EstadoCarril[];
   cuentas: CuentaHarness[];

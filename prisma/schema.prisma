@@ -370,6 +370,7 @@ model NotaDevice {
   trabajoBandeja    TrabajoBandeja?
   harnessCuentas    HarnessCuenta[]
   harnessEstado     HarnessEstado[]
+  harnessEventos    HarnessEvento[]
 
   @@map("nota_devices")
 }
@@ -1060,4 +1061,23 @@ model HarnessEstado {
 
   @@unique([deviceId, carril])
   @@map("harness_estado")
+}
+
+// Lo que le pasa al harness, para poder verlo desde la app en vez de tener que
+// abrir runner.log en la máquina: arrancó, se apagó, se quedó sin cuota, no
+// consiguió cuenta. Sobre todo importa para el apagado — sin esto, apretar el
+// botón y no ver nada no distingue "se apagó" de "no se pudo apagar".
+model HarnessEvento {
+  id       String @id @default(cuid())
+  deviceId String
+  carril   String
+  // arranque | apagado | cuota | error | info
+  tipo     String @default("info")
+  texto    String @default("")
+  createdAt DateTime @default(now())
+
+  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+  @@map("harness_eventos")
 }

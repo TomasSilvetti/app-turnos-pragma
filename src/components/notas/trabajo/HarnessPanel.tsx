@@ -5,17 +5,22 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Moon, PowerOff, KeyRound, Clock, Hammer, Sparkles, Power, Loader2 } from "lucide-react";
+import {
+  Activity, Moon, PowerOff, KeyRound, Clock, Hammer, Sparkles, Power, Loader2,
+  ChevronRight, AlertTriangle, Info,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
 import {
   duracion,
+  hhmm,
   porcentajeCuota,
   NOMBRE_CARRIL,
   type Carril,
   type CuentaHarness,
   type EstadoCarril,
   type EstadoHarness,
+  type EventoHarness,
 } from "@/lib/notas/trabajoClient";
 
 // Panel de arriba de la sección: qué está haciendo cada carril y cómo andan las
@@ -35,6 +40,14 @@ const ICONO_CARRIL: Record<Carril, typeof Hammer> = {
 function horaReset(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
+
+const ICONO_EVENTO: Record<EventoHarness["tipo"], React.ReactNode> = {
+  arranque: <Power className="size-3 text-emerald-500" />,
+  apagado: <PowerOff className="size-3 text-muted-foreground" />,
+  cuota: <Clock className="size-3 text-amber-500" />,
+  error: <AlertTriangle className="size-3 text-destructive" />,
+  info: <Info className="size-3 text-muted-foreground" />,
+};
 
 function FilaCarril({
   c,
@@ -117,12 +130,18 @@ function FilaCarril({
 
 export function HarnessPanel() {
   const [datos, setDatos] = useState<EstadoHarness | null>(null);
+  const [eventos, setEventos] = useState<EventoHarness[]>([]);
+  const [verLog, setVerLog] = useState(false);
   const [cambiando, setCambiando] = useState<string | null>(null);
   const [, setTick] = useState(0);
 
   const cargar = useCallback(async () => {
-    const res = await notasFetch("/api/notas/trabajo/estado").catch(() => null);
+    const [res, resEventos] = await Promise.all([
+      notasFetch("/api/notas/trabajo/estado").catch(() => null),
+      notasFetch("/api/notas/trabajo/eventos").catch(() => null),
+    ]);
     if (res?.ok) setDatos(await res.json());
+    if (resEventos?.ok) setEventos((await resEventos.json()).eventos ?? []);
   }, []);
 
   useEffect(() => {
@@ -269,6 +288,38 @@ export function HarnessPanel() {
             </li>
           )}
         </ul>
+      )}
+
+      {/* Log del harness: sin esto, apretar apagar y no ver nada no distingue
+          "se apagó" de "no se pudo apagar". */}
+      {eventos.length > 0 && (
+        <div className="border-t border-border pt-3">
+          <button
+            type="button"
+            onClick={() => setVerLog((v) => !v)}
+            className="flex w-full items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ChevronRight className={cn("size-3.5 transition-transform", verLog && "rotate-90")} />
+            Actividad del harness
+            <span className="ml-auto flex items-center gap-1.5 font-normal">
+              {ICONO_EVENTO[eventos[0].tipo]}
+              <span className="max-w-[14rem] truncate">{eventos[0].texto}</span>
+              <span className="tabular-nums">{hhmm(eventos[0].createdAt)}</span>
+            </span>
+          </button>
+
+          {verLog && (
+            <ol className="mt-2 space-y-1.5">
+              {eventos.map((e) => (
+                <li key={e.id} className="flex gap-2 text-[11px] leading-relaxed">
+                  <span className="mt-0.5 shrink-0">{ICONO_EVENTO[e.tipo]}</span>
+                  <span className="shrink-0 tabular-nums text-muted-foreground">{hhmm(e.createdAt)}</span>
+                  <span className={cn(e.tipo === "error" && "text-destructive")}>{e.texto}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
       )}
     </section>
   );
