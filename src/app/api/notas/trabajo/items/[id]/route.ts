@@ -44,7 +44,9 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   const deviceId = await resolveDeviceId(request);
   if (!deviceId) return noAutorizado();
   const { id } = await ctx.params;
-  if (!(await itemDelDevice(id, deviceId))) return noEncontrado();
+  const actual = await itemDelDevice(id, deviceId);
+  if (!actual) return noEncontrado();
+  const estadoPrevio = actual.estado;
 
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Body inválido" }, { status: 400 });
@@ -62,6 +64,10 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
     if (body.estado === "pendiente") {
       data.motivoBloqueo = null;
       data.sesionInicio = null;
+      // Sacar a mano una tarea de bloqueados es decir "intentala de nuevo": sin
+      // reiniciar los intentos, la cola la volvería a bloquear en la primera
+      // vuelta y el botón no serviría para nada.
+      if (estadoPrevio === "bloqueado") data.intentos = 0;
     }
     // Pausar no es fracasar: los intentos quedan como estaban, así reanudarla no
     // la deja a un paso de que el harness la saltee por trabada.
