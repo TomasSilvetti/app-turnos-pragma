@@ -19,6 +19,16 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   if (!body) return NextResponse.json({ error: "Body inválido" }, { status: 400 });
 
   const data: Prisma.TrabajoItemUpdateInput = {};
+
+  // La cuenta se quedó sin cuota, o su login murió: la sesión ni siquiera llegó
+  // a arrancar. Ese intento se devuelve, o tres rotaciones seguidas bloquean una
+  // tarea que nadie intentó hacer — que es exactamente lo que pasó el 03/08 con
+  // cuatro tareas, en menos de un minuto.
+  if (body.devolverIntento === true) {
+    const actualItem = await prisma.trabajoItem.findUnique({ where: { id }, select: { intentos: true } });
+    data.intentos = Math.max(0, (actualItem?.intentos ?? 1) - 1);
+  }
+
   if (typeof body.pasoActual === "number") data.pasoActual = Math.trunc(body.pasoActual);
   if (typeof body.pasosTotales === "number") data.pasosTotales = Math.trunc(body.pasosTotales);
   if (typeof body.cuenta === "string") data.cuenta = body.cuenta;
