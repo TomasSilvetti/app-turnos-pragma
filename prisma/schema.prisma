@@ -371,6 +371,8 @@ model NotaDevice {
   harnessCuentas    HarnessCuenta[]
   harnessEstado     HarnessEstado[]
   harnessEventos    HarnessEvento[]
+  consolaSesiones   ConsolaSesion[]
+  consolaCaptura    ConsolaCaptura?
 
   @@map("nota_devices")
 }
@@ -1067,6 +1069,86 @@ model HarnessEstado {
 // abrir runner.log en la máquina: arrancó, se apagó, se quedó sin cuota, no
 // consiguió cuenta. Sobre todo importa para el apagado — sin esto, apretar el
 // botón y no ver nada no distingue "se apagó" de "no se pudo apagar".
+// ─────────────────────────────────────────────────────────────
+// Consola: una sesión de Claude Code de la máquina del usuario,
+// manejada desde el celular.
+//
+// El CLI ya trae Remote Control, pero ata la sesión a la cuenta
+// que la lanzó y `/login` no funciona desde el móvil: cuando esa
+// cuenta se queda sin cuota hay que ir hasta la notebook. Acá el
+// cambio de cuenta es mover CLAUDE_CONFIG_DIR — lo que el harness
+// ya hace — y el historial se conserva copiando el .jsonl de la
+// sesión a la carpeta de la cuenta nueva.
+// ─────────────────────────────────────────────────────────────
+
+model ConsolaSesion {
+  id       String @id @default(cuid())
+  deviceId String
+  // El id que usa el CLI (`--session-id`). Es un UUID y lo genera la app: así
+  // el archivo de historial se puede encontrar en cualquier carpeta de cuenta.
+  sessionId String @unique
+  titulo   String @default("")
+  // Carpeta de cuenta con la que corre (1, 2, 3). Cambiarla es cambiar de
+  // cuenta sin perder la conversación.
+  cuenta   String?
+  // idle | pendiente | pensando | error
+  //   pendiente = hay un prompt esperando que el carril lo tome
+  estado   String @default("idle")
+  error    String?
+  // Directorio donde corre la sesión. Cambia qué código ve.
+  directorio String @default("")
+  archivada Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  mensajes ConsolaMensaje[]
+
+  @@index([deviceId, archivada, updatedAt])
+  @@map("consola_sesiones")
+}
+
+model ConsolaMensaje {
+  id       String @id @default(cuid())
+  sesionId String
+  // usuario | asistente | sistema
+  rol      String @default("usuario")
+  texto    String @default("")
+  // Mientras la respuesta llega por chunks se va apendeando a `texto` y esto
+  // queda en true; la UI lo usa para mostrar el cursor de escritura.
+  parcial  Boolean @default(false)
+  // Imágenes que la sesión produjo en su respuesta (capturas que sacó ella).
+  // Van por URL de Blob, igual que en el log del harness.
+  imagenes String[] @default([])
+  createdAt DateTime @default(now())
+
+  sesion ConsolaSesion @relation(fields: [sesionId], references: [id], onDelete: Cascade)
+
+  @@index([sesionId, createdAt])
+  @@map("consola_mensajes")
+}
+
+// La vista viva de la pantalla: UNA sola por device. Sacar una nueva reemplaza
+// la anterior y borra su blob — si no, una tarde de uso deja cien capturas
+// pagando storage para mirar una.
+model ConsolaCaptura {
+  id       String @id @default(cuid())
+  deviceId String @unique
+  url      String
+  pathname String
+  ancho    Int    @default(0)
+  alto     Int    @default(0)
+  // pendiente = el usuario la pidió y el carril todavía no la sacó
+  estado   String @default("lista")
+  pedidaEn DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@map("consola_capturas")
+}
+
 model HarnessEvento {
   id       String @id @default(cuid())
   deviceId String
