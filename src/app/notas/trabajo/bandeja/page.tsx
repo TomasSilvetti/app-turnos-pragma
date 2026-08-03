@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Sparkles, AlertTriangle, Clock, CheckCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Sparkles, AlertTriangle, Clock, CheckCheck, PowerOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
@@ -36,6 +36,10 @@ export default function BandejaPage() {
   const [analizando, setAnalizando] = useState(false);
   const [confirmando, setConfirmando] = useState<string | null>(null);
   const [contenedor, setContenedor] = useState<HTMLElement | null>(null);
+  // Un pedido encolado con el harness apagado se queda esperando para siempre.
+  // El cartel tiene que decir eso y no "está en la cola", que suena a que algo
+  // está pasando.
+  const [harnessVivo, setHarnessVivo] = useState<boolean | null>(null);
   // Cambia cuando el contenido del crudo se reemplaza desde el servidor (al
   // confirmar), para volver a montar el editor con el texto nuevo.
   const [version, setVersion] = useState(0);
@@ -44,7 +48,11 @@ export default function BandejaPage() {
   const extensiones = useMemo(() => [BloqueId], []);
 
   const cargar = useCallback(async () => {
-    const res = await notasFetch("/api/notas/trabajo/bandeja").catch(() => null);
+    const [res, resEstado] = await Promise.all([
+      notasFetch("/api/notas/trabajo/bandeja").catch(() => null),
+      notasFetch("/api/notas/trabajo/estado").catch(() => null),
+    ]);
+    if (resEstado?.ok) setHarnessVivo((await resEstado.json()).vivo === true);
     if (!res?.ok) return;
     const { bandeja } = await res.json();
     setBandeja(bandeja);
@@ -180,14 +188,24 @@ export default function BandejaPage() {
         </p>
       )}
 
-      {esperando && (
-        <p className="mb-4 flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm">
-          <Clock className="size-4 shrink-0 text-primary" />
-          {bandeja?.estado === "analizando"
-            ? "El harness está leyendo la bandeja…"
-            : "En la cola del harness. Si ninguna cuenta tiene cuota, arranca cuando vuelva la primera."}
-        </p>
-      )}
+      {esperando &&
+        (harnessVivo === false ? (
+          <p className="mb-4 flex items-start gap-2 rounded-xl border border-amber-500/50 bg-amber-500/5 p-3 text-sm">
+            <PowerOff className="mt-0.5 size-4 shrink-0 text-amber-500" />
+            <span>
+              El pedido quedó guardado, pero <strong>el harness está apagado</strong> y no hay nadie que
+              lo lea. Arrancalo en la máquina con <code className="rounded bg-muted px-1 py-0.5 text-xs">runner.ps1</code> y
+              lo toma en menos de 30 segundos.
+            </span>
+          </p>
+        ) : (
+          <p className="mb-4 flex items-center gap-2 rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm">
+            <Clock className="size-4 shrink-0 text-primary" />
+            {bandeja?.estado === "analizando"
+              ? "El harness está leyendo la bandeja…"
+              : "En la cola del harness. Si ninguna cuenta tiene cuota, arranca cuando vuelva la primera."}
+          </p>
+        ))}
 
       {!bandeja ? (
         <div className="flex justify-center py-16 text-muted-foreground">
