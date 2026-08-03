@@ -46,21 +46,24 @@ function FilaCarril({
   cambiando: boolean;
 }) {
   const trabajando = c.estado === "trabajando";
-  const Icono = !c.vivo ? PowerOff : trabajando ? Activity : Moon;
+  // `vivo` es "reportó hace poco", no "está corriendo": el último latido de un
+  // carril es justamente el que dice que se apagó. Lo que manda es el estado.
+  const corriendo = c.vivo && c.estado !== "detenido";
+  const Icono = !corriendo ? PowerOff : trabajando ? Activity : Moon;
   const IconoCarril = ICONO_CARRIL[c.carril];
-  // Encendido pero todavía sin latido: el vigía lo está por levantar. Dura unos
-  // segundos y hay que mostrarlo, o el botón parece que no hizo nada.
-  const arrancando = c.encendido && !c.vivo;
+  // Encendido pero todavía sin reportar: el vigía lo está por levantar. Dura
+  // unos segundos y hay que mostrarlo, o el botón parece que no hizo nada.
+  const arrancando = c.encendido && !corriendo;
 
   return (
     <div className="flex items-start gap-2.5">
       <span
         className={cn(
           "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg",
-          trabajando && c.vivo ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+          trabajando && corriendo ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
         )}
       >
-        <Icono className={cn("size-4", trabajando && c.vivo && "animate-pulse")} />
+        <Icono className={cn("size-4", trabajando && corriendo && "animate-pulse")} />
       </span>
 
       <div className="min-w-0 flex-1">
@@ -68,10 +71,10 @@ function FilaCarril({
           <IconoCarril className="size-3.5 text-muted-foreground" />
           {NOMBRE_CARRIL[c.carril]}
           <span className="text-xs font-normal text-muted-foreground">
-            · {arrancando ? "arrancando…" : !c.vivo ? "detenido" : trabajando ? "trabajando" : "sin trabajo"}
+            · {arrancando ? "arrancando…" : !corriendo ? "detenido" : trabajando ? "trabajando" : "sin trabajo"}
           </span>
         </p>
-        {c.vivo && trabajando ? (
+        {corriendo && trabajando ? (
           <p className="truncate text-xs text-muted-foreground">
             {c.itemEnCurso ? `«${c.itemEnCurso.titulo || "Sin título"}»` : "analizando la bandeja"}
             {c.sesionInicio && ` · ${duracion(c.sesionInicio)} de ${c.limiteSesionMin} min`}
@@ -80,7 +83,7 @@ function FilaCarril({
           <p className="text-xs text-muted-foreground">
             {arrancando
               ? "El vigía lo está levantando en tu máquina."
-              : !c.vivo
+              : !corriendo
                 ? c.actualizadoAt
                   ? `Último latido hace ${duracion(c.actualizadoAt)}.`
                   : "Nunca reportó."
