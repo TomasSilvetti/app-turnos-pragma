@@ -5,7 +5,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Moon, PowerOff, KeyRound, Clock, Hammer, Sparkles } from "lucide-react";
+import { Activity, Moon, PowerOff, KeyRound, Clock, Hammer, Sparkles, Power, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
 import {
@@ -36,10 +36,21 @@ function horaReset(iso: string): string {
   return new Date(iso).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
 }
 
-function FilaCarril({ c }: { c: EstadoCarril }) {
+function FilaCarril({
+  c,
+  onEncender,
+  cambiando,
+}: {
+  c: EstadoCarril;
+  onEncender: (carril: Carril, encendido: boolean) => void;
+  cambiando: boolean;
+}) {
   const trabajando = c.estado === "trabajando";
   const Icono = !c.vivo ? PowerOff : trabajando ? Activity : Moon;
   const IconoCarril = ICONO_CARRIL[c.carril];
+  // Encendido pero todavía sin latido: el vigía lo está por levantar. Dura unos
+  // segundos y hay que mostrarlo, o el botón parece que no hizo nada.
+  const arrancando = c.encendido && !c.vivo;
 
   return (
     <div className="flex items-start gap-2.5">
@@ -57,7 +68,7 @@ function FilaCarril({ c }: { c: EstadoCarril }) {
           <IconoCarril className="size-3.5 text-muted-foreground" />
           {NOMBRE_CARRIL[c.carril]}
           <span className="text-xs font-normal text-muted-foreground">
-            · {!c.vivo ? "detenido" : trabajando ? "trabajando" : "sin trabajo"}
+            · {arrancando ? "arrancando…" : !c.vivo ? "detenido" : trabajando ? "trabajando" : "sin trabajo"}
           </span>
         </p>
         {c.vivo && trabajando ? (
@@ -67,14 +78,36 @@ function FilaCarril({ c }: { c: EstadoCarril }) {
           </p>
         ) : (
           <p className="text-xs text-muted-foreground">
-            {!c.vivo
-              ? c.actualizadoAt
-                ? `Último latido hace ${duracion(c.actualizadoAt)}.`
-                : "Nunca reportó."
-              : "A la espera."}
+            {arrancando
+              ? "El vigía lo está levantando en tu máquina."
+              : !c.vivo
+                ? c.actualizadoAt
+                  ? `Último latido hace ${duracion(c.actualizadoAt)}.`
+                  : "Nunca reportó."
+                : "A la espera de trabajo."}
           </p>
         )}
       </div>
+
+      <button
+        type="button"
+        onClick={() => onEncender(c.carril, !c.encendido)}
+        disabled={cambiando}
+        aria-label={c.encendido ? `Apagar ${NOMBRE_CARRIL[c.carril]}` : `Encender ${NOMBRE_CARRIL[c.carril]}`}
+        title={
+          c.encendido
+            ? "Apagar: termina lo que está haciendo y no toma nada más"
+            : "Encender: arranca en tu máquina y empieza a tomar trabajo"
+        }
+        className={cn(
+          "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg border-2 transition-colors disabled:opacity-50",
+          c.encendido
+            ? "border-primary bg-primary/10 text-primary hover:bg-primary/20"
+            : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+        )}
+      >
+        {cambiando ? <Loader2 className="size-4 animate-spin" /> : <Power className="size-4" />}
+      </button>
     </div>
   );
 }
@@ -127,13 +160,28 @@ export function HarnessPanel() {
     cargar();
   };
 
+  const encender = async (carril: Carril, encendido: boolean) => {
+    setCambiando(carril);
+    // Optimista: el switch se pinta ya, aunque el arranque real tarde unos
+    // segundos en verse. Sin esto el botón parece que no responde.
+    setDatos((prev) =>
+      prev ? { ...prev, carriles: prev.carriles.map((c) => (c.carril === carril ? { ...c, encendido } : c)) } : prev
+    );
+    await notasFetch("/api/notas/trabajo/estado/encendido", {
+      method: "POST",
+      body: JSON.stringify({ carril, encendido }),
+    }).catch(() => {});
+    setCambiando(null);
+    cargar();
+  };
+
   const cuentas = datos?.cuentas ?? [];
 
   return (
     <section className="mb-6 space-y-3 rounded-xl border border-border bg-card p-4">
-      {datos?.carriles.map((c) => <FilaCarril key={c.carril} c={c} />) ?? (
-        <p className="text-sm text-muted-foreground">…</p>
-      )}
+      {datos?.carriles.map((c) => (
+        <FilaCarril key={c.carril} c={c} onEncender={encender} cambiando={cambiando === c.carril} />
+      )) ?? <p className="text-sm text-muted-foreground">…</p>}
 
       {cuentas.length > 0 && (
         <ul className="space-y-3 border-t border-border pt-3">

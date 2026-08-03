@@ -67,6 +67,7 @@ export type CuentaHarness = {
 export type EstadoCarril = {
   carril: Carril;
   vivo: boolean;
+  encendido: boolean;
   estado: "detenido" | "ocioso" | "trabajando";
   itemEnCurso: { id: string; titulo: string; pasoActual: number; pasosTotales: number; intentos: number } | null;
   sesionInicio: string | null;

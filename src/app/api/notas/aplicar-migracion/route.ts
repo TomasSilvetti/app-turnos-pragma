@@ -564,6 +564,13 @@ const MIGRATIONS: Migration[] = [
       `CREATE UNIQUE INDEX IF NOT EXISTS "harness_estado_deviceId_carril_key" ON "harness_estado"("deviceId", "carril")`,
     ],
   },
+  {
+    name: "20260803180000_harness_encendido",
+    checksum: "60e499b5677c77817817a0de42f450e13e80d25e141a0cbb6bdb043ee9cc0be5",
+    statements: [
+      `ALTER TABLE "harness_estado" ADD COLUMN IF NOT EXISTS "encendido" BOOLEAN NOT NULL DEFAULT false`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {

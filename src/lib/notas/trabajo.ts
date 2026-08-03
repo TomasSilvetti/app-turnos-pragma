@@ -105,6 +105,9 @@ export async function estadoHarness(deviceId: string) {
     return {
       carril,
       vivo,
+      // Lo que pediste desde el botón, que puede no coincidir todavía con lo que
+      // pasa: entre encenderlo y que el vigía lo levante hay unos segundos.
+      encendido: fila?.encendido ?? false,
       estado: vivo ? fila!.estado : "detenido",
       itemEnCurso: vivo ? fila!.itemEnCurso : null,
       sesionInicio: vivo ? fila!.sesionInicio : null,

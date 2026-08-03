@@ -1043,7 +1043,11 @@ model HarnessEstado {
   deviceId String
   // trabajo | itemizacion
   carril   String @default("trabajo")
-  // detenido | ocioso | trabajando
+  // Lo que el usuario pidió desde el botón de la app. La app corre en Vercel y
+  // no puede lanzar un proceso en la máquina: deja acá el deseo y el vigía, que
+  // sí corre ahí, lo obedece —arranca el carril, o le pide que frene—.
+  encendido Boolean @default(false)
+  // detenido | ocioso | trabajando  (lo que está pasando de verdad)
   estado   String @default("detenido")
   itemEnCursoId String?
   sesionInicio  DateTime?

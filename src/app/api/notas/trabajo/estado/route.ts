@@ -39,6 +39,9 @@ export async function PUT(request: NextRequest) {
 
   const datos = {
     estado,
+    // El runner también manda el switch: si lo arrancaste o lo frenaste desde el
+    // panel de Windows, el botón de la app tiene que reflejarlo.
+    ...(typeof body?.encendido === "boolean" ? { encendido: body.encendido } : {}),
     itemEnCursoId: typeof body?.itemEnCursoId === "string" ? body.itemEnCursoId : null,
     sesionInicio: fecha(body?.sesionInicio),
     cuentaActual: typeof body?.cuentaActual === "string" ? body.cuentaActual : null,
