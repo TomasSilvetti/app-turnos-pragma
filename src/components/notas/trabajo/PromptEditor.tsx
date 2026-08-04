@@ -8,7 +8,12 @@ import { TextStyle, Color } from "@tiptap/extension-text-style";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { Loader2 } from "lucide-react";
 import { notasFetch } from "@/lib/notas/client";
-import { archivoAImagenComprimida, esImagen } from "@/lib/notas/imagen";
+import {
+  archivoAImagenComprimida,
+  esImagen,
+  imagenesDelEvento,
+  manejarPegadoDeImagenes,
+} from "@/lib/notas/imagen";
 import { NotaImage } from "@/components/notas/editor/notaImage";
 import { EditorToolbar } from "@/components/notas/EditorToolbar";
 
@@ -121,15 +126,13 @@ export function PromptEditor({
     editorProps: {
       attributes: { class: "notas-prose focus:outline-none min-h-[6rem] px-3 py-2 text-sm" },
       handlePaste: (_view, event) => {
-        const imagenes = Array.from(event.clipboardData?.files ?? []).filter(esImagen);
-        if (imagenes.length === 0) return false;
-        event.preventDefault();
-        subirImagenes(imagenes);
-        return true;
+        const atendido = manejarPegadoDeImagenes(event.clipboardData, (files) => subirImagenes(files));
+        if (atendido) event.preventDefault();
+        return atendido;
       },
       handleDrop: (_view, event, _slice, moved) => {
         if (moved) return false;
-        const imagenes = Array.from(event.dataTransfer?.files ?? []).filter(esImagen);
+        const imagenes = imagenesDelEvento(event.dataTransfer);
         if (imagenes.length === 0) return false;
         event.preventDefault();
         subirImagenes(imagenes);

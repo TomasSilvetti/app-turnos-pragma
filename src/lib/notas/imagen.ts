@@ -83,3 +83,67 @@ export function pesoAproximadoKb(dataUrl: string): number {
   const base64 = dataUrl.slice(dataUrl.indexOf(",") + 1);
   return Math.round((base64.length * 0.75) / 1024);
 }
+
+// ── Imágenes pegadas o arrastradas ──
+// Una captura de Windows (Win+Shift+S, ImprPant) no pone un archivo en el
+// portapapeles sino un bitmap crudo: `files` queda vacío y la imagen aparece
+// sólo en `items`. Por eso `items` va primero y `files` queda de complemento
+// para lo copiado desde el explorador.
+export function imagenesDelEvento(dt: DataTransfer | null | undefined): File[] {
+  if (!dt) return [];
+  const deItems: File[] = [];
+  for (const item of Array.from(dt.items ?? [])) {
+    if (item.kind !== "file" || !item.type.startsWith("image/")) continue;
+    const file = item.getAsFile();
+    if (file) deItems.push(file);
+  }
+  if (deItems.length > 0) return deItems;
+  return Array.from(dt.files ?? []).filter(esImagen);
+}
+
+// La Herramienta de Recortes publica la captura como bitmap + un HTML que
+// apunta a un PNG temporal en disco: ahí no hay File que sacar del evento y hay
+// que ir a leer el portapapeles aparte.
+function pareceImagenPegada(dt: DataTransfer | null | undefined): boolean {
+  if (!dt) return false;
+  if (Array.from(dt.types ?? []).some((t) => t.startsWith("image/"))) return true;
+  if (dt.getData("text/plain").trim()) return false;
+  return /<img\b/i.test(dt.getData("text/html"));
+}
+
+// Último recurso: la Async Clipboard API sí entrega el bitmap. Pide permiso de
+// lectura, así que sólo se llama cuando el evento no trajo ningún archivo.
+async function imagenesDelPortapapeles(): Promise<File[]> {
+  if (typeof navigator === "undefined" || !navigator.clipboard?.read) return [];
+  try {
+    const files: File[] = [];
+    for (const item of await navigator.clipboard.read()) {
+      const tipo = item.types.find((t) => t.startsWith("image/"));
+      if (!tipo) continue;
+      const blob = await item.getType(tipo);
+      files.push(new File([blob], `captura.${tipo.split("/")[1] || "png"}`, { type: tipo }));
+    }
+    return files;
+  } catch {
+    return [];
+  }
+}
+
+// Devuelve true si el pegado era de imágenes y quedó atendido: quien llama corta
+// ahí el pegado normal. El camino del portapapeles es asincrónico, así que las
+// imágenes pueden llegar al callback un tick después.
+export function manejarPegadoDeImagenes(
+  dt: DataTransfer | null | undefined,
+  onImagenes: (files: File[]) => void
+): boolean {
+  const inmediatas = imagenesDelEvento(dt);
+  if (inmediatas.length > 0) {
+    onImagenes(inmediatas);
+    return true;
+  }
+  if (!pareceImagenPegada(dt)) return false;
+  imagenesDelPortapapeles().then((files) => {
+    if (files.length > 0) onImagenes(files);
+  });
+  return true;
+}

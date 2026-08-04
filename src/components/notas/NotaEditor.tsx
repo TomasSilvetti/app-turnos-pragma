@@ -18,7 +18,12 @@ import { NotaImage, INSERT_IMAGE_EVENT } from "./editor/notaImage";
 import { ReminderModal, type ReminderValues } from "./ReminderModal";
 import { ProgressModal, type ProgressValues } from "./ProgressModal";
 import { ImageCropModal } from "./ImageCropModal";
-import { archivoAImagenComprimida, esImagen } from "@/lib/notas/imagen";
+import {
+  archivoAImagenComprimida,
+  esImagen,
+  imagenesDelEvento,
+  manejarPegadoDeImagenes,
+} from "@/lib/notas/imagen";
 
 type Estado = "idle" | "saving" | "saved";
 
@@ -191,16 +196,14 @@ export function NotaEditor({
       attributes: { class: "notas-prose focus:outline-none min-h-[60vh] px-4 py-4" },
       // Pegar captura / imagen del portapapeles.
       handlePaste: (_view, event) => {
-        const imagenes = Array.from(event.clipboardData?.files ?? []).filter(esImagen);
-        if (imagenes.length === 0) return false;
-        event.preventDefault();
-        insertarImagenes(imagenes);
-        return true;
+        const atendido = manejarPegadoDeImagenes(event.clipboardData, (files) => insertarImagenes(files));
+        if (atendido) event.preventDefault();
+        return atendido;
       },
       // Arrastrar y soltar archivos de imagen sobre el editor.
       handleDrop: (view, event, _slice, moved) => {
         if (moved) return false;
-        const imagenes = Array.from(event.dataTransfer?.files ?? []).filter(esImagen);
+        const imagenes = imagenesDelEvento(event.dataTransfer);
         if (imagenes.length === 0) return false;
         event.preventDefault();
         const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });

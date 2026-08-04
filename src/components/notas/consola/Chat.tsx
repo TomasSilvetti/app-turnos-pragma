@@ -11,7 +11,7 @@ import { Send, Loader2, User, Terminal, AlertTriangle, X, Paperclip } from "luci
 import { cn } from "@/lib/utils";
 import { consolaFetch, type MensajeConsola, type SesionConsola } from "@/lib/notas/consolaClient";
 import { hhmm } from "@/lib/notas/trabajoClient";
-import { esImagen, archivoAImagenComprimida } from "@/lib/notas/imagen";
+import { esImagen, archivoAImagenComprimida, manejarPegadoDeImagenes } from "@/lib/notas/imagen";
 
 export function Chat({ sesionId, onCambio }: { sesionId: string; onCambio: () => void }) {
   const [sesion, setSesion] = useState<SesionConsola | null>(null);
@@ -194,10 +194,7 @@ export function Chat({ sesionId, onCambio }: { sesionId: string; onCambio: () =>
               }
             }}
             onPaste={(e) => {
-              const archivos = Array.from(e.clipboardData?.files ?? []).filter(esImagen);
-              if (archivos.length === 0) return;
-              e.preventDefault();
-              subirImagenes(archivos);
+              if (manejarPegadoDeImagenes(e.clipboardData, subirImagenes)) e.preventDefault();
             }}
             rows={2}
             placeholder="Qué querés que haga en la notebook…"
