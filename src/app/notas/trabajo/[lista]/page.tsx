@@ -13,7 +13,8 @@ import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
 import { WorkItem } from "@/components/notas/trabajo/WorkItem";
 import { HarnessPanel } from "@/components/notas/trabajo/HarnessPanel";
-import { LISTAS, esClaveLista, type ItemTrabajo } from "@/lib/notas/trabajoClient";
+import { PropuestosPorInforme } from "@/components/notas/trabajo/PropuestosPorInforme";
+import { LISTAS, esClaveLista, type ItemTrabajo, type PedidoArchivo } from "@/lib/notas/trabajoClient";
 
 // Cada "nota fija" es esta pantalla con otro filtro. No son notas de Tiptap: el
 // harness escribe el log mientras el usuario puede estar editando el prompt, y
@@ -28,17 +29,28 @@ export default function ListaTrabajoPage() {
   const config = LISTAS[clave];
 
   const [items, setItems] = useState<ItemTrabajo[] | null>(null);
+  // Sólo para propuestos: el informe del que salió cada ítem, que es como se
+  // agrupan y se aprueban.
+  const [pedidos, setPedidos] = useState<PedidoArchivo[]>([]);
   const [creando, setCreando] = useState(false);
+  const esPropuestos = clave === "propuestos";
 
   const cargar = useCallback(async () => {
-    const res = await notasFetch(`/api/notas/trabajo/items?estado=${config.estado}`).catch(() => null);
+    const [res, resPedidos] = await Promise.all([
+      notasFetch(`/api/notas/trabajo/items?estado=${config.estado}`).catch(() => null),
+      esPropuestos ? notasFetch("/api/notas/trabajo/archivo").catch(() => null) : null,
+    ]);
     if (res?.ok) {
       const { items } = await res.json();
       setItems(items);
     } else {
       setItems([]);
     }
-  }, [config.estado]);
+    if (resPedidos?.ok) {
+      const { pedidos } = await resPedidos.json();
+      setPedidos(pedidos ?? []);
+    }
+  }, [config.estado, esPropuestos]);
 
   useEffect(() => {
     if (ready && deviceId) cargar();
@@ -97,6 +109,10 @@ export default function ListaTrabajoPage() {
         <div className="flex justify-center py-16 text-muted-foreground">
           <Loader2 className="animate-spin" />
         </div>
+      ) : esPropuestos ? (
+        // Sin ítems igual hay algo que mostrar: el informe que se está
+        // analizando en este momento, o el que falló.
+        <PropuestosPorInforme items={items} pedidos={pedidos} onCambio={cargar} />
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-16 text-center">
           <Inbox className="mx-auto mb-3 size-8 text-muted-foreground" />

@@ -1,6 +1,6 @@
 // Tipos y helpers compartidos por la UI de la sección Trabajo.
 
-export type EstadoItem = "pendiente" | "en_curso" | "pausada" | "bloqueado" | "completado";
+export type EstadoItem = "propuesto" | "pendiente" | "en_curso" | "pausada" | "bloqueado" | "completado";
 export type Carril = "trabajo" | "itemizacion";
 
 export const NOMBRE_CARRIL: Record<Carril, string> = {
@@ -42,6 +42,10 @@ export type ItemTrabajo = {
   sesionInicio: string | null;
   cuenta: string | null;
   motivoBloqueo: string | null;
+  // Sólo en los que salieron de un informe: qué archivo y qué parte.
+  fuenteArchivo?: string | null;
+  fuenteAncla?: string | null;
+  pedidoArchivoId?: string | null;
   createdAt: string;
   updatedAt: string;
   completadoEn: string | null;
@@ -133,7 +137,25 @@ export type Bandeja = {
 // existe, la sesión arranca en el proyecto por defecto sin avisar.
 export const PROYECTOS = ["app-turnos", "construia"];
 
+export type EstadoPedidoArchivo = "pendiente" | "analizando" | "listo" | "error";
+
+// Un archivo de la notebook mandado a itemizar desde la consola. Guarda la ruta
+// y nada del contenido: el informe vive en la máquina donde corre el harness.
+export type PedidoArchivo = {
+  id: string;
+  ruta: string;
+  nombre: string;
+  alcance: string;
+  estado: EstadoPedidoArchivo;
+  error: string | null;
+  itemsCreados: number;
+  pedidoEn: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const LISTAS = {
+  propuestos: { titulo: "Propuestos por el itemizador", estado: "propuesto" as const },
   pendiente: { titulo: "Lista de trabajo pendiente", estado: "pendiente" as const },
   bloqueados: { titulo: "Bloqueados", estado: "bloqueado" as const },
   completados: { titulo: "Trabajo completado", estado: "completado" as const },

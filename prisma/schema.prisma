@@ -368,6 +368,7 @@ model NotaDevice {
   calendarEvents    NotaCalendarEvent[]
   trabajoItems      TrabajoItem[]
   trabajoBandeja    TrabajoBandeja?
+  pedidosArchivo    TrabajoPedidoArchivo[]
   harnessCuentas    HarnessCuenta[]
   harnessEstado     HarnessEstado[]
   harnessEventos    HarnessEvento[]
@@ -835,7 +836,10 @@ model TrabajoItem {
   id       String @id @default(cuid())
   deviceId String
   titulo   String @default("")
-  // pendiente | en_curso | pausada | bloqueado | completado
+  // propuesto | pendiente | en_curso | pausada | bloqueado | completado
+  //   propuesto = lo escribio el itemizador leyendo un informe, y todavia no lo
+  //   aprobaste. La cola NO lo entrega: quince items creados de una sentada
+  //   arrancarian solos con el carril encendido, sin que nadie los haya leido.
   //   pausada = la frenaste vos. La cola no la entrega hasta que la reanudes,
   //   y sus intentos no suben: no fracaso, la sacaste de circulacion.
   estado   String @default("pendiente")
@@ -861,14 +865,58 @@ model TrabajoItem {
   updatedAt   DateTime  @updatedAt
   completadoEn DateTime?
 
+  // De donde salio, cuando salio de un informe y no de la bandeja. El prompt NO
+  // repite el informe: dice que hay que hacer y apunta acá, y la sesion que lo
+  // ejecute abre el archivo en esa ancla si necesita el detalle.
+  //   fuenteArchivo = ruta tal como se la menciono desde la consola
+  //   fuenteAncla   = id dentro del documento ("#h04"), no un numero de linea:
+  //                   el informe se sigue editando y las lineas se corren.
+  fuenteArchivo String?
+  fuenteAncla   String?
+  pedidoArchivoId String?
+
   device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  pedidoArchivo TrabajoPedidoArchivo? @relation(fields: [pedidoArchivoId], references: [id], onDelete: SetNull)
   prompts  TrabajoPrompt[]
   logs     TrabajoLogEntry[]
   imagenes TrabajoImagen[]
   enCursoDe HarnessEstado[]
 
   @@index([deviceId, estado, orden])
+  @@index([pedidoArchivoId])
   @@map("trabajo_items")
+}
+
+// Un archivo de la notebook mandado a itemizar desde la consola: un plan o un
+// informe que hay que partir en tareas.
+//
+// Guarda la RUTA y nada del contenido. El archivo pesa cientos de KB, vive en la
+// maquina donde corre el harness y se sigue editando: copiarlo acá seria pagar
+// tokens por texto que ademas quedaria viejo. La sesion que itemiza lo lee del
+// disco y sube los items ya escritos.
+model TrabajoPedidoArchivo {
+  id       String @id @default(cuid())
+  deviceId String
+  // Ruta absoluta en la notebook, tal como la resolvio la consola.
+  ruta     String
+  // El nombre del archivo, para no tener que mostrar la ruta entera en el celular.
+  nombre   String @default("")
+  // Que itemizar, en las palabras del usuario: "h09 h15", "solo la mesa de
+  // trabajo", o vacio para el documento entero. Lo interpreta la sesion.
+  alcance  String @default("")
+  // pendiente | analizando | listo | error
+  estado   String @default("pendiente")
+  error    String?
+  itemsCreados Int @default(0)
+  pedidoEn DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  device NotaDevice    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  items  TrabajoItem[]
+
+  @@index([deviceId, estado])
+  @@map("trabajo_pedidos_archivo")
 }
 
 // Un ítem puede tener varios prompts: el inicial y los de desbloqueo que se

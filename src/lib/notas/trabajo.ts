@@ -7,7 +7,7 @@ import { resolveDeviceId } from "./device";
 // el navegador (device anónimo, como el resto de notas) y el puente del harness,
 // que corre fuera del navegador y por eso necesita además un token compartido.
 
-export const ESTADOS = ["pendiente", "en_curso", "pausada", "bloqueado", "completado"] as const;
+export const ESTADOS = ["propuesto", "pendiente", "en_curso", "pausada", "bloqueado", "completado"] as const;
 export type EstadoItem = (typeof ESTADOS)[number];
 
 export const CARRILES = ["trabajo", "itemizacion"] as const;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Loader2, Trash2, Check, Timer, RotateCw, FileText, Terminal, Pause, Play } from "lucide-react";
+import { ChevronRight, Loader2, Trash2, Check, Timer, RotateCw, FileText, Terminal, Pause, Play, FileSearch } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { notasFetch } from "@/lib/notas/client";
 import { PromptEditor } from "./PromptEditor";
@@ -39,6 +39,9 @@ export function WorkItem({
 
   const enCurso = item.estado === "en_curso";
   const pausada = item.estado === "pausada";
+  // Lo escribió el itemizador leyendo un informe y todavía no lo aprobaste: no
+  // es trabajo pendiente hasta que digas que sí.
+  const propuesto = item.estado === "propuesto";
   const pct = porcentaje(item);
 
   const cargarDetalle = useCallback(async () => {
@@ -128,24 +131,39 @@ export function WorkItem({
         "overflow-hidden rounded-xl border bg-card transition-colors",
         enCurso ? "nota-item-trabajando border-primary/60" : "border-border",
         item.estado === "bloqueado" && "border-amber-500/50",
+        propuesto && "border-dashed border-sky-500/50",
         pausada && "opacity-60"
       )}
     >
       {/* Cabecera — el párrafo padre */}
       <div className="flex items-start gap-2.5 p-3">
-        <button
-          type="button"
-          onClick={() => patch({ estado: item.estado === "completado" ? "pendiente" : "completado" })}
-          aria-label={item.estado === "completado" ? "Reabrir" : "Marcar como completada"}
-          className={cn(
-            "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
-            item.estado === "completado"
-              ? "border-primary bg-primary text-primary-foreground"
-              : "border-muted-foreground/40 hover:border-primary"
-          )}
-        >
-          {item.estado === "completado" && <Check className="size-3.5" />}
-        </button>
+        {propuesto ? (
+          // Aprobar, no completar: el checkbox de un propuesto significaría
+          // "terminé una tarea que todavía nadie empezó".
+          <button
+            type="button"
+            onClick={() => patch({ estado: "pendiente" })}
+            aria-label="Aprobar y mandar a la cola"
+            title="Aprobar: pasa a la lista de trabajo pendiente"
+            className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 border-sky-500/60 text-sky-500 transition-colors hover:bg-sky-500 hover:text-white"
+          >
+            <Check className="size-3.5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => patch({ estado: item.estado === "completado" ? "pendiente" : "completado" })}
+            aria-label={item.estado === "completado" ? "Reabrir" : "Marcar como completada"}
+            className={cn(
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors",
+              item.estado === "completado"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-muted-foreground/40 hover:border-primary"
+            )}
+          >
+            {item.estado === "completado" && <Check className="size-3.5" />}
+          </button>
+        )}
 
         <button
           type="button"
@@ -168,6 +186,18 @@ export function WorkItem({
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 pl-6 text-xs text-muted-foreground">
             {item.proyecto && <span className="rounded bg-muted px-1.5 py-0.5 font-mono">{item.proyecto}</span>}
+            {item.fuenteArchivo && (
+              // De qué parte del informe salió. Es lo que hace que el ítem se
+              // pueda ampliar sin que el prompt tenga que repetir el documento.
+              <span
+                className="flex items-center gap-1 text-sky-600 dark:text-sky-400"
+                title={`${item.fuenteArchivo}${item.fuenteAncla ?? ""}`}
+              >
+                <FileSearch className="size-3" />
+                {(item.fuenteArchivo.split(/[\\/]/).pop() || item.fuenteArchivo) + (item.fuenteAncla ?? "")}
+              </span>
+            )}
+            {propuesto && <span className="font-medium text-sky-600 dark:text-sky-400">sin aprobar</span>}
             {pausada && <span className="font-medium">en pausa</span>}
             {enCurso && (
               <span className="flex items-center gap-1 font-medium text-primary">
@@ -235,7 +265,7 @@ export function WorkItem({
           </button>
         )}
 
-        {(item.estado === "completado" || item.estado === "bloqueado") && (
+        {(item.estado === "completado" || item.estado === "bloqueado" || propuesto) && (
           <button
             type="button"
             onClick={eliminar}

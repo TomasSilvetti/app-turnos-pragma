@@ -6,7 +6,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ListTodo, OctagonAlert, CheckCheck, Loader2, Inbox } from "lucide-react";
+import { ListTodo, OctagonAlert, CheckCheck, Loader2, Inbox, FileSearch } from "lucide-react";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
@@ -25,6 +25,13 @@ const NOTAS_FIJAS = [
     descripcion: "Pegá el pegote acá y salen los ítems.",
     icono: Inbox,
     color: "text-muted-foreground",
+  },
+  {
+    clave: "propuestos",
+    titulo: "Propuestos por el itemizador",
+    descripcion: "Lo que salió de un informe y espera tu visto bueno.",
+    icono: FileSearch,
+    color: "text-sky-500",
   },
   {
     clave: "pendiente",
@@ -81,6 +88,7 @@ export default function TrabajoPage() {
   const contar = (clave: string) => {
     if (clave === "bandeja") return sugerencias;
     if (!items) return null;
+    if (clave === "propuestos") return items.filter((i) => i.estado === "propuesto").length;
     if (clave === "pendiente") return items.filter((i) => i.estado === "pendiente" || i.estado === "en_curso").length;
     if (clave === "bloqueados") return items.filter((i) => i.estado === "bloqueado").length;
     return items.filter((i) => i.estado === "completado").length;
