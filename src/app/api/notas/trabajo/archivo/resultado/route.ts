@@ -72,6 +72,8 @@ export async function POST(request: NextRequest) {
         pedidoArchivoId: pedido.id,
         fuenteArchivo: entrante.fuenteArchivo || pedido.ruta,
         fuenteAncla: entrante.fuenteAncla,
+        fuenteHuella: entrante.fuenteHuella || null,
+        fuenteRevisadaEn: new Date(),
         prompts: {
           create: { tipo: "inicial", contenido: docDeItem(entrante) as unknown as Prisma.InputJsonValue },
         },

@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
       pasoActual: true, pasosTotales: true, intentos: true,
       sesionInicio: true, cuenta: true, motivoBloqueo: true,
       fuenteArchivo: true, fuenteAncla: true, pedidoArchivoId: true,
+      fuenteCambiada: true,
       createdAt: true, updatedAt: true, completadoEn: true,
       _count: { select: { logs: true } },
     },

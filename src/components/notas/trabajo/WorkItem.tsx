@@ -190,11 +190,21 @@ export function WorkItem({
               // De qué parte del informe salió. Es lo que hace que el ítem se
               // pueda ampliar sin que el prompt tenga que repetir el documento.
               <span
-                className="flex items-center gap-1 text-sky-600 dark:text-sky-400"
-                title={`${item.fuenteArchivo}${item.fuenteAncla ?? ""}`}
+                className={cn(
+                  "flex items-center gap-1",
+                  item.fuenteCambiada
+                    ? "font-medium text-amber-600 dark:text-amber-400"
+                    : "text-sky-600 dark:text-sky-400"
+                )}
+                title={
+                  item.fuenteCambiada
+                    ? `${item.fuenteArchivo}${item.fuenteAncla ?? ""}\n\nEsta parte del informe se editó después de que se escribió el ítem. La sesión va a trabajar contra el informe de hoy, no contra el texto del prompt.`
+                    : `${item.fuenteArchivo}${item.fuenteAncla ?? ""}`
+                }
               >
                 <FileSearch className="size-3" />
                 {(item.fuenteArchivo.split(/[\\/]/).pop() || item.fuenteArchivo) + (item.fuenteAncla ?? "")}
+                {item.fuenteCambiada && " · el informe cambió"}
               </span>
             )}
             {propuesto && <span className="font-medium text-sky-600 dark:text-sky-400">sin aprobar</span>}

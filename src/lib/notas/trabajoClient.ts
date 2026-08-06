@@ -45,6 +45,8 @@ export type ItemTrabajo = {
   // Sólo en los que salieron de un informe: qué archivo y qué parte.
   fuenteArchivo?: string | null;
   fuenteAncla?: string | null;
+  // El informe se editó después de que se escribió este ítem.
+  fuenteCambiada?: boolean;
   pedidoArchivoId?: string | null;
   createdAt: string;
   updatedAt: string;

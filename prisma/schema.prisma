@@ -873,6 +873,14 @@ model TrabajoItem {
   //                   el informe se sigue editando y las lineas se corren.
   fuenteArchivo String?
   fuenteAncla   String?
+  // Huella del texto de esa ancla en el momento en que se escribió el ítem. El
+  // informe se sigue editando: sin esto, el ítem se desarrolla contra una
+  // versión que ya no existe y nadie se entera hasta que el trabajo está hecho.
+  // Vacía en los ítems viejos, y eso se trata como "puede haber cambiado".
+  fuenteHuella  String?
+  // La puso el puente al comparar la huella contra el archivo de hoy.
+  fuenteCambiada   Boolean   @default(false)
+  fuenteRevisadaEn DateTime?
   pedidoArchivoId String?
 
   device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)

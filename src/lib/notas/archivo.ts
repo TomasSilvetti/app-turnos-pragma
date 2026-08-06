@@ -25,6 +25,9 @@ export type ItemEntrante = {
   prompt: string;
   fuenteArchivo: string;
   fuenteAncla: string;
+  // Cómo estaba esa parte del informe cuando se escribió el ítem. Lo que
+  // permite, semanas después, saber si el informe se movió abajo del ítem.
+  fuenteHuella: string;
   imagenes: ImagenSubida[];
 };
 
@@ -150,6 +153,7 @@ export function normalizarItems(crudo: unknown): { items: ItemEntrante[]; descar
       prompt,
       fuenteArchivo: cadena(fuente.archivo ?? fila.fuenteArchivo, 400),
       fuenteAncla: cadena(fuente.ancla ?? fila.fuenteAncla, 120),
+      fuenteHuella: cadena(fuente.huella ?? fila.fuenteHuella, 64),
       imagenes,
     });
   }

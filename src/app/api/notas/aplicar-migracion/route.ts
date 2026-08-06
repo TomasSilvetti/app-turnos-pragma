@@ -677,6 +677,15 @@ const MIGRATIONS: Migration[] = [
        END IF; END $$`,
     ],
   },
+  {
+    name: "20260806140000_add_fuente_huella",
+    checksum: "7f649ebc80e0327edf2bfabd4c420ebee52fe818da0d054dc87eae26fd73e98a",
+    statements: [
+      `ALTER TABLE "trabajo_items" ADD COLUMN IF NOT EXISTS "fuenteHuella" TEXT`,
+      `ALTER TABLE "trabajo_items" ADD COLUMN IF NOT EXISTS "fuenteCambiada" BOOLEAN NOT NULL DEFAULT false`,
+      `ALTER TABLE "trabajo_items" ADD COLUMN IF NOT EXISTS "fuenteRevisadaEn" TIMESTAMP(3)`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {
