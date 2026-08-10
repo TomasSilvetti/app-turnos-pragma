@@ -23,10 +23,16 @@ export function WorkItem({
   item,
   onCambio,
   onCrearDesdeProblema,
+  seleccionado,
+  onSeleccionar,
 }: {
   item: ItemTrabajo;
   onCambio: () => void;
   onCrearDesdeProblema: (texto: string) => void;
+  // Sólo llega en las listas con acciones en lote (bloqueados). Si no viene, el
+  // ítem no muestra casilla de selección.
+  seleccionado?: boolean;
+  onSeleccionar?: (id: string, valor: boolean) => void;
 }) {
   const [abierto, setAbierto] = useState(false);
   const [detalle, setDetalle] = useState<ItemTrabajo | null>(null);
@@ -137,6 +143,24 @@ export function WorkItem({
     >
       {/* Cabecera — el párrafo padre */}
       <div className="flex items-start gap-2.5 p-3">
+        {onSeleccionar && (
+          <button
+            type="button"
+            onClick={() => onSeleccionar(item.id, !seleccionado)}
+            role="checkbox"
+            aria-checked={!!seleccionado}
+            aria-label={`Seleccionar «${item.titulo || "sin título"}»`}
+            className={cn(
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+              seleccionado
+                ? "border-amber-500 bg-amber-500 text-white"
+                : "border-muted-foreground/40 hover:border-amber-500"
+            )}
+          >
+            {seleccionado && <Check className="size-3.5" />}
+          </button>
+        )}
+
         {propuesto ? (
           // Aprobar, no completar: el checkbox de un propuesto significaría
           // "terminé una tarea que todavía nadie empezó".

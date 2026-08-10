@@ -40,6 +40,41 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ items });
 }
 
+// PATCH: mueve varios ítems de estado en una sola llamada. Lo usa el "reencolar
+// todo" de bloqueados: veinte PATCH sueltos serían veinte viajes y una lista a
+// medio mover si alguno falla.
+export async function PATCH(request: NextRequest) {
+  const deviceId = await resolveDeviceId(request);
+  if (!deviceId) return noAutorizado();
+
+  const body = await request.json().catch(() => null);
+  const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((v: unknown) => typeof v === "string") : [];
+  const estado = body?.estado as EstadoItem;
+  if (!ids.length || !ESTADOS.includes(estado)) {
+    return NextResponse.json({ error: "Body inválido" }, { status: 400 });
+  }
+
+  const where = { id: { in: ids }, deviceId };
+  const completadoEn = estado === "completado" ? new Date() : null;
+
+  if (estado !== "pendiente") {
+    const { count } = await prisma.trabajoItem.updateMany({ where, data: { estado, completadoEn } });
+    return NextResponse.json({ count });
+  }
+
+  // Volver a la cola limpia el motivo del bloqueo y la sesión colgada. Los
+  // intentos se reinician sólo en los que venían bloqueados — mismo criterio
+  // que el PATCH individual: sin eso la cola los vuelve a bloquear en la
+  // primera vuelta y el botón no sirve de nada.
+  const base = { estado, completadoEn, motivoBloqueo: null, sesionInicio: null };
+  const [bloqueados, resto] = await prisma.$transaction([
+    prisma.trabajoItem.updateMany({ where: { ...where, estado: "bloqueado" }, data: { ...base, intentos: 0 } }),
+    prisma.trabajoItem.updateMany({ where: { ...where, estado: { not: "bloqueado" } }, data: base }),
+  ]);
+
+  return NextResponse.json({ count: bloqueados.count + resto.count });
+}
+
 // POST: crea un ítem con su prompt inicial. Acepta `contenido` (documento de
 // Tiptap) para el caso "crear ítem desde un problema del log", que nace con el
 // texto del problema ya adentro.

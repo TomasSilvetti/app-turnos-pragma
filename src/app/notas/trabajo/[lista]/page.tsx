@@ -6,8 +6,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Plus, Loader2, Inbox } from "lucide-react";
+import { ArrowLeft, Plus, Loader2, Inbox, Check, Minus, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
@@ -33,7 +34,11 @@ export default function ListaTrabajoPage() {
   // agrupan y se aprueban.
   const [pedidos, setPedidos] = useState<PedidoArchivo[]>([]);
   const [creando, setCreando] = useState(false);
+  // Selección en lote: hoy sólo en bloqueados, para devolverlos todos a la cola.
+  const [seleccion, setSeleccion] = useState<string[]>([]);
+  const [reencolando, setReencolando] = useState(false);
   const esPropuestos = clave === "propuestos";
+  const enLote = clave === "bloqueados";
 
   const cargar = useCallback(async () => {
     const [res, resPedidos] = await Promise.all([
@@ -43,6 +48,9 @@ export default function ListaTrabajoPage() {
     if (res?.ok) {
       const { items } = await res.json();
       setItems(items);
+      // El refresco de fondo puede traer una lista sin los que ya se movieron:
+      // una selección que apunta a ítems que no están más manda ids fantasma.
+      setSeleccion((prev) => prev.filter((id) => items.some((i: ItemTrabajo) => i.id === id)));
     } else {
       setItems([]);
     }
@@ -86,6 +94,33 @@ export default function ListaTrabajoPage() {
     [cargar, clave, router]
   );
 
+  const alternarSeleccion = useCallback((id: string, valor: boolean) => {
+    setSeleccion((prev) => (valor ? [...prev, id] : prev.filter((x) => x !== id)));
+  }, []);
+
+  const alternarTodo = useCallback(() => {
+    setSeleccion((prev) => (prev.length === (items?.length ?? 0) ? [] : (items ?? []).map((i) => i.id)));
+  }, [items]);
+
+  // Reencolar es mandarlos de vuelta a la lista de trabajo pendiente, que es de
+  // donde el harness toma. El endpoint les limpia el bloqueo y les devuelve los
+  // intentos.
+  const reencolar = useCallback(async () => {
+    if (!seleccion.length) return;
+    setReencolando(true);
+    const res = await notasFetch("/api/notas/trabajo/items", {
+      method: "PATCH",
+      body: JSON.stringify({ ids: seleccion, estado: "pendiente" }),
+    }).catch(() => null);
+    setReencolando(false);
+    if (res?.ok) {
+      setSeleccion([]);
+      cargar();
+    }
+  }, [seleccion, cargar]);
+
+  const todosSeleccionados = !!items && items.length > 0 && seleccion.length === items.length;
+
   return (
     <div className="mx-auto max-w-3xl px-4 pb-24 pt-6 sm:px-6">
       <header className="mb-5 flex items-center gap-2">
@@ -103,6 +138,48 @@ export default function ListaTrabajoPage() {
           {creando ? <Loader2 className="animate-spin" /> : <Plus />}
           Nuevo ítem de trabajo
         </Button>
+      )}
+
+      {enLote && items && items.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-3 py-2">
+          <button
+            type="button"
+            onClick={alternarTodo}
+            role="checkbox"
+            aria-checked={todosSeleccionados ? true : seleccion.length > 0 ? "mixed" : false}
+            className="flex items-center gap-2 text-sm font-medium"
+          >
+            <span
+              className={cn(
+                "flex size-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                seleccion.length > 0
+                  ? "border-amber-500 bg-amber-500 text-white"
+                  : "border-muted-foreground/40 hover:border-amber-500"
+              )}
+            >
+              {todosSeleccionados ? (
+                <Check className="size-3.5" />
+              ) : seleccion.length > 0 ? (
+                <Minus className="size-3.5" />
+              ) : null}
+            </span>
+            Seleccionar todo
+          </button>
+
+          <span className="text-xs text-muted-foreground">
+            {seleccion.length} de {items.length}
+          </span>
+
+          <Button
+            onClick={reencolar}
+            disabled={!seleccion.length || reencolando}
+            size="sm"
+            className="ml-auto"
+          >
+            {reencolando ? <Loader2 className="animate-spin" /> : <RotateCw />}
+            Reencolar en pendiente
+          </Button>
+        </div>
       )}
 
       {!items ? (
@@ -127,7 +204,14 @@ export default function ListaTrabajoPage() {
       ) : (
         <ul className="space-y-3">
           {items.map((item) => (
-            <WorkItem key={item.id} item={item} onCambio={cargar} onCrearDesdeProblema={crear} />
+            <WorkItem
+              key={item.id}
+              item={item}
+              onCambio={cargar}
+              onCrearDesdeProblema={crear}
+              seleccionado={enLote && seleccion.includes(item.id)}
+              onSeleccionar={enLote ? alternarSeleccion : undefined}
+            />
           ))}
         </ul>
       )}
