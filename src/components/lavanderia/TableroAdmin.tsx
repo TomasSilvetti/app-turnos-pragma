@@ -309,6 +309,7 @@ export function TableroAdmin() {
   const [sobreFecha, setSobreFecha] = useState<string | null>(null);
   const [confirmar, setConfirmar] = useState<DiaSnap | null>(null);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [diaModal, setDiaModal] = useState<string | null>(null);
   const [avisoOt, setAvisoOt] = useState<OTSnap | null>(null);
   const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
@@ -420,6 +421,20 @@ export function TableroAdmin() {
   const idxHoy = diasView.findIndex((d) => d.esHoy);
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
 
+  // El buscador ve siempre los 14 días, sin importar el filtro. Si la OT cae en
+  // una columna que no se puede expandir (fuera del filtro, o vista comprimida),
+  // la abrimos en el modal en vez de resaltarla en una tarjeta invisible.
+  const irAOT = (ot: OTSnap, fecha: string) => {
+    const idx = dias.findIndex((d) => d.fecha === fecha);
+    if (vista === 7 && idx >= 0 && idx < 7) {
+      resaltar(ot.id, fecha);
+      return;
+    }
+    const d = idx >= 0 ? dias[idx] : null;
+    setDiaModal(d ? `${d.dia} ${d.fechaCorta}` : null);
+    setOtModal(ot);
+  };
+
   return (
     <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal, avisarWhatsapp: setAvisoOt }}>
     <div className="space-y-3">
@@ -432,7 +447,7 @@ export function TableroAdmin() {
         </div>
         <div className="flex items-center gap-2">
           <ToggleVista vista={vista} onVista={setVista} />
-          <BuscadorOT dias={diasView} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+          <BuscadorOT dias={dias} onSeleccionar={irAOT} />
         </div>
       </div>
       <DndContext
@@ -482,9 +497,14 @@ export function TableroAdmin() {
         <OTModal
           ot={otModal}
           admin
-          onCerrar={() => setOtModal(null)}
+          diaEtiqueta={diaModal ?? undefined}
+          onCerrar={() => {
+            setOtModal(null);
+            setDiaModal(null);
+          }}
           onActualizar={() => {
             setOtModal(null);
+            setDiaModal(null);
             refrescar();
           }}
         />

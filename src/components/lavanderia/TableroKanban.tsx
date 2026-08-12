@@ -16,6 +16,7 @@ import type { OTSnap } from "@/lib/lavanderia/tablero";
 export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   const { snapshot, conectado, refrescar, aplicarLocal, quitarLocal } = useTableroStream(empleadoId);
   const [otModal, setOtModal] = useState<OTSnap | null>(null);
+  const [diaModal, setDiaModal] = useState<string | null>(null);
   const [avisoOt, setAvisoOt] = useState<OTSnap | null>(null);
   const [vista, setVista] = useState<7 | 14>(7);
   const { resaltadaId, expandidaFecha, resaltar } = useResaltarOT();
@@ -32,6 +33,25 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
   // La columna "ancha" es la de hoy; si hoy no es laborable, la primera.
   const idxHoy = dias.findIndex((d) => d.esHoy);
   const anchaIdx = idxHoy >= 0 ? idxHoy : 0;
+
+  // El buscador ve siempre los 14 días, sin importar el filtro. Si la OT cae en
+  // una columna que no se puede expandir (fuera del filtro, o vista comprimida),
+  // la abrimos en el modal en vez de resaltarla en una tarjeta invisible.
+  const irAOT = (ot: OTSnap, fecha: string) => {
+    const idx = snapshot.dias.findIndex((d) => d.fecha === fecha);
+    if (vista === 7 && idx >= 0 && idx < 7) {
+      resaltar(ot.id, fecha);
+      return;
+    }
+    const d = idx >= 0 ? snapshot.dias[idx] : null;
+    setDiaModal(d ? `${d.dia} ${d.fechaCorta}` : null);
+    setOtModal(ot);
+  };
+
+  const cerrarModal = () => {
+    setOtModal(null);
+    setDiaModal(null);
+  };
 
   return (
     <TableroAccionesProvider value={{ refrescar, aplicarLocal, quitarLocal, avisarWhatsapp: setAvisoOt }}>
@@ -52,7 +72,7 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
         )}
         <div className="flex items-center gap-2">
           <ToggleVista vista={vista} onVista={setVista} />
-          <BuscadorOT dias={dias} onSeleccionar={(ot, fecha) => resaltar(ot.id, fecha)} />
+          <BuscadorOT dias={snapshot.dias} onSeleccionar={irAOT} />
         </div>
       </div>
       <div
@@ -77,7 +97,12 @@ export function TableroKanban({ empleadoId }: { empleadoId: string }) {
       </div>
       {otModal && (
         // El SSE refresca el snapshot solo; al actualizar solo cerramos el modal.
-        <OTModal ot={otModal} onCerrar={() => setOtModal(null)} onActualizar={() => setOtModal(null)} />
+        <OTModal
+          ot={otModal}
+          diaEtiqueta={diaModal ?? undefined}
+          onCerrar={cerrarModal}
+          onActualizar={cerrarModal}
+        />
       )}
       {avisoOt && <AvisoWhatsappModal ot={avisoOt} onCerrar={() => setAvisoOt(null)} />}
     </div>

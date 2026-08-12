@@ -20,11 +20,15 @@ export function OTModal({
   onCerrar,
   onActualizar,
   admin = false,
+  diaEtiqueta,
 }: {
   ot: OTSnap;
   onCerrar: () => void;
   onActualizar: () => void;
   admin?: boolean;
+  // Día en el que está agendada la OT; se muestra al abrirla desde el buscador,
+  // donde la columna del día puede no estar a la vista.
+  diaEtiqueta?: string;
 }) {
   const [prendas, setPrendas] = useState<Prenda[]>([]);
   const [procesos, setProcesos] = useState<Proceso[]>([]);
@@ -202,7 +206,14 @@ export function OTModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-          <h3 className="font-semibold">{ot.numero ? `OT ${ot.numero}` : "Orden de trabajo"}</h3>
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="truncate font-semibold">{ot.numero ? `OT ${ot.numero}` : "Orden de trabajo"}</h3>
+            {diaEtiqueta && (
+              <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium capitalize text-muted-foreground">
+                {diaEtiqueta}
+              </span>
+            )}
+          </div>
           <button
             onClick={onCerrar}
             aria-label="Cerrar"
