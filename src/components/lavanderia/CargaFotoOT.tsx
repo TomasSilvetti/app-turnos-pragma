@@ -18,7 +18,14 @@ const normalizar = (s: string) =>
 type Prenda = { id: string; nombre: string };
 type Proceso = { id: string; nombre: string };
 type Tiempo = { prendaId: string; procesoId: string; minutos: number };
-type ItemPreview = { descripcion: string; cantidad: number; prendaId: string | null; procesoIds: string[]; esNueva: boolean };
+type ItemPreview = {
+  descripcion: string;
+  cantidad: number;
+  prendaId: string | null;
+  procesoIds: string[];
+  esNueva: boolean;
+  precioTotal: number | null;
+};
 type OTPreview = {
   numero: string | null;
   nombreCliente: string | null;
@@ -27,7 +34,17 @@ type OTPreview = {
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null;
-  items: { descripcion: string; cantidad: number; prendaId: string | null; prendaNombre: string | null; procesoIds: string[]; esNueva: boolean }[];
+  totalTicket: number | null;
+  formaPago: string | null;
+  items: {
+    descripcion: string;
+    cantidad: number;
+    prendaId: string | null;
+    prendaNombre: string | null;
+    procesoIds: string[];
+    esNueva: boolean;
+    precioTotal: number | null;
+  }[];
 };
 
 type Estado = "inicial" | "procesando" | "preview" | "creando" | "creada";
@@ -90,7 +107,7 @@ export function CargaFotoOT() {
       }
       const extraida: OTPreview = data.ot;
       setOt(extraida);
-      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, procesoIds: i.procesoIds ?? [], esNueva: i.esNueva === true })));
+      setItems(extraida.items.map((i) => ({ descripcion: i.descripcion, cantidad: i.cantidad, prendaId: i.prendaId, procesoIds: i.procesoIds ?? [], esNueva: i.esNueva === true, precioTotal: i.precioTotal ?? null })));
       setEstado("preview");
     } catch {
       setError("Error de red al procesar la foto");
@@ -116,6 +133,8 @@ export function CargaFotoOT() {
           fechaTicket: ot.fechaTicket,
           urgente: ot.urgente,
           fechaNecesaria: ot.fechaNecesaria,
+          totalTicket: ot.totalTicket,
+          formaPago: ot.formaPago,
           items: items.filter((i) => i.prendaId || i.descripcion.trim()),
           datosIA: ot,
           force,
@@ -155,6 +174,14 @@ export function CargaFotoOT() {
     return n === "" || /\bvarios?\b/.test(n);
   };
   const hayNuevaSinResolver = items.some(nombreNuevaPendiente);
+
+  // Checksum del ticket: si ningún renglón trajo importe no hay nada que comparar.
+  const conPrecio = items.filter((i) => i.precioTotal !== null);
+  const sumaItems = conPrecio.length
+    ? Math.round(conPrecio.reduce((acc, i) => acc + (i.precioTotal ?? 0), 0) * 100) / 100
+    : null;
+  const totalCalza =
+    ot?.totalTicket == null || sumaItems === null ? null : Math.abs(ot.totalTicket - sumaItems) < 0.01;
 
   const toggleProceso = (idx: number, procesoId: string) =>
     setItems((arr) =>
@@ -303,6 +330,23 @@ export function CargaFotoOT() {
                   className="h-9 w-14 rounded-md border border-border bg-background text-center text-sm outline-none focus:border-primary"
                   aria-label="Cantidad"
                 />
+                <div className="relative">
+                  <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={it.precioTotal ?? ""}
+                    placeholder="—"
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      const n = Number(v);
+                      setItem(idx, { precioTotal: v === "" || !Number.isFinite(n) || n < 0 ? null : n });
+                    }}
+                    className="h-9 w-24 rounded-md border border-border bg-background pl-5 pr-2 text-right text-sm outline-none focus:border-primary"
+                    aria-label="Importe del renglón"
+                  />
+                </div>
                 <button onClick={() => setItems((arr) => arr.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
                   <Trash2 className="size-4" />
                 </button>
@@ -346,10 +390,50 @@ export function CargaFotoOT() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, procesoIds: [], esNueva: false }])}
+            onClick={() => setItems((arr) => [...arr, { descripcion: "", cantidad: 1, prendaId: null, procesoIds: [], esNueva: false, precioTotal: null }])}
           >
             <Plus /> Agregar item
           </Button>
+        </div>
+
+        {/* Total del ticket. Se guarda tal como está impreso; si no coincide con la
+            suma de los renglones, alguno se leyó mal y conviene corregirlo ahora. */}
+        <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3">
+          <div className="flex items-center justify-between gap-3">
+            <label htmlFor="total-ticket" className="text-sm font-medium">
+              Total del ticket
+            </label>
+            <div className="relative">
+              <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+              <input
+                id="total-ticket"
+                type="number"
+                min={0}
+                step="0.01"
+                value={ot.totalTicket ?? ""}
+                placeholder="—"
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  const n = Number(v);
+                  setOt({ ...ot, totalTicket: v === "" || !Number.isFinite(n) || n < 0 ? null : n });
+                }}
+                className="h-9 w-32 rounded-md border border-border bg-background pl-5 pr-2 text-right text-sm font-medium outline-none focus:border-primary"
+              />
+            </div>
+          </div>
+          {sumaItems !== null && (
+            <p
+              className={cn(
+                "text-[11px]",
+                totalCalza === false ? "flex items-center gap-1 font-medium text-yellow-700 dark:text-yellow-300" : "text-muted-foreground"
+              )}
+            >
+              {totalCalza === false && <AlertTriangle className="size-3" />}
+              Suma de los renglones: ${sumaItems.toLocaleString("es-AR", { minimumFractionDigits: 2 })}
+              {totalCalza === false && " — no coincide con el total"}
+            </p>
+          )}
+          {ot.formaPago && <p className="text-[11px] text-muted-foreground">Pago: {ot.formaPago}</p>}
         </div>
 
         {hayNuevaSinResolver && (

@@ -649,6 +649,10 @@ model LavOT {
   grupoId           String? // agrupa las partes de una OT dividida
   parteIndice       Int? // 1-based, para mostrar "2/6"
   parteTotal        Int? // total de partes del grupo
+  // Importe del ticket ("TOTAL: $ ...") y forma de pago, tal como figuran impresos.
+  // No se recalculan a partir de los items: si no calzan, es un dato a revisar.
+  totalTicket       Decimal?  @db.Decimal(12, 2)
+  formaPago         String?
   empleadoCargaId   String?
   empleadoTrabajoId String?
   empezadoEn        DateTime?
@@ -678,6 +682,10 @@ model LavOTItem {
   cantidad    Int      @default(1)
   procesoIds  String[] // ids de los procesos aplicados a la prenda (columnas de la matriz)
   duracionMin Int      @default(0)
+  // Precios tal como vienen impresos en el ticket. Null = el ticket no los traía
+  // o la visión no los pudo leer; nunca se calculan ni se infieren.
+  precioUnit  Decimal? @db.Decimal(12, 2)
+  precioTotal Decimal? @db.Decimal(12, 2)
 
   ot     LavOT      @relation(fields: [otId], references: [id], onDelete: Cascade)
   prenda LavPrenda? @relation(fields: [prendaId], references: [id], onDelete: SetNull)
@@ -718,6 +726,12 @@ model LavOTHistorico {
   totalPrendas          Int     @default(0) // suma de cantidades
   totalItems            Int     @default(0) // cantidad de líneas/prendas distintas
   totalProcesos         Int     @default(0) // suma de procesos aplicados
+  // ── Dinero (del ticket, no calculado) ──
+  // totalTicket es lo que dice el ticket; sumaItems es Σ de las líneas. Si difieren,
+  // la lectura del ticket falló en algún renglón: filtrar por eso antes de analizar.
+  totalTicket           Decimal? @db.Decimal(12, 2)
+  sumaItems             Decimal? @db.Decimal(12, 2)
+  formaPago             String?
   // Carga viva del taller al ingresar (congestión que enfrentó la OT):
   backlogCount          Int? // OTs vivas por delante
   backlogMin            Int? // minutos proyectados vivos por delante

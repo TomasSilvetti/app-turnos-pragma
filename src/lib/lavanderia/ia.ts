@@ -48,6 +48,8 @@ export type ItemExtraido = {
   procesoIds: string[]; // procesos detectados, mapeados a los conocidos
   procesos: string[]; // nombres de esos procesos
   esNueva: boolean; // el ticket dice "varios": prenda nueva que todavía no está en el sistema
+  precioUnit: number | null; // importe impreso al lado del renglón
+  precioTotal: number | null; // precioUnit × cantidad, salvo que el ticket lo diga
 };
 
 // "varios" en el ticket = prenda que aún no existe en la matriz; el empleado debe
@@ -63,6 +65,8 @@ export type OTExtraida = {
   fechaTicket: string | null;
   urgente: boolean;
   fechaNecesaria: string | null; // yyyy-MM-dd, de "PARA DD/MM"
+  totalTicket: number | null; // "TOTAL: $ ..." impreso
+  formaPago: string | null; // "Su Pago: CREDITO"
   items: ItemExtraido[];
 };
 
@@ -94,6 +98,15 @@ const TOOL = {
         description:
           'Si el ticket dice "PARA <fecha>" (ej "PARA 30/06"), la fecha en formato yyyy-MM-dd. Inferí el año según la fecha de hoy indicada en el texto. Si no hay una fecha pedida, null.',
       },
+      totalTicket: {
+        type: ["number", "null"],
+        description:
+          'Importe del renglón "TOTAL: $ ..." tal como está impreso, como número sin separador de miles (ej "$ 37200.00" → 37200). Si no figura, null.',
+      },
+      formaPago: {
+        type: ["string", "null"],
+        description: 'Medio de pago del renglón "Su Pago: ..." (ej CREDITO, DEBITO, EFECTIVO). Si no figura, null.',
+      },
       items: {
         type: "array",
         description: "Cada prenda o servicio del ticket",
@@ -102,6 +115,11 @@ const TOOL = {
           properties: {
             descripcion: { type: "string", description: "Texto de la prenda/servicio tal como aparece" },
             cantidad: { type: "number" },
+            precioUnit: {
+              type: ["number", "null"],
+              description:
+                "Importe impreso a la derecha de ese renglón, como número sin separador de miles (ej '$ 18600.00' → 18600). Si el renglón no tiene importe, null. No lo calcules ni lo infieras de otros renglones.",
+            },
             prendaSugerida: {
               type: ["string", "null"],
               description: "Nombre EXACTO de la lista de prendas conocidas que corresponde, o null",
@@ -161,6 +179,9 @@ export async function escanearComanda(
               "los procesos en procesosSugeridos (nombres EXACTOS de la lista de procesos cuando coincidan). " +
               "Matcheá con cuidado lo que dice el ticket: si algo no coincide claramente con una prenda o " +
               "un proceso conocido, dejalo en null / fuera de la lista en vez de inventar.\n" +
+              "Copiá también los IMPORTES tal como están impresos: el de cada renglón en precioUnit, el " +
+              'del renglón "TOTAL" en totalTicket y el medio de pago en formaPago. Son transcripciones, ' +
+              "no cálculos: si un importe no se lee o no está, poné null en vez de deducirlo.\n" +
               'Si una línea dice "VARIOS", es una prenda que todavía NO está en el sistema: dejá ' +
               'prendaSugerida en null y poné descripcion="varios".\n\n' +
               "PRENDAS conocidas:\n" +
@@ -187,12 +208,22 @@ export async function escanearComanda(
     fechaTicket?: string | null;
     urgente?: boolean | null;
     fechaNecesaria?: string | null;
+    totalTicket?: number | null;
+    formaPago?: string | null;
     items?: {
       descripcion: string;
       cantidad: number;
       prendaSugerida?: string | null;
       procesosSugeridos?: string[] | null;
+      precioUnit?: number | null;
     }[];
+  };
+
+  // Importe válido = número finito y no negativo. Cualquier otra cosa es null:
+  // preferimos no tener el dato antes que tener uno inventado.
+  const importe = (v: unknown): number | null => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
   };
 
   const fechaNecesaria =
@@ -224,6 +255,15 @@ export async function escanearComanda(
     // los kilos), así que la cantidad siempre es 1.
     const cantidad = esValet(match) ? 1 : Math.max(1, Math.round(Number(it.cantidad) || 1));
 
+    // El ticket imprime el importe del renglón completo. Cuando la línea agrupa
+    // varias unidades, el unitario se deriva; en Valet la cantidad son kilos y el
+    // importe impreso ya es el de la línea, así que no se divide.
+    const precioTotal = importe(it.precioUnit);
+    const precioUnit =
+      precioTotal === null || esValet(match) || cantidad <= 1
+        ? precioTotal
+        : Math.round((precioTotal / cantidad) * 100) / 100;
+
     return {
       descripcion: it.descripcion,
       cantidad,
@@ -232,6 +272,8 @@ export async function escanearComanda(
       procesoIds: procMatches.map((p) => p.id),
       procesos: procMatches.map((p) => p.nombre),
       esNueva: !match && (esVarios(it.descripcion) || esVarios(it.prendaSugerida)),
+      precioUnit,
+      precioTotal,
     };
   });
 
@@ -243,6 +285,8 @@ export async function escanearComanda(
     fechaTicket: data.fechaTicket ?? null,
     urgente: data.urgente === true,
     fechaNecesaria,
+    totalTicket: importe(data.totalTicket),
+    formaPago: typeof data.formaPago === "string" && data.formaPago.trim() ? data.formaPago.trim() : null,
     items,
   };
 }

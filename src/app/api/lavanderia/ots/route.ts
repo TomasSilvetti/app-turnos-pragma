@@ -21,16 +21,28 @@ export async function POST(request: NextRequest) {
   if (!empleado) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
+
+  // Los importes son transcripciones del ticket: se aceptan solo si son números
+  // válidos y no negativos, y nunca se calculan a partir de otros campos.
+  const importe = (v: unknown): number | null => {
+    if (v === null || v === undefined || v === "") return null;
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : null;
+  };
+
   // esNueva: prenda "varios" renombrada por el empleado; se da de alta incompleta abajo.
-  const items: (ItemEntrada & { esNueva: boolean })[] = Array.isArray(body.items)
+  // precioTotal es el importe del renglón del ticket; el unitario se deriva de él.
+  type ItemBody = ItemEntrada & { esNueva?: boolean; precioTotal?: unknown };
+  const items: (ItemEntrada & { esNueva: boolean; precioTotal: number | null })[] = Array.isArray(body.items)
     ? body.items
         .filter((i: unknown) => i && typeof (i as ItemEntrada).descripcion === "string")
-        .map((i: ItemEntrada & { esNueva?: boolean }) => ({
+        .map((i: ItemBody) => ({
           prendaId: i.prendaId ?? null,
           descripcion: i.descripcion,
           cantidad: Number(i.cantidad) || 1,
           procesoIds: Array.isArray(i.procesoIds) ? i.procesoIds.filter((x): x is string => typeof x === "string") : [],
           esNueva: i.esNueva === true,
+          precioTotal: importe(i.precioTotal),
         }))
     : [];
 
@@ -89,6 +101,8 @@ export async function POST(request: NextRequest) {
     aRevisar: calculo.aRevisar,
     urgente,
     fechaNecesaria,
+    totalTicket: importe(body.totalTicket),
+    formaPago: typeof body.formaPago === "string" && body.formaPago.trim() ? body.formaPago.trim() : null,
     empleadoCargaId: empleado.id,
     datosIA: body.datosIA ?? null,
   };
@@ -103,13 +117,23 @@ export async function POST(request: NextRequest) {
       orden,
       duracionMin: calculo.duracionTotal,
       items: {
-        create: calculo.items.map((it) => ({
-          descripcion: it.descripcion,
-          prendaId: it.prendaId,
-          cantidad: it.cantidad,
-          procesoIds: it.procesoIds,
-          duracionMin: it.duracionMin,
-        })),
+        // calcularDuracion preserva el orden de entrada, así que el índice aparea
+        // cada item calculado con el importe que vino del ticket.
+        create: calculo.items.map((it, i) => {
+          const precioTotal = items[i]?.precioTotal ?? null;
+          return {
+            descripcion: it.descripcion,
+            prendaId: it.prendaId,
+            cantidad: it.cantidad,
+            procesoIds: it.procesoIds,
+            duracionMin: it.duracionMin,
+            precioUnit:
+              precioTotal === null || it.cantidad <= 1
+                ? precioTotal
+                : Math.round((precioTotal / it.cantidad) * 100) / 100,
+            precioTotal,
+          };
+        }),
       },
     },
     select: { id: true, fechaAsignada: true, duracionMin: true, aRevisar: true },

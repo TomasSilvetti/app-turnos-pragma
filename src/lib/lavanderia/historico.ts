@@ -55,6 +55,8 @@ type ItemDB = {
   cantidad: number;
   procesoIds: string[];
   duracionMin: number;
+  precioUnit?: Prisma.Decimal | null;
+  precioTotal?: Prisma.Decimal | null;
 };
 
 type PrendaSnap = {
@@ -65,6 +67,8 @@ type PrendaSnap = {
   procesoIds: string[];
   procesoNombres: string[];
   duracionMin: number;
+  precioUnit: number | null;
+  precioTotal: number | null;
 };
 
 // Resuelve nombres de prendas/procesos y arma el snapshot de composición + totales.
@@ -73,6 +77,7 @@ async function componerPrendas(items: ItemDB[]): Promise<{
   totalPrendas: number;
   totalItems: number;
   totalProcesos: number;
+  sumaItems: number | null;
 }> {
   const [procesos, prendas] = await Promise.all([
     prisma.lavProceso.findMany({ select: { id: true, nombre: true } }),
@@ -89,13 +94,22 @@ async function componerPrendas(items: ItemDB[]): Promise<{
     procesoIds: it.procesoIds,
     procesoNombres: it.procesoIds.map((id) => nombreProceso.get(id) ?? "").filter(Boolean),
     duracionMin: it.duracionMin,
+    precioUnit: it.precioUnit == null ? null : Number(it.precioUnit),
+    precioTotal: it.precioTotal == null ? null : Number(it.precioTotal),
   }));
+
+  // Solo tiene sentido sumar si alguna línea trajo importe; si ninguna lo trajo,
+  // la suma es "no sabemos", no cero.
+  const conPrecio = snap.filter((p) => p.precioTotal !== null);
 
   return {
     prendas: snap,
     totalPrendas: snap.reduce((acc, p) => acc + p.cantidad, 0),
     totalItems: snap.length,
     totalProcesos: snap.reduce((acc, p) => acc + p.procesoIds.length * p.cantidad, 0),
+    sumaItems: conPrecio.length
+      ? Math.round(conPrecio.reduce((acc, p) => acc + (p.precioTotal ?? 0), 0) * 100) / 100
+      : null,
   };
 }
 
@@ -244,6 +258,9 @@ export async function historicoAlCrear(otId: string): Promise<void> {
         totalPrendas: comp.totalPrendas,
         totalItems: comp.totalItems,
         totalProcesos: comp.totalProcesos,
+        totalTicket: ot.totalTicket,
+        sumaItems: comp.sumaItems,
+        formaPago: ot.formaPago,
         backlogCount: backlog.count,
         backlogMin: backlog.min,
         empleadoCargaId: ot.empleadoCargaId,
@@ -288,6 +305,8 @@ export async function historicoAlCerrar(otId: string): Promise<void> {
       empezadoEn: ot.empezadoEn?.toISOString() ?? null,
       terminadoEn: ot.terminadoEn?.toISOString() ?? null,
       entregadoEn: ot.entregadoEn?.toISOString() ?? null,
+      totalTicket: ot.totalTicket == null ? null : Number(ot.totalTicket),
+      formaPago: ot.formaPago,
       prendas: comp.prendas,
     };
 
@@ -308,6 +327,9 @@ export async function historicoAlCerrar(otId: string): Promise<void> {
         totalPrendas: comp.totalPrendas,
         totalItems: comp.totalItems,
         totalProcesos: comp.totalProcesos,
+        totalTicket: ot.totalTicket,
+        sumaItems: comp.sumaItems,
+        formaPago: ot.formaPago,
         prendas: comp.prendas as unknown as Prisma.InputJsonValue,
         snapshot: snapshot as unknown as Prisma.InputJsonValue,
       },

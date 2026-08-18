@@ -686,6 +686,21 @@ const MIGRATIONS: Migration[] = [
       `ALTER TABLE "trabajo_items" ADD COLUMN IF NOT EXISTS "fuenteRevisadaEn" TIMESTAMP(3)`,
     ],
   },
+  {
+    // Precios transcriptos del ticket (distinto del viejo "lav_precios", que era
+    // el precio calculado por la matriz y se abandonó).
+    name: "20260818101047_lav_precios_ticket",
+    checksum: "f31385dd4d716e2fa8c2d6f029f3074bd8902f39a79e0864503906d9930791e2",
+    statements: [
+      `ALTER TABLE "lav_ot_items" ADD COLUMN IF NOT EXISTS "precioUnit" DECIMAL(12,2)`,
+      `ALTER TABLE "lav_ot_items" ADD COLUMN IF NOT EXISTS "precioTotal" DECIMAL(12,2)`,
+      `ALTER TABLE "lav_ots" ADD COLUMN IF NOT EXISTS "totalTicket" DECIMAL(12,2)`,
+      `ALTER TABLE "lav_ots" ADD COLUMN IF NOT EXISTS "formaPago" TEXT`,
+      `ALTER TABLE "lav_ot_historico" ADD COLUMN IF NOT EXISTS "totalTicket" DECIMAL(12,2)`,
+      `ALTER TABLE "lav_ot_historico" ADD COLUMN IF NOT EXISTS "sumaItems" DECIMAL(12,2)`,
+      `ALTER TABLE "lav_ot_historico" ADD COLUMN IF NOT EXISTS "formaPago" TEXT`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {
