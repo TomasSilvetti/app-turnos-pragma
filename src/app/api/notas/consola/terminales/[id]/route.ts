@@ -26,7 +26,13 @@ export async function PATCH(request: NextRequest, ctx: Ctx) {
   return NextResponse.json({ terminal });
 }
 
-// POST: encolar un prompt para que el agente lo tipee en esa consola.
+// Teclas sueltas que se pueden mandar en vez de texto. Es una lista blanca y no
+// un passthrough: el agente las traduce a virtual-key codes, y aceptar cualquier
+// nombre sería dejar que el navegador elija qué teclear.
+const TECLAS = ["esc"];
+
+// POST: encolar algo para que el agente lo mande a esa consola. O un prompt
+// ({ texto }), o una tecla suelta ({ tecla: "esc" }) para interrumpir.
 //
 // Los saltos de línea se aplastan a espacios: en la TUI de Claude Code un Enter
 // manda el mensaje, así que un prompt de tres párrafos escrito tal cual se
@@ -43,6 +49,24 @@ export async function POST(request: NextRequest, ctx: Ctx) {
   }
 
   const body = await request.json().catch(() => ({}));
+
+  if (body?.tecla) {
+    const tecla = String(body.tecla).toLowerCase();
+    if (!TECLAS.includes(tecla)) {
+      return NextResponse.json({ error: `Tecla no permitida: ${tecla}` }, { status: 400 });
+    }
+    // Interrumpir es urgente por definición: si quedaron prompts esperando en la
+    // cola, mandarlos después del Esc es justo lo contrario de lo que se pidió.
+    // Van a "cancelado" y no a "error" para no encender la alarma de la UI, que
+    // significa "algo se rompió" y no "esto ya no hacía falta".
+    await prisma.consolaEnvio.updateMany({
+      where: { terminalId: id, estado: "pendiente" },
+      data: { estado: "cancelado", enviadoEn: new Date() },
+    });
+    const envio = await prisma.consolaEnvio.create({ data: { terminalId: id, texto: "", tecla } });
+    return NextResponse.json({ envio });
+  }
+
   const texto = String(body?.texto ?? "")
     .replace(/\s*\r?\n\s*/g, " ")
     .trim();

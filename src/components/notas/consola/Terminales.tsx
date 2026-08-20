@@ -4,7 +4,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Send, TerminalSquare, Pencil, Check, AlertCircle } from "lucide-react";
+import { Loader2, Send, TerminalSquare, Pencil, Check, AlertCircle, OctagonX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { consolaFetch, type TerminalConsola } from "@/lib/notas/consolaClient";
 import { hhmm } from "@/lib/notas/trabajoClient";
@@ -96,6 +96,7 @@ function Fila({
 }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [escapando, setEscapando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editando, setEditando] = useState(false);
   const [apodo, setApodo] = useState(terminal.apodo);
@@ -115,6 +116,25 @@ function Fila({
       return;
     }
     setTexto("");
+    onCambio();
+  };
+
+  // Esc interrumpe lo que Claude Code esté haciendo. No pide confirmación a
+  // propósito: se aprieta justo cuando algo se fue por el camino equivocado, y
+  // un "¿seguro?" en el medio le saca el sentido.
+  const escapar = async () => {
+    setEscapando(true);
+    setError(null);
+    const res = await consolaFetch(`/api/notas/consola/terminales/${terminal.id}`, {
+      method: "POST",
+      body: JSON.stringify({ tecla: "esc" }),
+    }).catch(() => null);
+    setEscapando(false);
+
+    if (!res?.ok) {
+      setError((await res?.json().catch(() => null))?.error ?? "No se pudo mandar el Esc");
+      return;
+    }
     onCambio();
   };
 
@@ -178,6 +198,18 @@ function Fila({
               </button>
             )}
             <span className="ml-auto text-[11px] text-muted-foreground">{hhmm(terminal.vistoEn)}</span>
+            {/* Arriba de todo y no junto a "Mandar": el Esc se aprieta cuando
+                algo se fue por mal camino, y ahí no se quiere estar buscándolo. */}
+            <button
+              type="button"
+              onClick={escapar}
+              disabled={escapando}
+              title="Interrumpir lo que esté haciendo"
+              className="flex items-center gap-1 rounded-lg border border-destructive/40 px-2 py-1 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+            >
+              {escapando ? <Loader2 className="size-3 animate-spin" /> : <OctagonX className="size-3" />}
+              Esc
+            </button>
           </div>
 
           {/* La foto del buffer. Se lee de abajo hacia arriba, así que el scroll

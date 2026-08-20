@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    envios: envios.map((e) => ({ id: e.id, pid: e.terminal.pid, texto: e.texto })),
+    envios: envios.map((e) => ({ id: e.id, pid: e.terminal.pid, texto: e.texto, tecla: e.tecla })),
   });
 }
 

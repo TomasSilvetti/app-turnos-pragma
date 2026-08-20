@@ -1262,7 +1262,11 @@ model ConsolaEnvio {
   id         String @id @default(cuid())
   terminalId String
   texto      String
-  // pendiente | enviado | error
+  // Tecla suelta a mandar en vez de texto: por ahora sólo "esc", que en la TUI
+  // de Claude Code interrumpe lo que esté haciendo. Cuando está puesta, `texto`
+  // queda vacío.
+  tecla      String?
+  // pendiente | enviado | error | cancelado
   estado     String @default("pendiente")
   error      String?
   createdAt  DateTime @default(now())

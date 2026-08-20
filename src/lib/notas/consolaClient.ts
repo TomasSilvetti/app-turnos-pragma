@@ -65,7 +65,9 @@ export async function consolaFetch(input: string, init: RequestInit = {}): Promi
 export type EnvioConsola = {
   id: string;
   texto: string;
-  estado: "pendiente" | "enviado" | "error";
+  // Cuando viene una tecla suelta ("esc"), `texto` está vacío.
+  tecla: string | null;
+  estado: "pendiente" | "enviado" | "error" | "cancelado";
   error: string | null;
   createdAt: string;
   enviadoEn: string | null;

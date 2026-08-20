@@ -253,6 +253,38 @@ public class Consolas {
       FreeConsole();
     }
   }
+
+  // Manda una tecla suelta. Por ahora solo Esc, que en la TUI de Claude Code
+  // interrumpe lo que este haciendo.
+  //
+  // Va con su virtual-key code y el UnicodeChar correspondiente: una TUI puede
+  // leer cualquiera de los dos segun como tenga configurada la consola, y
+  // mandar solo uno hace que la tecla funcione en unas y en otras no.
+  public static void TeclaSuelta(int pid, string nombre) {
+    ushort vk;
+    char ch;
+    switch (nombre) {
+      case "esc": vk = 0x1B; ch = (char)27; break;
+      default: throw new Exception("Tecla desconocida: " + nombre);
+    }
+
+    Enganchar(pid);
+    IntPtr entrada = INVALID;
+    try {
+      entrada = CreateFileW("CONIN$", GENERIC_READ | GENERIC_WRITE,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE, IntPtr.Zero, OPEN_EXISTING, 0, IntPtr.Zero);
+      if (entrada == INVALID)
+        throw new Exception("No se pudo abrir CONIN$: " + Marshal.GetLastWin32Error());
+
+      INPUT_RECORD[] recs = new INPUT_RECORD[2];
+      recs[0] = Tecla(ch, vk, true);
+      recs[1] = Tecla(ch, vk, false);
+      Volcar(entrada, recs);
+    } finally {
+      if (entrada != INVALID) CloseHandle(entrada);
+      FreeConsole();
+    }
+  }
 }
 '@
 
@@ -319,11 +351,16 @@ function Vuelta {
   foreach ($envio in @($cola.envios)) {
     $falla = $null
     try {
-      [Consolas]::Tipear([int]$envio.pid, [string]$envio.texto, $true, $DelayTipeoMs)
-      Log ("tipeado en PID {0}: {1}" -f $envio.pid, $envio.texto)
+      if ($envio.tecla) {
+        [Consolas]::TeclaSuelta([int]$envio.pid, [string]$envio.tecla)
+        Log ("tecla {0} en PID {1}" -f $envio.tecla, $envio.pid)
+      } else {
+        [Consolas]::Tipear([int]$envio.pid, [string]$envio.texto, $true, $DelayTipeoMs)
+        Log ("tipeado en PID {0}: {1}" -f $envio.pid, $envio.texto)
+      }
     } catch {
       $falla = $_.Exception.Message
-      Log ("ERROR tipeando en PID {0}: {1}" -f $envio.pid, $falla)
+      Log ("ERROR en PID {0}: {1}" -f $envio.pid, $falla)
     }
     Llamar "POST" "/api/notas/consola/teclas" @{ id = $envio.id; error = $falla } | Out-Null
   }

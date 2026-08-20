@@ -741,6 +741,13 @@ const MIGRATIONS: Migration[] = [
       EXCEPTION WHEN duplicate_object THEN NULL; END $$`,
     ],
   },
+  {
+    name: "20260820180000_consola_envio_tecla",
+    checksum: "0d4a418495e264362383bf82aae6fb3450b65aa5230f6532b036aaa4982c6dd9",
+    statements: [
+      `ALTER TABLE "consola_envios" ADD COLUMN IF NOT EXISTS "tecla" TEXT`,
+    ],
+  },
 ];
 
 export async function POST(request: NextRequest) {
