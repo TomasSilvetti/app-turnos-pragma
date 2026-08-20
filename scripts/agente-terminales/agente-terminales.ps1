@@ -1,4 +1,4 @@
-<#
+﻿<#
   Agente de terminales adoptadas.
 
   Corre en la notebook y hace de puente entre /notas/consola y las pestanas de
@@ -15,6 +15,9 @@
 #>
 
 param(
+  # Por defecto se leen del .env del harness, que ya tiene estas tres cosas: son
+  # las mismas credenciales, y tenerlas en dos lados es tener una desactualizada.
+  [string]$EnvFile      = "C:\Users\tomas\Documents\Proyectos\harness-cuentas\.env",
   [string]$BaseUrl      = $env:CONSOLA_BASE_URL,
   [string]$DeviceId     = $env:CONSOLA_DEVICE_ID,
   [string]$HarnessToken = $env:HARNESS_TOKEN,
@@ -27,9 +30,21 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($EnvFile -and (Test-Path $EnvFile)) {
+  $delEnv = @{}
+  foreach ($linea in Get-Content $EnvFile) {
+    if ($linea -match '^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)$') {
+      $delEnv[$Matches[1]] = $Matches[2].Trim().Trim('"')
+    }
+  }
+  if (-not $BaseUrl)      { $BaseUrl      = $delEnv["APP_URL"] }
+  if (-not $DeviceId)     { $DeviceId     = $delEnv["NOTAS_DEVICE_ID"] }
+  if (-not $HarnessToken) { $HarnessToken = $delEnv["HARNESS_TOKEN"] }
+}
+
 if (-not $BaseUrl)      { $BaseUrl = "http://localhost:3000" }
-if (-not $DeviceId)     { throw "Falta CONSOLA_DEVICE_ID (el deviceId de notas)." }
-if (-not $HarnessToken) { throw "Falta HARNESS_TOKEN." }
+if (-not $DeviceId)     { throw "Falta el deviceId: ponelo en $EnvFile como NOTAS_DEVICE_ID, o pasalo con -DeviceId." }
+if (-not $HarnessToken) { throw "Falta HARNESS_TOKEN en $EnvFile." }
 $BaseUrl = $BaseUrl.TrimEnd("/")
 
 $LogDir  = Join-Path $env:LOCALAPPDATA "consola-agente"

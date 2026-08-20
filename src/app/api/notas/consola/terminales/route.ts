@@ -24,6 +24,15 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ terminales, agenteVivo: fresco });
 }
 
+// El título que pone Claude Code arranca con un emoji, y leerlo del buffer de
+// consola a veces devuelve medio par surrogate. Eso no es texto válido: rompe el
+// JSON de vuelta al navegador y Postgres puede rechazarlo.
+const SURROGATE_HUERFANO = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+function sanear(valor: unknown, largo: number): string {
+  return String(valor ?? "").replace(SURROGATE_HUERFANO, "").slice(0, largo);
+}
+
 // POST: el censo del agente local. Manda la foto completa de lo que ve, y eso
 // reemplaza el estado anterior — lo que no viene en la lista está cerrado.
 export async function POST(request: NextRequest) {
@@ -44,12 +53,12 @@ export async function POST(request: NextRequest) {
         create: {
           deviceId,
           pid: Number(t.pid),
-          titulo: String(t.titulo ?? "").slice(0, 200),
-          pantalla: String(t.pantalla ?? "").slice(0, 20000),
+          titulo: sanear(t.titulo, 200),
+          pantalla: sanear(t.pantalla, 20000),
         },
         update: {
-          titulo: String(t.titulo ?? "").slice(0, 200),
-          pantalla: String(t.pantalla ?? "").slice(0, 20000),
+          titulo: sanear(t.titulo, 200),
+          pantalla: sanear(t.pantalla, 20000),
           viva: true,
           vistoEn: new Date(),
         },
