@@ -374,6 +374,7 @@ model NotaDevice {
   harnessEventos    HarnessEvento[]
   consolaSesiones   ConsolaSesion[]
   consolaCaptura    ConsolaCaptura?
+  consolaTerminales ConsolaTerminal[]
 
   @@map("nota_devices")
 }
@@ -1217,6 +1218,61 @@ model ConsolaCaptura {
   device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
   @@map("consola_capturas")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Terminales adoptadas: las pestañas de Windows Terminal que ya están
+// abiertas en la notebook con un Claude Code corriendo adentro.
+//
+// A diferencia de ConsolaSesion, acá la app no es dueña de nada: el agente
+// local se cuelga de consolas ajenas, les tipea el prompt y les lee la
+// pantalla. Por eso no hay historial de mensajes — lo único que existe es el
+// último dibujo del buffer, que se pisa en cada censo.
+// ─────────────────────────────────────────────────────────────
+
+model ConsolaTerminal {
+  id       String @id @default(cuid())
+  deviceId String
+  // PID de un proceso adjunto a esa consola. Sirve de handle para AttachConsole
+  // y cambia cada vez que la pestaña se reabre: no es un id estable.
+  pid      Int
+  // Nombre que le pone el usuario desde el celular. Es lo único que distingue
+  // "la del proyecto de turnos" de "la otra", porque el título que reporta
+  // Windows cambia solo mientras Claude Code trabaja.
+  apodo    String @default("")
+  titulo   String @default("")
+  // Últimas líneas del buffer de pantalla. No es historial: es una foto que se
+  // reemplaza entera en cada censo.
+  pantalla String @default("")
+  // El agente la vio en el último censo. Una pestaña cerrada queda en false en
+  // vez de borrarse, para no perder el apodo si se reabre.
+  viva     Boolean @default(true)
+  vistoEn  DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  device NotaDevice     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  envios ConsolaEnvio[]
+
+  @@unique([deviceId, pid])
+  @@index([deviceId, viva])
+  @@map("consola_terminales")
+}
+
+model ConsolaEnvio {
+  id         String @id @default(cuid())
+  terminalId String
+  texto      String
+  // pendiente | enviado | error
+  estado     String @default("pendiente")
+  error      String?
+  createdAt  DateTime @default(now())
+  enviadoEn  DateTime?
+
+  terminal ConsolaTerminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+
+  @@index([terminalId, createdAt])
+  @@index([estado, createdAt])
+  @@map("consola_envios")
 }
 
 model HarnessEvento {

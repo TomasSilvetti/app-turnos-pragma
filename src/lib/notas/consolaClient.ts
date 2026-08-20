@@ -61,3 +61,26 @@ export async function consolaFetch(input: string, init: RequestInit = {}): Promi
   }
   return fetch(input, { ...init, headers });
 }
+
+export type EnvioConsola = {
+  id: string;
+  texto: string;
+  estado: "pendiente" | "enviado" | "error";
+  error: string | null;
+  createdAt: string;
+  enviadoEn: string | null;
+};
+
+// Una pestaña de Windows Terminal que ya estaba abierta en la notebook. La app
+// no la creó ni es dueña de ella: el agente local se cuelga de su consola.
+export type TerminalConsola = {
+  id: string;
+  pid: number;
+  apodo: string;
+  titulo: string;
+  pantalla: string;
+  viva: boolean;
+  vistoEn: string;
+  createdAt: string;
+  envios: EnvioConsola[];
+};

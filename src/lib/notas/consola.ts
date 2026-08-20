@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { resolveDeviceId } from "./device";
+import { codigoValido } from "./totp";
 
 // La consola le da a quien la abra una sesión de Claude Code con permisos
 // totales sobre la máquina del usuario. El resto de la app de notas se conforma
@@ -43,6 +44,19 @@ export function pinCorrecto(pin: unknown): boolean {
   const esperado = process.env.CONSOLA_PIN;
   if (!esperado || typeof pin !== "string" || pin.length !== esperado.length) return false;
   return timingSafeEqual(Buffer.from(pin), Buffer.from(esperado));
+}
+
+// Un PIN fijo viaja igual cada vez: quien lo vea una vez entra siempre. Con
+// CONSOLA_TOTP_SECRET puesto, la puerta pasa a ser el código de seis dígitos de
+// Google Authenticator y el PIN deja de servir — no conviven, porque dejar los
+// dos abiertos deja la puerta vieja abierta.
+export function usaTotp(): boolean {
+  return Boolean(process.env.CONSOLA_TOTP_SECRET);
+}
+
+export function claveCorrecta(clave: unknown): boolean {
+  const secreto = process.env.CONSOLA_TOTP_SECRET;
+  return secreto ? codigoValido(secreto, clave) : pinCorrecto(clave);
 }
 
 // Igual que resolveDeviceId pero exigiendo además el token de la consola.

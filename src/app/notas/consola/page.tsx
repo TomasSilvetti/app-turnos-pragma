@@ -4,13 +4,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Loader2, Plus, History, KeyRound, Lock, ChevronDown, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Plus, History, KeyRound, Lock, ChevronDown, Trash2, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotaDevice } from "@/hooks/useNotaDevice";
 import { notasFetch } from "@/lib/notas/client";
 import { ThemeToggle } from "@/components/notas/ThemeToggle";
 import { VistaViva } from "@/components/notas/consola/VistaViva";
+import { Terminales } from "@/components/notas/consola/Terminales";
 import { Chat } from "@/components/notas/consola/Chat";
 import { consolaFetch, getToken, olvidarToken, setToken, type SesionConsola } from "@/lib/notas/consolaClient";
 import { fechaCorta, type CuentaHarness } from "@/lib/notas/trabajoClient";
@@ -149,6 +150,8 @@ export default function ConsolaPage() {
         </ul>
       )}
 
+      <Terminales />
+
       <VistaViva />
 
       {sesion && cuentas.length > 0 && (
@@ -191,17 +194,29 @@ export default function ConsolaPage() {
 }
 
 function PedirPin({ onEntrar }: { onEntrar: () => void }) {
-  const [pin, setPin] = useState("");
+  const [clave, setClave] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [probando, setProbando] = useState(false);
+  const [modo, setModo] = useState<"pin" | "totp">("pin");
+
+  // Qué pide la puerta lo decide el servidor: acá sólo cambia el cartel y el
+  // teclado que abre el celular.
+  useEffect(() => {
+    fetch("/api/notas/consola/pin")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => d && setModo(d.modo))
+      .catch(() => {});
+  }, []);
+
+  const totp = modo === "totp";
 
   const entrar = async () => {
-    if (!pin.trim()) return;
+    if (!clave.trim()) return;
     setProbando(true);
     setError(null);
     const res = await notasFetch("/api/notas/consola/pin", {
       method: "POST",
-      body: JSON.stringify({ pin }),
+      body: JSON.stringify({ codigo: clave }),
     }).catch(() => null);
     setProbando(false);
 
@@ -210,36 +225,40 @@ function PedirPin({ onEntrar }: { onEntrar: () => void }) {
       onEntrar();
       return;
     }
-    setError((await res?.json().catch(() => null))?.error ?? "No se pudo verificar el PIN");
-    setPin("");
+    setError((await res?.json().catch(() => null))?.error ?? "No se pudo verificar");
+    setClave("");
   };
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col items-center justify-center gap-4 px-6">
       <span className="flex size-12 items-center justify-center rounded-xl bg-muted">
-        <Lock className="size-5 text-muted-foreground" />
+        {totp ? <Smartphone className="size-5 text-muted-foreground" /> : <Lock className="size-5 text-muted-foreground" />}
       </span>
       <div className="text-center">
         <h1 className="text-lg font-semibold">Consola</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Da control total sobre tu notebook, así que va con PIN aparte.
+          {totp
+            ? "Da control total sobre tu notebook. Poné el código de Google Authenticator."
+            : "Da control total sobre tu notebook, así que va con PIN aparte."}
         </p>
       </div>
 
       <input
-        type="password"
+        type={totp ? "text" : "password"}
         inputMode="numeric"
+        autoComplete={totp ? "one-time-code" : "off"}
+        maxLength={totp ? 6 : undefined}
         autoFocus
-        value={pin}
-        onChange={(e) => setPin(e.target.value)}
+        value={clave}
+        onChange={(e) => setClave(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && entrar()}
-        placeholder="PIN"
+        placeholder={totp ? "000000" : "PIN"}
         className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-center text-lg tracking-widest outline-none focus:ring-2 focus:ring-primary/40"
       />
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button onClick={entrar} disabled={!pin.trim() || probando} className="w-full" size="lg">
+      <Button onClick={entrar} disabled={!clave.trim() || probando} className="w-full" size="lg">
         {probando ? <Loader2 className="animate-spin" /> : <KeyRound />}
         Entrar
       </Button>
