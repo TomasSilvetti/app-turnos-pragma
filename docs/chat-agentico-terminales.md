@@ -13,9 +13,30 @@ conversación donde se definió.
 2. Voz a texto (chico, independiente de todo lo demás).
 3. Chat agéntico — depende de que el grupo A esté sólido, porque lo usa como
    motor de ejecución.
-4. Mover todo el módulo de consola a pragmaMonitor — al final, cuando 1-3 estén
-   estables. Requiere agregar el repo de pragmaMonitor a la sesión que lo haga;
-   no está en el scope de este repo.
+4. Mover a pragmaMonitor: no solo el módulo de consola, también las bandejas
+   de `TrabajoItem` (pendientes, en curso, bloqueados, completados,
+   `conflicto_merge`) — el módulo de trabajo entero, transversal a todas las
+   apps, no específico de esta.
+
+**Tensión sin resolver sobre el punto 4:** si las bandejas van a terminar
+viviendo en pragmaMonitor, construir el chat agéntico (bloque C) contra el
+schema y los endpoints de *este* repo (como está escrito más abajo, pensado
+para `/api/notas/trabajo/*`) significa migrar un sistema de tickets ya en uso
+más adelante — más trabajo que construirlo directo en pragmaMonitor desde el
+arranque. Antes de empezar el bloque C hay que decidir una de las dos:
+
+- **(a)** Construir C acá igual, como está escrito, y migrar todo (consola +
+  bandejas) a pragmaMonitor al final — acepta el costo de portar los datos
+  después, pero permite empezar ya sin esperar a tener el otro repo agregado.
+- **(b)** Agregar pragmaMonitor a la sesión ahora y construir el schema/API de
+  las bandejas ahí directamente — el bloque C de este documento pasaría a ser
+  una referencia de diseño a portar, no código a escribir en este repo. En
+  este caso, `app-turnos-pragma` queda solo como uno de los repos sobre los
+  que las terminales de trabajo hacen `git worktree`, no como dueño de los
+  datos.
+
+Esta decisión no está tomada — queda para quien retome este documento (o para
+resolverla antes de arrancar el bloque C).
 
 ---
 
@@ -261,10 +282,20 @@ uso por otra terminal en paralelo.
 
 ---
 
-## Mover el módulo de consola a pragmaMonitor
+## Mover a pragmaMonitor: consola + bandejas de trabajo
 
-Decisión tomada: sí, migrar, pero al final — después de que los bloques
-anteriores estén estables, para no diagnosticar bugs en dos repos a la vez.
-`pragmaMonitor` es un repositorio separado, transversal a todas las apps del
-usuario. La sesión que encare esta parte necesita que se le agregue ese repo
-explícitamente, no está disponible por defecto.
+Alcance ampliado (no solo consola): también las bandejas de tickets/estado de
+`TrabajoItem` — pendientes, en curso, bloqueados, completados,
+`conflicto_merge` — junto con todo lo que las sostiene (`ESTADOS`, los
+`TrabajoPrompt`/`TrabajoLog`/`TrabajoImagen`, `HarnessEstado`,
+`HarnessCuenta`, y el resto de `/api/notas/trabajo/*`). La idea es que sea un
+módulo transversal a todas las apps del usuario, no algo específico de
+`app-turnos-pragma`.
+
+`pragmaMonitor` es un repositorio separado — la sesión que encare esta parte
+necesita que se le agregue explícitamente, no está disponible por defecto.
+
+Ver la nota de "Tensión sin resolver" al principio de este documento: dado
+este alcance ampliado, hay que decidir si el bloque C (chat agéntico) se
+construye primero acá y se migra después, o si directamente se construye ya
+en pragmaMonitor — antes de arrancar el bloque C.
