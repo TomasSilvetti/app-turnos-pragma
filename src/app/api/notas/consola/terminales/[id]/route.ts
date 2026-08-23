@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { resolveConsola, sinPin } from "@/lib/notas/consola";
+import { resolveConsola, sinPin, terminalVigente } from "@/lib/notas/consola";
 import { noEncontrado } from "@/lib/notas/trabajo";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, ctx: Ctx) {
 
   const terminal = await terminalDelDevice(id, deviceId);
   if (!terminal) return noEncontrado();
-  if (!terminal.viva) {
+  if (!terminalVigente(terminal)) {
     return NextResponse.json({ error: "Esa terminal ya no está abierta" }, { status: 409 });
   }
 

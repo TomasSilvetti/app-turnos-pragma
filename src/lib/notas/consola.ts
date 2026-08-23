@@ -77,3 +77,14 @@ export async function sesionDelDevice(id: string, deviceId: string) {
   const s = await prisma.consolaSesion.findUnique({ where: { id } });
   return s && s.deviceId === deviceId ? s : null;
 }
+
+// Pasado este rato sin censo, el agente está caído y lo que reportó ya no
+// significa nada. `viva` en la base es una foto del último censo, no un
+// cálculo: si el agente se muere, nada la vuelve a poner en `false` porque
+// nunca llega un censo nuevo que la corrija. Por eso la vigencia real hay que
+// calcularla con el reloj en cada lectura, en vez de confiar en la columna.
+export const CENSO_VENCE_MS = 30 * 1000;
+
+export function terminalVigente(t: { viva: boolean; vistoEn: Date }): boolean {
+  return t.viva && Date.now() - t.vistoEn.getTime() < CENSO_VENCE_MS;
+}

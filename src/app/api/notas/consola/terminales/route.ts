@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { resolveConsola, sinPin } from "@/lib/notas/consola";
+import { CENSO_VENCE_MS, resolveConsola, sinPin, terminalVigente } from "@/lib/notas/consola";
 import { noAutorizado, resolveHarness } from "@/lib/notas/trabajo";
-
-// Pasado este rato sin censo, el agente está caído y las terminales que reporta
-// ya no significan nada: se muestran apagadas en vez de mentir que están vivas.
-const CENSO_VENCE_MS = 30 * 1000;
 
 // GET: el celular pide la lista de pestañas abiertas, con su última pantalla.
 export async function GET(request: NextRequest) {
@@ -20,8 +16,13 @@ export async function GET(request: NextRequest) {
     },
   });
 
+  // `viva` tal cual sale de la base es la foto del último censo, no la
+  // vigencia real: una fila puede seguir diciendo `true` mucho después de que
+  // el agente se calló. Se corrige acá para que nadie que lea esta respuesta
+  // (la lista, el cartel) tenga que volver a hacer esta cuenta por su cuenta.
+  const vigentes = terminales.map((t) => ({ ...t, viva: terminalVigente(t) }));
   const fresco = terminales.some((t) => Date.now() - t.vistoEn.getTime() < CENSO_VENCE_MS);
-  return NextResponse.json({ terminales, agenteVivo: fresco });
+  return NextResponse.json({ terminales: vigentes, agenteVivo: fresco });
 }
 
 // El título que pone Claude Code arranca con un emoji, y leerlo del buffer de
