@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { RegistroStepper } from "@/components/auth/RegistroStepper";
 import { RegistroStep1Form } from "@/components/auth/RegistroStep1Form";
 import { RegistroStep2Form } from "@/components/auth/RegistroStep2Form";
@@ -57,7 +58,7 @@ function RegistroContent() {
             />
           )}
 
-          {step === 1 && (
+          {step === 1 ? (
             <p className="mt-6 text-center text-sm text-white/60">
               ¿Ya tenés cuenta?{" "}
               <a
@@ -66,6 +67,16 @@ function RegistroContent() {
               >
                 Iniciá sesión
               </a>
+            </p>
+          ) : (
+            <p className="mt-6 text-center text-sm text-white/60">
+              <button
+                type="button"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="font-medium text-white hover:text-white/80 underline underline-offset-2"
+              >
+                Volver al login
+              </button>
             </p>
           )}
         </div>
