@@ -366,33 +366,24 @@ model NotaDevice {
   notas             Nota[]
   pushSubscriptions NotaPushSubscription[]
   calendarEvents    NotaCalendarEvent[]
-  trabajoItems      TrabajoItem[]
-  trabajoBandeja    TrabajoBandeja?
-  pedidosArchivo    TrabajoPedidoArchivo[]
-  harnessCuentas    HarnessCuenta[]
-  harnessEstado     HarnessEstado[]
-  harnessEventos    HarnessEvento[]
-  consolaSesiones   ConsolaSesion[]
-  consolaCaptura    ConsolaCaptura?
-  consolaTerminales ConsolaTerminal[]
 
   @@map("nota_devices")
 }
 
 model NotaCalendarEvent {
-  id          String   @id @default(cuid())
-  deviceId    String
-  date        String // yyyy-MM-dd (hora Argentina)
-  startTime   String // HH:mm
-  endTime     String // HH:mm
-  title       String   @default("")
-  color       String   @default("blue")
+  id              String   @id @default(cuid())
+  deviceId        String
+  date            String // yyyy-MM-dd (hora Argentina)
+  startTime       String // HH:mm
+  endTime         String // HH:mm
+  title           String   @default("")
+  color           String   @default("blue")
   // Recordatorios: minutos antes del inicio en que avisar (varios por actividad).
   reminderOffsets Int[]    @default([])
   // Claves de recordatorios ya enviados (dedup del cron).
   firedKeys       String[] @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
 
@@ -417,19 +408,19 @@ model Nota {
 }
 
 model NotaReminder {
-  id           String   @id @default(cuid())
-  notaId       String
-  deviceId     String
-  text         String   @default("")
-  time         String
-  daysOfWeek   Int[]
-  oneTimeDate  String?
+  id              String   @id @default(cuid())
+  notaId          String
+  deviceId        String
+  text            String   @default("")
+  time            String
+  daysOfWeek      Int[]
+  oneTimeDate     String?
   intervalMinutes Int?
-  endTime      String?
-  enabled      Boolean  @default(true)
-  lastFiredKey String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  endTime         String?
+  enabled         Boolean  @default(true)
+  lastFiredKey    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   nota Nota @relation(fields: [notaId], references: [id], onDelete: Cascade)
 
@@ -501,8 +492,8 @@ model LavEmpleado {
   email          String? @unique
   hashedPassword String?
 
-  otsCargadas   LavOT[] @relation("LavOTCarga")
-  otsTrabajadas LavOT[] @relation("LavOTTrabajo")
+  otsCargadas   LavOT[]                 @relation("LavOTCarga")
+  otsTrabajadas LavOT[]                 @relation("LavOTTrabajo")
   resetTokens   LavPasswordResetToken[]
 
   @@map("lav_empleados")
@@ -702,8 +693,8 @@ model LavOTItem {
 // día/hora) se congelan al crear; los labels (lead time real, error de
 // estimación) se completan al terminar/entregar.
 model LavOTHistorico {
-  id          String @id @default(cuid())
-  otId        String @unique // referencia lógica a la LavOT (no FK a propósito)
+  id          String  @id @default(cuid())
+  otId        String  @unique // referencia lógica a la LavOT (no FK a propósito)
   numero      String?
   grupoId     String? // agrupa partes de una OT dividida (mismo ticket)
   parteIndice Int?
@@ -719,14 +710,14 @@ model LavOTHistorico {
   ingresoFecha          String // yyyy-MM-dd (AR)
   ingresoDiaSemana      Int // 0=domingo .. 6=sábado
   ingresoHoraMin        Int // minutos desde medianoche (hora AR)
-  urgente               Boolean @default(false)
+  urgente               Boolean  @default(false)
   fechaNecesaria        String? // yyyy-MM-dd de "PARA DD/MM"
-  aRevisar              Boolean @default(false)
+  aRevisar              Boolean  @default(false)
   duracionProyectadaMin Int // estimación del modelo al ingreso
   fechaAsignadaInicial  String? // día del tablero que prometió el modelo al ingresar
-  totalPrendas          Int     @default(0) // suma de cantidades
-  totalItems            Int     @default(0) // cantidad de líneas/prendas distintas
-  totalProcesos         Int     @default(0) // suma de procesos aplicados
+  totalPrendas          Int      @default(0) // suma de cantidades
+  totalItems            Int      @default(0) // cantidad de líneas/prendas distintas
+  totalProcesos         Int      @default(0) // suma de procesos aplicados
   // ── Dinero (del ticket, no calculado) ──
   // totalTicket es lo que dice el ticket; sumaItems es Σ de las líneas. Si difieren,
   // la lectura del ticket falló en algún renglón: filtrar por eso antes de analizar.
@@ -834,462 +825,4 @@ model LavIAUso {
 
   @@index([creadoEn])
   @@map("lav_ia_uso")
-}
-
-// ─────────────────────────────────────────────────────────────
-// Sección Trabajo de la app de notas. Es la cola del harness de
-// cuentas, que corre en la máquina del usuario: la app es la
-// única entrada de trabajo y la única vista del progreso.
-//
-// El ítem NO vive dentro del JSON de una nota a propósito: el
-// harness escribe el log mientras el usuario puede estar
-// editando el prompt, y un solo documento compartido haría que
-// una escritura pise a la otra.
-// ─────────────────────────────────────────────────────────────
-
-model TrabajoItem {
-  id       String @id @default(cuid())
-  deviceId String
-  titulo   String @default("")
-  // propuesto | pendiente | en_curso | pausada | bloqueado | completado
-  //   propuesto = lo escribio el itemizador leyendo un informe, y todavia no lo
-  //   aprobaste. La cola NO lo entrega: quince items creados de una sentada
-  //   arrancarian solos con el carril encendido, sin que nadie los haya leido.
-  //   pausada = la frenaste vos. La cola no la entrega hasta que la reanudes,
-  //   y sus intentos no suben: no fracaso, la sacaste de circulacion.
-  estado   String @default("pendiente")
-  // Posición dentro de su lista; el harness toma el pendiente de menor orden.
-  orden    Int    @default(0)
-  // Clave de proyectos.json en el harness: dice en qué repo trabajar.
-  proyecto String @default("")
-
-  // Progreso: los pasos numerados del prompt. La sesión los declara al
-  // arrancar y va marcando cuál cursa; sin ellos la barra no se dibuja.
-  pasoActual  Int @default(0)
-  pasosTotales Int @default(0)
-  // Cuántas sesiones lo tomaron sin cerrarlo. A los 3 el harness lo bloquea.
-  intentos    Int @default(0)
-
-  // Sesión en curso, para el cronómetro contra el techo del runner.
-  sesionInicio DateTime?
-  cuenta       String?
-  // Motivo cuando estado = bloqueado (lo escribe el harness o el runner).
-  motivoBloqueo String?
-
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  completadoEn DateTime?
-
-  // De donde salio, cuando salio de un informe y no de la bandeja. El prompt NO
-  // repite el informe: dice que hay que hacer y apunta acá, y la sesion que lo
-  // ejecute abre el archivo en esa ancla si necesita el detalle.
-  //   fuenteArchivo = ruta tal como se la menciono desde la consola
-  //   fuenteAncla   = id dentro del documento ("#h04"), no un numero de linea:
-  //                   el informe se sigue editando y las lineas se corren.
-  fuenteArchivo String?
-  fuenteAncla   String?
-  // Huella del texto de esa ancla en el momento en que se escribió el ítem. El
-  // informe se sigue editando: sin esto, el ítem se desarrolla contra una
-  // versión que ya no existe y nadie se entera hasta que el trabajo está hecho.
-  // Vacía en los ítems viejos, y eso se trata como "puede haber cambiado".
-  fuenteHuella  String?
-  // La puso el puente al comparar la huella contra el archivo de hoy.
-  fuenteCambiada   Boolean   @default(false)
-  fuenteRevisadaEn DateTime?
-  pedidoArchivoId String?
-
-  device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  pedidoArchivo TrabajoPedidoArchivo? @relation(fields: [pedidoArchivoId], references: [id], onDelete: SetNull)
-  prompts  TrabajoPrompt[]
-  logs     TrabajoLogEntry[]
-  imagenes TrabajoImagen[]
-  enCursoDe HarnessEstado[]
-
-  @@index([deviceId, estado, orden])
-  @@index([pedidoArchivoId])
-  @@map("trabajo_items")
-}
-
-// Un archivo de la notebook mandado a itemizar desde la consola: un plan o un
-// informe que hay que partir en tareas.
-//
-// Guarda la RUTA y nada del contenido. El archivo pesa cientos de KB, vive en la
-// maquina donde corre el harness y se sigue editando: copiarlo acá seria pagar
-// tokens por texto que ademas quedaria viejo. La sesion que itemiza lo lee del
-// disco y sube los items ya escritos.
-model TrabajoPedidoArchivo {
-  id       String @id @default(cuid())
-  deviceId String
-  // Ruta absoluta en la notebook, tal como la resolvio la consola.
-  ruta     String
-  // El nombre del archivo, para no tener que mostrar la ruta entera en el celular.
-  nombre   String @default("")
-  // Que itemizar, en las palabras del usuario: "h09 h15", "solo la mesa de
-  // trabajo", o vacio para el documento entero. Lo interpreta la sesion.
-  alcance  String @default("")
-  // pendiente | analizando | listo | error
-  estado   String @default("pendiente")
-  error    String?
-  itemsCreados Int @default(0)
-  pedidoEn DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  device NotaDevice    @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  items  TrabajoItem[]
-
-  @@index([deviceId, estado])
-  @@map("trabajo_pedidos_archivo")
-}
-
-// Un ítem puede tener varios prompts: el inicial y los de desbloqueo que se
-// escriben desde la lista de bloqueados. Se acumulan en vez de pisarse porque
-// la sesión que retoma necesita leer los dos para entender qué cambió.
-model TrabajoPrompt {
-  id      String @id @default(cuid())
-  itemId  String
-  // inicial | desbloqueo
-  tipo    String @default("inicial")
-  // Documento de Tiptap. Las imágenes van por URL de Blob, no embebidas.
-  contenido Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  item     TrabajoItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  imagenes TrabajoImagen[]
-
-  @@index([itemId])
-  @@map("trabajo_prompts")
-}
-
-// Lo que la sesión va dejando: hitos, problemas y cómo los resolvió. Lo sube el
-// puente leyendo el ndjson que la sesión escribe en disco; la sesión nunca
-// habla con esta API.
-model TrabajoLogEntry {
-  id     String @id @default(cuid())
-  itemId String
-  // hito | problema | solucion | bloqueo | handoff
-  tipo   String @default("hito")
-  texto  String @default("")
-  paso   Int?
-  cuenta String?
-  // Marca el problema que la sesión no puede resolver sola. En la UI habilita
-  // el botón que convierte ese texto en un ítem de trabajo nuevo.
-  requiereIntervencion Boolean @default(false)
-  createdAt DateTime @default(now())
-
-  item     TrabajoItem     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  imagenes TrabajoImagen[]
-
-  @@index([itemId, createdAt])
-  @@map("trabajo_log_entries")
-}
-
-// Toda imagen de la sección vive en Vercel Blob; acá queda su referencia.
-// `pathname` es lo que permite borrarla del store cuando se elimina el ítem:
-// sin eso quedarían archivos huérfanos ocupando lugar para siempre.
-model TrabajoImagen {
-  id         String  @id @default(cuid())
-  // Nullable desde que existe la bandeja: una imagen pegada en el crudo todavia
-  // no pertenece a ningun item, y recien lo hace cuando se confirma la ventana
-  // que la contiene.
-  itemId     String?
-  bandejaId  String?
-  logEntryId String?
-  promptId   String?
-  url        String
-  pathname   String
-  ancho      Int     @default(0)
-  alto       Int     @default(0)
-  bytes      Int     @default(0)
-  createdAt  DateTime @default(now())
-
-  item     TrabajoItem?     @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  bandeja  TrabajoBandeja?  @relation(fields: [bandejaId], references: [id], onDelete: Cascade)
-  logEntry TrabajoLogEntry? @relation(fields: [logEntryId], references: [id], onDelete: Cascade)
-  prompt   TrabajoPrompt?   @relation(fields: [promptId], references: [id], onDelete: Cascade)
-
-  @@index([itemId])
-  @@index([bandejaId])
-  @@index([logEntryId])
-  @@index([promptId])
-  @@index([pathname])
-  @@map("trabajo_imagenes")
-}
-
-// Donde se pega el trabajo en crudo, tal como llega: un pegote con
-// explicaciones y capturas en el medio. De ahi salen los items.
-//
-// El analisis lo hace el HARNESS con el OAuth de las cuentas, no la API de
-// Anthropic: esto es una herramienta de desarrollo propia y sale de la
-// suscripcion. `estado` es todo el ida y vuelta con el runner.
-model TrabajoBandeja {
-  id       String @id @default(cuid())
-  deviceId String @unique
-  contenido Json
-  // vacia | lista | pendiente | analizando | error
-  //   pendiente  = el usuario apreto Analizar y el harness todavia no lo tomo
-  //   analizando = hay una sesion trabajando en el
-  //   lista      = hay sugerencias para revisar
-  estado   String @default("vacia")
-  error    String?
-  pedidoEn DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  device      NotaDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  sugerencias TrabajoSugerencia[]
-  imagenes    TrabajoImagen[]
-
-  @@map("trabajo_bandejas")
-}
-
-// Un item propuesto. NO guarda el texto: guarda a que bloques del crudo apunta.
-// Por eso arrastrar el borde de la ventana es cambiar un id, y el texto nunca
-// queda duplicado en dos lados desincronizandose.
-model TrabajoSugerencia {
-  id        String @id @default(cuid())
-  bandejaId String
-  titulo    String @default("")
-  proyecto  String @default("")
-  // Ids de bloque (atributo `bid` del documento) del primero y el ultimo bloque
-  // incluidos. Ids y no indices: confirmar una ventana borra bloques, y con
-  // indices se correrian todas las de abajo en silencio.
-  desdeBid  String
-  hastaBid  String
-  orden     Int    @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  bandeja TrabajoBandeja @relation(fields: [bandejaId], references: [id], onDelete: Cascade)
-
-  @@index([bandejaId, orden])
-  @@map("trabajo_sugerencias")
-}
-
-// Una fila por cuenta del harness (cuentas\1, cuentas\2, ...). Los tokens no se
-// pueden consultar: el CLI no expone /usage. Se acumulan sumando lo que cada
-// sesión reporta con --output-format json, y el techo se aprende solo: cuando
-// una cuenta corta por límite, lo acumulado en esa ventana ES su techo.
-model HarnessCuenta {
-  id       String @id @default(cuid())
-  deviceId String
-  // Nombre de la carpeta en cuentas\ (1, 2, 3). Es la clave con la que el
-  // runner cambia CLAUDE_CONFIG_DIR, asi que no se puede tocar.
-  nombre   String
-  // Lo que se muestra en pantalla: "cuenta 2" no dice nada cuando hay que
-  // decidir cual sacar de la rotacion.
-  email    String?
-  // Desactivada = fuera de la rotacion. Sirve para reservarse una cuenta para
-  // uso interactivo mientras el harness trabaja con las otras.
-  habilitada Boolean @default(true)
-  // Que carril la tiene tomada ahora: trabajo | itemizacion | null. La asigna
-  // la app y no el runner, porque es la unica que ve los dos carriles a la vez
-  // y sabe cuales habilitaste.
-  carril   String?
-  // activa | agotada | login_requerido
-  estado   String @default("activa")
-  tokensVentana  Int  @default(0)
-  // Techo observado la última vez que esta cuenta cortó por límite. null = todavía
-  // no cortó nunca, y entonces la barra se muestra sin porcentaje.
-  techoObservado Int?
-  // Hora en que vuelve la cuota, parseada del propio mensaje del CLI
-  // ("resets 2:50am"). Es el único dato exacto que hay sobre la cuota.
-  resetAt        DateTime?
-  ventanaInicio  DateTime?
-  ultimaSesionAt DateTime?
-  updatedAt      DateTime @updatedAt
-
-  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@unique([deviceId, nombre])
-  @@map("harness_cuentas")
-}
-
-// Latido de un carril del runner. Si `actualizadoAt` quedó viejo, la UI lo
-// muestra detenido: es la forma de enterarse de que la máquina se apagó sin que
-// nadie avise.
-//
-// Una fila por carril: el que hace las tareas de código y el que itemiza la
-// bandeja corren a la vez y con cuentas distintas, así que cada uno late aparte.
-model HarnessEstado {
-  id       String @id @default(cuid())
-  deviceId String
-  // trabajo | itemizacion
-  carril   String @default("trabajo")
-  // Lo que el usuario pidió desde el botón de la app. La app corre en Vercel y
-  // no puede lanzar un proceso en la máquina: deja acá el deseo y el vigía, que
-  // sí corre ahí, lo obedece —arranca el carril, o le pide que frene—.
-  encendido Boolean @default(false)
-  // detenido | ocioso | trabajando  (lo que está pasando de verdad)
-  estado   String @default("detenido")
-  itemEnCursoId String?
-  sesionInicio  DateTime?
-  cuentaActual  String?
-  limiteSesionMin Int @default(90)
-  actualizadoAt DateTime @default(now())
-
-  device     NotaDevice   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  itemEnCurso TrabajoItem? @relation(fields: [itemEnCursoId], references: [id], onDelete: SetNull)
-
-  @@unique([deviceId, carril])
-  @@map("harness_estado")
-}
-
-// Lo que le pasa al harness, para poder verlo desde la app en vez de tener que
-// abrir runner.log en la máquina: arrancó, se apagó, se quedó sin cuota, no
-// consiguió cuenta. Sobre todo importa para el apagado — sin esto, apretar el
-// botón y no ver nada no distingue "se apagó" de "no se pudo apagar".
-// ─────────────────────────────────────────────────────────────
-// Consola: una sesión de Claude Code de la máquina del usuario,
-// manejada desde el celular.
-//
-// El CLI ya trae Remote Control, pero ata la sesión a la cuenta
-// que la lanzó y `/login` no funciona desde el móvil: cuando esa
-// cuenta se queda sin cuota hay que ir hasta la notebook. Acá el
-// cambio de cuenta es mover CLAUDE_CONFIG_DIR — lo que el harness
-// ya hace — y el historial se conserva copiando el .jsonl de la
-// sesión a la carpeta de la cuenta nueva.
-// ─────────────────────────────────────────────────────────────
-
-model ConsolaSesion {
-  id       String @id @default(cuid())
-  deviceId String
-  // El id que usa el CLI (`--session-id`). Es un UUID y lo genera la app: así
-  // el archivo de historial se puede encontrar en cualquier carpeta de cuenta.
-  sessionId String @unique
-  titulo   String @default("")
-  // Carpeta de cuenta con la que corre (1, 2, 3). Cambiarla es cambiar de
-  // cuenta sin perder la conversación.
-  cuenta   String?
-  // idle | pendiente | pensando | error
-  //   pendiente = hay un prompt esperando que el carril lo tome
-  estado   String @default("idle")
-  error    String?
-  // Directorio donde corre la sesión. Cambia qué código ve.
-  directorio String @default("")
-  archivada Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  device   NotaDevice        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  mensajes ConsolaMensaje[]
-
-  @@index([deviceId, archivada, updatedAt])
-  @@map("consola_sesiones")
-}
-
-model ConsolaMensaje {
-  id       String @id @default(cuid())
-  sesionId String
-  // usuario | asistente | sistema
-  rol      String @default("usuario")
-  texto    String @default("")
-  // Mientras la respuesta llega por chunks se va apendeando a `texto` y esto
-  // queda en true; la UI lo usa para mostrar el cursor de escritura.
-  parcial  Boolean @default(false)
-  // Imágenes que la sesión produjo en su respuesta (capturas que sacó ella).
-  // Van por URL de Blob, igual que en el log del harness.
-  imagenes String[] @default([])
-  createdAt DateTime @default(now())
-
-  sesion ConsolaSesion @relation(fields: [sesionId], references: [id], onDelete: Cascade)
-
-  @@index([sesionId, createdAt])
-  @@map("consola_mensajes")
-}
-
-// La vista viva de la pantalla: UNA sola por device. Sacar una nueva reemplaza
-// la anterior y borra su blob — si no, una tarde de uso deja cien capturas
-// pagando storage para mirar una.
-model ConsolaCaptura {
-  id       String @id @default(cuid())
-  deviceId String @unique
-  url      String
-  pathname String
-  ancho    Int    @default(0)
-  alto     Int    @default(0)
-  // pendiente = el usuario la pidió y el carril todavía no la sacó
-  estado   String @default("lista")
-  pedidaEn DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@map("consola_capturas")
-}
-
-// ─────────────────────────────────────────────────────────────
-// Terminales adoptadas: las pestañas de Windows Terminal que ya están
-// abiertas en la notebook con un Claude Code corriendo adentro.
-//
-// A diferencia de ConsolaSesion, acá la app no es dueña de nada: el agente
-// local se cuelga de consolas ajenas, les tipea el prompt y les lee la
-// pantalla. Por eso no hay historial de mensajes — lo único que existe es el
-// último dibujo del buffer, que se pisa en cada censo.
-// ─────────────────────────────────────────────────────────────
-
-model ConsolaTerminal {
-  id       String @id @default(cuid())
-  deviceId String
-  // PID de un proceso adjunto a esa consola. Sirve de handle para AttachConsole
-  // y cambia cada vez que la pestaña se reabre: no es un id estable.
-  pid      Int
-  // Nombre que le pone el usuario desde el celular. Es lo único que distingue
-  // "la del proyecto de turnos" de "la otra", porque el título que reporta
-  // Windows cambia solo mientras Claude Code trabaja.
-  apodo    String @default("")
-  titulo   String @default("")
-  // Últimas líneas del buffer de pantalla. No es historial: es una foto que se
-  // reemplaza entera en cada censo.
-  pantalla String @default("")
-  // El agente la vio en el último censo. Una pestaña cerrada queda en false en
-  // vez de borrarse, para no perder el apodo si se reabre.
-  viva     Boolean @default(true)
-  vistoEn  DateTime @default(now())
-  createdAt DateTime @default(now())
-
-  device NotaDevice     @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-  envios ConsolaEnvio[]
-
-  @@unique([deviceId, pid])
-  @@index([deviceId, viva])
-  @@map("consola_terminales")
-}
-
-model ConsolaEnvio {
-  id         String @id @default(cuid())
-  terminalId String
-  texto      String
-  // Tecla suelta a mandar en vez de texto: por ahora sólo "esc", que en la TUI
-  // de Claude Code interrumpe lo que esté haciendo. Cuando está puesta, `texto`
-  // queda vacío.
-  tecla      String?
-  // pendiente | enviado | error | cancelado
-  estado     String @default("pendiente")
-  error      String?
-  createdAt  DateTime @default(now())
-  enviadoEn  DateTime?
-
-  terminal ConsolaTerminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
-
-  @@index([terminalId, createdAt])
-  @@index([estado, createdAt])
-  @@map("consola_envios")
-}
-
-model HarnessEvento {
-  id       String @id @default(cuid())
-  deviceId String
-  carril   String
-  // arranque | apagado | cuota | error | info
-  tipo     String @default("info")
-  texto    String @default("")
-  createdAt DateTime @default(now())
-
-  device NotaDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
-
-  @@index([deviceId, createdAt])
-  @@map("harness_eventos")
 }
