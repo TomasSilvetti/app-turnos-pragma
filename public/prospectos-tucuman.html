@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ruta de Calzado Tucumán</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+
+<style>
+  :root {
+    --navy: #0E3A5B;
+    --copper: #9E5C45;
+    --copper-soft: #EEA586;
+    --teal: #076A7A;
+    --ground: #F2F9F9;
+    --surface: #FFFFFF;
+    --ink: #17262F;
+    --ink-soft: #4C6270;
+    --line: #D3E1E3;
+    --line-soft: #E6EFEF;
+    --crit-bg: #FBE7E1;
+    --crit-ink: #8E3418;
+    --warn-bg: #FAEFD8;
+    --warn-ink: #7A5308;
+    --ok-bg: #DDEDEA;
+    --ok-ink: #16605C;
+    --shadow: 0 1px 2px rgba(14, 58, 91, .06), 0 8px 24px -16px rgba(14, 58, 91, .28);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --navy: #CFE4EE;
+      --copper: #E0997C;
+      --copper-soft: #8A4E38;
+      --teal: #64B8BF;
+      --ground: #0D1A21;
+      --surface: #12242C;
+      --ink: #E4EFF1;
+      --ink-soft: #9BB2BC;
+      --line: #24424E;
+      --line-soft: #1B333C;
+      --crit-bg: #3D1A11;
+      --crit-ink: #F0A78E;
+      --warn-bg: #3A2C0E;
+      --warn-ink: #E8C579;
+      --ok-bg: #12332F;
+      --ok-ink: #7FCEC0;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --navy: #CFE4EE;
+    --copper: #E0997C;
+    --copper-soft: #8A4E38;
+    --teal: #64B8BF;
+    --ground: #0D1A21;
+    --surface: #12242C;
+    --ink: #E4EFF1;
+    --ink-soft: #9BB2BC;
+    --line: #24424E;
+    --line-soft: #1B333C;
+    --crit-bg: #3D1A11;
+    --crit-ink: #F0A78E;
+    --warn-bg: #3A2C0E;
+    --warn-ink: #E8C579;
+    --ok-bg: #12332F;
+    --ok-ink: #7FCEC0;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px -16px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 0 20px 96px;
+  }
+
+  a { color: var(--teal); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--copper);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+
+  /* ---------- encabezado ---------- */
+
+  .head {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 56px 0 28px;
+    border-bottom: 2px solid var(--navy);
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--copper);
+    margin: 0;
+  }
+
+  h1 {
+    font-family: Archivo, system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(34px, 6vw, 54px);
+    line-height: 1.02;
+    letter-spacing: -.02em;
+    margin: 0;
+    color: var(--navy);
+    text-wrap: balance;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 17px;
+    color: var(--ink-soft);
+  }
+
+  .method {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    padding-top: 4px;
+  }
+  .method b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- resumen ---------- */
+
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin: 36px 0 8px;
+  }
+  .tally div {
+    background: var(--surface);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tally .n {
+    font-family: Archivo, sans-serif;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--copper);
+    font-variant-numeric: tabular-nums;
+  }
+  .tally .k {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.35;
+  }
+
+  h2 {
+    font-family: Archivo, sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 56px 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ---------- fichas ---------- */
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--copper);
+    box-shadow: var(--shadow);
+    padding: 22px 24px 24px;
+    display: grid;
+    grid-template-columns: 46px 1fr;
+    gap: 4px 18px;
+  }
+  .card[data-state="critico"] { border-left-color: var(--crit-ink); }
+  .card[data-state="tibio"] { border-left-color: var(--warn-ink); }
+
+  .rank {
+    grid-row: span 2;
+    font-family: Archivo, sans-serif;
+    font-weight: 800;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--copper-soft);
+    font-variant-numeric: tabular-nums;
+    padding-top: 2px;
+  }
+
+  .card h3 {
+    font-family: Archivo, sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    line-height: 1.15;
+    letter-spacing: -.01em;
+    margin: 0;
+    color: var(--navy);
+  }
+  .card h3 span {
+    display: block;
+    font-family: "IBM Plex Sans", sans-serif;
+    font-weight: 400;
+    font-size: 13.5px;
+    letter-spacing: 0;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+
+  .body { display: flex; flex-direction: column; gap: 14px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 2px;
+    background: var(--line-soft);
+    color: var(--ink-soft);
+  }
+  .chip.crit { background: var(--crit-bg); color: var(--crit-ink); }
+  .chip.warn { background: var(--warn-bg); color: var(--warn-ink); }
+  .chip.ok { background: var(--ok-bg); color: var(--ok-ink); }
+
+  dl.data {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 16px;
+    margin: 0;
+    font-size: 14.5px;
+  }
+  dl.data dt {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-top: 4px;
+  }
+  dl.data dd { margin: 0; }
+  dl.data dd.num {
+    font-family: "IBM Plex Mono", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .flaws { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .flaws li {
+    font-size: 14.5px;
+    padding-left: 20px;
+    position: relative;
+    color: var(--ink);
+  }
+  .flaws li::before {
+    content: "▸";
+    position: absolute;
+    left: 2px;
+    top: -1px;
+    color: var(--copper);
+  }
+  .flaws code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    background: var(--line-soft);
+    padding: 1px 5px;
+    border-radius: 2px;
+    word-break: break-all;
+  }
+
+  .pitch {
+    border-left: 2px solid var(--teal);
+    padding: 2px 0 2px 14px;
+    font-size: 15px;
+    font-style: italic;
+    color: var(--ink);
+  }
+  .pitch b {
+    display: block;
+    font-family: "IBM Plex Mono", monospace;
+    font-style: normal;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 4px;
+  }
+
+  /* ---------- tabla suplentes ---------- */
+
+  .scroll { overflow-x: auto; border: 1px solid var(--line); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 620px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+  th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--line-soft);
+    border-bottom: 1px solid var(--line);
+  }
+  td.num { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .note {
+    margin: 20px 0 0;
+    font-size: 14px;
+    color: var(--ink-soft);
+    max-width: 68ch;
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 620px) {
+    .card { grid-template-columns: 1fr; }
+    .rank { grid-row: auto; font-size: 22px; }
+    dl.data { grid-template-columns: 1fr; gap: 2px; }
+    dl.data dt { padding-top: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="head">
+    <p class="eyebrow">PragmaStore · prospección de campo</p>
+    <h1>Diez comercios de Tucumán que venden por WhatsApp sin catálogo que funcione</h1>
+    <p class="lede">Calzado e indumentaria, mayoristas y minoristas, todos con número de pedidos publicado. Ordenados por facilidad de cierre: arriba están los que ya intentaron tener tienda online y hoy la tienen rota — ésos no necesitan que les expliques para qué sirve.</p>
+    <p class="method">
+      <span><b>Relevado:</b> 24/08/2026</span>
+      <span><b>Fuentes:</b> páginas de Facebook + navegación real de cada sitio</span>
+      <span><b>Método:</b> Playwright, viewport móvil 390px</span>
+    </p>
+  </header>
+
+  <section class="tally">
+    <div><span class="n">4</span><span class="k">tienen web publicada en Facebook y está caída o secuestrada</span></div>
+    <div><span class="n">6</span><span class="k">no tienen catálogo: el pedido se arma a mano en el chat</span></div>
+    <div><span class="n">379k</span><span class="k">seguidores sumados entre los diez</span></div>
+    <div><span class="n">7</span><span class="k">venden también por mayor — el pedido largo es su rutina diaria</span></div>
+  </section>
+
+  <h2>Prioridad alta · la web que publican está rota</h2>
+
+  <div class="list">
+
+    <article class="card" data-state="critico">
+      <div class="rank">01</div>
+      <div>
+        <h3>Gastón Calzados<span>Zapatería · dama, hombre, adolescente y niño</span></h3>
+        <div class="chips">
+          <span class="chip crit">Dominio inexistente</span>
+          <span class="chip">49 mil seguidores</span>
+          <span class="chip">94% recomendado (372 opiniones)</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>24 de Septiembre 282, San Miguel de Tucumán</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493816138436">+54 9 381 613-8436</a></dd>
+          <dt>Fijo</dt><dd class="num">0381 421-0917</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/gastoncalzadostuc/">/gastoncalzadostuc</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>La página de Facebook publica <code>gastoncalzados.com.ar</code> como sitio oficial y el dominio no resuelve: <code>NXDOMAIN</code>. Cada persona que toca ese link se lleva un error del navegador.</li>
+          <li>Es el peor de los casos: el cliente ya buscó comprarle online y no pudo. No hay que convencerlo de la idea, solo de reemplazar lo que se le cayó.</li>
+          <li>Sin catálogo activo, los 49 mil seguidores desembocan todos en el mismo chat.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Entré a la página que tenés puesta en el Facebook y no abre. ¿Sabías? Te muestro en el celular cómo queda una que sí funcione, son treinta segundos.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="critico">
+      <div class="rank">02</div>
+      <div>
+        <h3>Dasani Indumentaria Femenina<span>Ropa de mujer · por mayor y por menor · cinco sucursales</span></h3>
+        <div class="chips">
+          <span class="chip crit">Tienda devuelve error 410</span>
+          <span class="chip">106 mil seguidores</span>
+          <span class="chip ok">Ya usa link de WhatsApp</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Direcciones</dt><dd>Crisóstomo Álvarez 616 y 476 · Buenos Aires 188 · Salta 271 · Córdoba 381</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/543812235318">+54 381 223-5318</a></dd>
+          <dt>Fijo</dt><dd class="num">0381 385-1077</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/dasani.tiendademoda/">/dasani.tiendademoda</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li><code>dasani.com.ar</code> responde <code>HTTP 410 Gone</code>: página en blanco, sin contenido. La tienda fue dada de baja y el link sigue publicado.</li>
+          <li>Es el más grande de la lista por audiencia y el único con cinco locales: el mismo catálogo tendría que resolver stock y precios de todos.</li>
+          <li>Ya trabaja con un enlace directo de WhatsApp para pedidos, así que el hábito está instalado. Falta lo que se abre antes del chat.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Con cinco locales, ¿el pedido de mayorista lo sumás vos a mano en el chat? Te muestro cómo entra ya sumado y con el local que lo despacha.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="critico">
+      <div class="rank">03</div>
+      <div>
+        <h3>Tus Zapatos<span>Indumentaria, calzado y accesorios · moda casual</span></h3>
+        <div class="chips">
+          <span class="chip crit">Dominio con publicidad de terceros</span>
+          <span class="chip">58 mil seguidores</span>
+          <span class="chip warn">Sin WhatsApp visible</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Av. Siria 2345, San Miguel de Tucumán</dd>
+          <dt>Teléfono</dt><dd class="num">0381 455-2000</dd>
+          <dt>Mail</dt><dd>info@tuszapatos.com.ar</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/TusZapatosArg/">/TusZapatosArg</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li><code>tuszapatos.com.ar</code> abre, pero lo primero que aparece en el celular es un banner violeta de encuestas pagas (“Hasta 880 ARS por dar tu opinión”, Surveoo) tapando los productos.</li>
+          <li>Los productos que muestra son zapatillas Nike genéricas con precios de $159.999 — no es el surtido de un local de Av. Siria. La marca perdió el control de su propio dominio.</li>
+          <li>No hay ningún botón de WhatsApp en toda la portada: el visitante no tiene por dónde preguntar.</li>
+          <li>Tarda 7,4 s en quedar utilizable en móvil.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“¿Vos sabés lo que le aparece hoy a quien entra a tuzapatos.com.ar? Mirá — te muestro la captura. Con tu nombre encima.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="critico">
+      <div class="rank">04</div>
+      <div>
+        <h3>Calzados Verona<span>Zapatería · 45 años · alta moda para dama</span></h3>
+        <div class="chips">
+          <span class="chip crit">Dominio inexistente</span>
+          <span class="chip">38 mil seguidores</span>
+          <span class="chip ok">98% recomendado</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>24 de Septiembre esq. Buenos Aires, San Miguel de Tucumán</dd>
+          <dt>Teléfono</dt><dd class="num">0381 430-2382</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/calzadosveronatucuman/">/calzadosveronatucuman</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li><code>calzadosverona.com</code> tampoco resuelve. Es la misma historia que Gastón Calzados y están a media cuadra: sirve para nombrarlo como caso, no como competencia.</li>
+          <li>Publican reels de producto casi a diario y ninguno tiene a dónde mandar al que pregunta el precio.</li>
+          <li>El perfil no muestra número de WhatsApp, solo el fijo — el pedido a distancia hoy directamente no existe para ellos.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Cuarenta y cinco años y hoy la única forma de comprarles de afuera es venir hasta el local. Te muestro cómo se hace pedido sin que ustedes cambien nada de lo que hacen.”</p>
+      </div>
+    </article>
+
+  </div>
+
+  <h2>Prioridad media · el pedido se arma entero dentro del chat</h2>
+
+  <div class="list">
+
+    <article class="card" data-state="tibio">
+      <div class="rank">05</div>
+      <div>
+        <h3>Ellas y Él Calzados<span>Mayorista y minorista · envíos a todo el país</span></h3>
+        <div class="chips">
+          <span class="chip warn">Sin catálogo</span>
+          <span class="chip">49 mil seguidores</span>
+          <span class="chip ok">wa.me publicado</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Av. Ejército del Norte 714 · 9:30–13:30 y 16–20 h</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493816983643">+54 9 381 698-3643</a></dd>
+          <dt>Mail</dt><dd>ellasyel2026@gmail.com</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/calzadospormayortucuman/">/calzadospormayortucuman</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>El único destino de toda su comunicación es <code>wa.me/5493816983643</code>. No hay lista de productos en ningún lado: el mayorista pregunta talles y precios uno por uno.</li>
+          <li>Publican “ofertas” en imagen suelta, sin precio escrito. Cada publicación genera decenas de “cuánto sale” que hay que contestar a mano.</li>
+          <li>Venden por mayor con envío a todo el país: el pedido típico son diez pares, justo el caso donde sumar a mano se equivoca.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“El pedido de diez pares, ¿lo sumás vos en la calculadora? Eso es lo que te saco de encima.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="tibio">
+      <div class="rank">06</div>
+      <div>
+        <h3>Camila Mayorista<span>Indumentaria femenina por mayor · dos locales</span></h3>
+        <div class="chips">
+          <span class="chip warn">Sin web ni catálogo</span>
+          <span class="chip">87 mil seguidores</span>
+          <span class="chip ok">100% recomendado</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Direcciones</dt><dd>Sáenz Peña 221 locales 1 y 2 · Roca 830 · 10–19 h</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493812362435">+54 9 381 236-2435</a></dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/camindumentaria.ok/">/camindumentaria.ok</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>87 mil seguidores y cero presencia fuera de las redes: ni sitio, ni Tiendanube, ni catálogo en PDF.</li>
+          <li>Comunican por precio (“prendas desde $3.000”) en videos, no en una lista consultable. Quien quiere comprar de otra provincia tiene que pedir fotos.</li>
+          <li>Dos direcciones distintas y envíos a todo el país sin ningún lugar donde figure qué hay en cada una.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Tenés más seguidores que muchas marcas grandes y no tenés dónde mandarlos a comprar. ¿Cuántos mensajes por día contestás?”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="tibio">
+      <div class="rank">07</div>
+      <div>
+        <h3>TxM Ropa Tucumán x Mayor<span>Indumentaria por mayor · orientado a revendedores</span></h3>
+        <div class="chips">
+          <span class="chip warn">Sin web ni catálogo</span>
+          <span class="chip">86 mil seguidores</span>
+          <span class="chip">94% recomendado (300 opiniones)</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Crisóstomo Álvarez 1182, San Miguel de Tucumán</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493815504207">+54 9 381 550-4207</a></dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/tucumanxmayor/">/tucumanxmayor</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>Su propia descripción dice que existen para “hacer más fácil el trabajo de revendedores” — y el revendedor tiene que armar el pedido escribiendo en un chat.</li>
+          <li>Publican “nuevos ingresos” en video sin lista de artículos: el cliente frecuente no puede ver qué entró sin preguntar.</li>
+          <li>Base de clientes que repite (revendedores) y ningún historial de pedidos: cada compra arranca de cero.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Tus revendedores te compran todos los meses lo mismo. ¿Y cada vez te lo tienen que escribir de nuevo?”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="tibio">
+      <div class="rank">08</div>
+      <div>
+        <h3>Indumentaria Por Mayor Tucumán<span>Mayorista · envíos a todo el país</span></h3>
+        <div class="chips">
+          <span class="chip crit">Catálogo por videollamada</span>
+          <span class="chip">70 mil seguidores</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Congreso 176 local 3, frente a la Casa Histórica · 9–20:30 h</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493814142758">+54 9 381 414-2758</a></dd>
+          <dt>Fijo</dt><dd class="num">0381 304-7096</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/indumentariapormayortucuman/">/indumentariapormayortucuman</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>Lo dice la propia biografía: <em>“para ver nuestros productos, mensaje / videollamada / grupo o catálogo”</em>. Vender por videollamada significa una persona ocupada por cliente.</li>
+          <li>El “grupo” de difusión sustituye al catálogo: el cliente tiene que scrollear meses de mensajes para encontrar un artículo.</li>
+          <li>Es el argumento de venta más redondo de la lista — el costo del método actual se mide en horas del dueño.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“¿Cuántas videollamadas hacés por día para mostrar la misma ropa? Eso lo ve el cliente solo, y vos recibís el pedido hecho.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="tibio">
+      <div class="rank">09</div>
+      <div>
+        <h3>Leone Indumentaria y Calzados<span>Ropa y calzado · por mayor y por menor</span></h3>
+        <div class="chips">
+          <span class="chip crit">“Pedidos únicamente por WhatsApp”</span>
+          <span class="chip">1,8 mil seguidores</span>
+          <span class="chip ok">Negocio chico, decide el dueño</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Av. Sáenz Peña 111, local 20, San Miguel de Tucumán</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493815740820">+54 9 381 574-0820</a></dd>
+          <dt>Mail</dt><dd>maria.frs26@gmail.com</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/leonetiendaderopa/">/leonetiendaderopa</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>La descripción dice textual: <em>“Los pedidos se toman únicamente por WhatsApp al número publicado”</em>. Es el perfil exacto del producto, escrito por ellos mismos.</li>
+          <li>Última publicación de julio de 2024: la página está quieta, no hay nadie manteniendo presencia. Menos audiencia, pero también menos resistencia a probar algo.</li>
+          <li>Local dentro de una galería: no reciben tráfico de vereda, todo depende del chat.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“En tu Facebook decís que los pedidos son solo por WhatsApp. Justamente para eso hago esto.”</p>
+      </div>
+    </article>
+
+    <article class="card" data-state="tibio">
+      <div class="rank">10</div>
+      <div>
+        <h3>Pacific Shoes<span>Mayorista de calzado · envíos a todo el país</span></h3>
+        <div class="chips">
+          <span class="chip warn">Sin catálogo</span>
+          <span class="chip crit">Le piden catálogo en los comentarios</span>
+          <span class="chip">2,9 mil seguidores</span>
+        </div>
+      </div>
+      <div></div>
+      <div class="body">
+        <dl class="data">
+          <dt>Dirección</dt><dd>Av. Bulnes 1251, San Miguel de Tucumán · lunes a sábado 9–17 h</dd>
+          <dt>WhatsApp</dt><dd class="num"><a href="https://wa.me/5493814050148">+54 9 381 405-0148</a> (todo el país)</dd>
+          <dt>Alternativo</dt><dd class="num">381 361-9221 (Tucumán)</dd>
+          <dt>Facebook</dt><dd><a href="https://www.facebook.com/pacific.shoes.tuc/">/pacific.shoes.tuc</a></dd>
+        </dl>
+        <ul class="flaws">
+          <li>En los comentarios de sus publicaciones hay clientes escribiendo <em>“¿Puedes enviar catálogo?”</em> sin respuesta. La demanda está a la vista, pública.</li>
+          <li>Trabajan el contenido en TikTok con volumen alto y toda esa audiencia termina en un chat sin lista de precios.</li>
+          <li>Dos números distintos según de dónde llame el cliente: dos bandejas de entrada, ningún registro unificado de pedidos.</li>
+        </ul>
+        <p class="pitch"><b>Apertura</b>“Te están pidiendo el catálogo en los comentarios. Te lo dejo armado y funcionando, y les pasás un link en vez de fotos.”</p>
+      </div>
+    </article>
+
+  </div>
+
+  <h2>Suplentes · si alguno de los diez no atiende</h2>
+
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr><th>Negocio</th><th>Zona</th><th>Contacto</th><th>Por qué entra</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ropa por Mayor Tucumán</td>
+          <td>San Miguel</td>
+          <td class="num">—</td>
+          <td>Paga Tiendanube y la tienda está cerrada con contraseña: “Estamos renovando, volvé en unos días”. Pagan por algo que nadie puede ver.</td>
+        </tr>
+        <tr>
+          <td>Clara Calzados</td>
+          <td>4 sucursales · Muñecas 138, Mendoza 675, 25 de Mayo 358, Lobo de la Vega 50</td>
+          <td class="num">381 588-3239</td>
+          <td>Cuatro locales coordinados sólo con un <code>wa.me/message</code>. Sin web propia.</td>
+        </tr>
+        <tr>
+          <td>Monísima Tienda de Moda</td>
+          <td>Tucumán</td>
+          <td class="num">—</td>
+          <td>Aparece en buscadores como tienda online y <code>monisimatiendademoda.com</code> ya no resuelve.</td>
+        </tr>
+        <tr>
+          <td>L&amp;L Indumentaria y Calzado</td>
+          <td>Yerba Buena · Av. Nicolás Avellaneda</td>
+          <td class="num">0381 624-4179</td>
+          <td>Emprendimiento chico, publica el número en cada video. Ticket bajo, pero cierra en una visita.</td>
+        </tr>
+        <tr>
+          <td>TOPICA</td>
+          <td>Showroom · Capital y Yerba Buena</td>
+          <td class="num">381 392-3104</td>
+          <td>Showroom con envíos propios y sin nada donde ver la ropa. Página casi sin actividad.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Descartados a propósito</h2>
+
+  <p class="note"><b>Kavak Deportes</b> (WooCommerce con carrito y 23 productos con precio), <b>Color Uva</b>, <b>Infinity</b> y <b>Roma Indumentaria</b> (Tiendanube andando, medios de pago y cuotas configurados). Tienen catálogo funcionando: venderles es una migración, no una primera venta, y la conversación es otra. También quedaron afuera las publicaciones de Marketplace de reventa sin local — no hay a quién volver a visitar.</p>
+
+  <footer>
+    Relevamiento propio · 24/08/2026 · datos tomados de las páginas públicas de Facebook y de la navegación de cada sitio en móvil. Verificar teléfono antes de visitar: los perfiles no siempre están actualizados.
+  </footer>
+
+</div>
+</body>
+</html>
